@@ -12,16 +12,15 @@ public class User {
 
     @Id
     private String id;
-
+    
     private String authProvider;     // google, facebook, etc.
     private String providerId;
-
     private String email;
+    private String password;
     private String fullName;
     private Role role;
-    public enum Role {GUEST,ADMIN,MANAGER};
+    public enum Role {GUEST,ADMIN,MANAGER}; //only allow 3 types of user roles
     private String phone;
-
     private List<SavedPaymentMethod> savedPaymentMethods;
     private Address billingAddress;
     private Preferences preferences;
@@ -51,6 +50,7 @@ public class User {
     public static class Preferences {
         private String bedType;
         private Boolean smoking;
+        
         //default constructor for preferences
         public Preferences() {}
 
@@ -58,7 +58,7 @@ public class User {
         public String getBedType() {return bedType;}
         public void setBedType(String bedType) {this.bedType = bedType;}
 
-        public Boolean isSmoking() {return smoking;}
+        public Boolean getSmoking() {return smoking;}
         public void setSmoking(Boolean smoking) {this.smoking = smoking;}
     }
 
@@ -129,4 +129,8 @@ public class User {
 
     public Instant getCreatedAt() {return createdAt;}
     public void setCreatedAt(Instant createdAt) {this.createdAt = createdAt;}
+
+    public String getPassword() {return password;}
+
+    public void setPassword(String password) {this.password = password;}
 }
