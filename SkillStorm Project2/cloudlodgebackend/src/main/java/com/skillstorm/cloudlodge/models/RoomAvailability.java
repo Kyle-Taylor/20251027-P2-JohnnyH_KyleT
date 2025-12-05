@@ -7,7 +7,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 //tracks availability per room per day
 //each booked date for a room gets its own document
-@Document(collection = "room_calendar")
+@Document(collection = "roomAvailability")
 public class RoomAvailability {
 
     @Id

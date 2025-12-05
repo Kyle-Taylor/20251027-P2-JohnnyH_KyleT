@@ -3,7 +3,6 @@ package com.skillstorm.cloudlodge.configs;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
@@ -15,6 +14,16 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.disable())
             .cors(cors -> {})
+            .authorizeHttpRequests(auth -> auth
+                .anyRequest().permitAll()   // ← allow ALL traffic
+            )
+            .formLogin(form -> form.disable())
+            .httpBasic(basic -> basic.disable());  // optional
+
+        return http.build();
+    }
+
+            /**
             .sessionManagement(sess -> 
                 sess.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
             )
@@ -33,6 +42,9 @@ public class SecurityConfig {
 
         return http.build();
     }
+         */
+
+    
 }
 
 
