@@ -92,6 +92,11 @@ public class ReservationController {
         try {
             return new ResponseEntity<>(reservationService.findByCheckInRange(start, end), HttpStatus.OK);
         }
+        catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                .header("Error", e.getMessage())
+                .build();
+        }
         catch (Exception e) {
             return ResponseEntity.badRequest()
                 .header("Error", "Invalid date format. Use YYYY-MM-DD.")

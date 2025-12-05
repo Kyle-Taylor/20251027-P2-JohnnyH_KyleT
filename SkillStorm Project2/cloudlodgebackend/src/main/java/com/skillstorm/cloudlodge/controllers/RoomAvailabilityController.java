@@ -65,13 +65,18 @@ public class RoomAvailabilityController {
         }
         catch (DateTimeParseException e) {
             return ResponseEntity.badRequest()
-                    .header("Error", "Invalid date format. Use YYYY-MM-DD.")
-                    .build();
+                .header("Error", "Invalid date format. Use YYYY-MM-DD.")
+                .build();
+        }
+        catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                .header("Error", e.getMessage())
+                .build();
         }
         catch (Exception e) {
             return ResponseEntity.internalServerError()
-                    .header("Error", "Sorry! We have an internal Error! Please check back later.")
-                    .build();
+                .header("Error", "Sorry! We have an internal Error! Please check back later.")
+                .build();
         }
     }
 

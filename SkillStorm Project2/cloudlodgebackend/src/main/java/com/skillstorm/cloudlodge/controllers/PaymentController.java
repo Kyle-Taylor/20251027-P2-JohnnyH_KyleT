@@ -57,7 +57,6 @@ public class PaymentController {
                     .header("Error", e.getMessage())
                     .build();
         }
-        }
         catch (Exception e) {
             return ResponseEntity.internalServerError()
                 .header("Error", "Sorry! We have an internal Error! Please check back later.")
@@ -90,14 +89,12 @@ public class PaymentController {
         try {
             Payment payment = paymentService.findByTransactionId(txnId)
                     .orElseThrow(() -> new IllegalArgumentException("Payment not found with transactionId " + txnId));
-
             return new ResponseEntity<>(payment, HttpStatus.OK);
         }
         catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .header("Error", e.getMessage())
                     .build();
-        }
         }
         catch (Exception e) {
             return ResponseEntity.internalServerError()
