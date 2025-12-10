@@ -13,24 +13,25 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.skillstorm.cloudlodge.models.ResolvedRoom;
 import com.skillstorm.cloudlodge.models.Room;
 import com.skillstorm.cloudlodge.services.RoomService;
-import org.springframework.web.bind.annotation.RequestParam;
 
 
 @RestController
 @RequestMapping("/rooms")
 public class RoomController {
     private final RoomService roomService;
+
     public RoomController(RoomService roomService) {
         this.roomService = roomService;
     }
 
-    // GET all rooms
+    // GET all resolved rooms
     @GetMapping
-    public ResponseEntity<List<Room>> getAllRooms() {
+    public ResponseEntity<List<ResolvedRoom>> getAllRooms() {
         try {
-            List<Room> rooms = roomService.findAll();
+            List<ResolvedRoom> rooms = roomService.findAllResolved();
             return new ResponseEntity<>(rooms, HttpStatus.OK);
         }
         catch (Exception e) {
@@ -38,7 +39,7 @@ public class RoomController {
                     .header("Error", "Sorry! We have an internal Error! Please check back later.")
                     .build();
         }
-    } 
+    }
 
     // GET room by ID
     @GetMapping("/{id}")
