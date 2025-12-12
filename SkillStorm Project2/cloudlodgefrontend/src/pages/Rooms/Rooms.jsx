@@ -1,4 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
+// Initial form state for Add Room
+const INITIAL_FORM = {
+  number: "",
+  roomTypeId: "",
+  price: "",
+  maxGuests: "",
+  amenities: "",
+  description: "",
+};
 import {
   Card,
   CardContent,
@@ -22,69 +31,69 @@ import {
   FormControl,
   Stack,
   Tooltip,
-  IconButton
-} from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
-import DeleteIcon from '@mui/icons-material/Delete';
-import BedIcon from '@mui/icons-material/Bed';
-import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import CancelIcon from '@mui/icons-material/Cancel';
+  IconButton,
+  Paper,
+} from "@mui/material";
+import AddIcon from "@mui/icons-material/Add";
+import DeleteIcon from "@mui/icons-material/Delete";
+import BedIcon from "@mui/icons-material/Bed";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import CancelIcon from "@mui/icons-material/Cancel";
+import RoomsHeader from "./RoomsHeader";
+import CloseIcon from '@mui/icons-material/Close';
 
-const API_URL = 'http://localhost:8080/rooms';
+const API_URL = "http://localhost:8080/rooms";
 
 export default function Rooms() {
   const [rooms, setRooms] = useState([]);
   const [roomTypes, setRoomTypes] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [form, setForm] = useState({
-    number: '',
-    roomTypeId: '',
-    price: '',
-    maxGuests: '',
-    amenities: '',
-    description: ''
-  });
+  const [error, setError] = useState("");
+
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [editMode, setEditMode] = useState(false);
+
+  const [form, setForm] = useState(INITIAL_FORM);
+
+  function resetAddForm() {
+    setForm(INITIAL_FORM);
+  }
+
   const [editForm, setEditForm] = useState({
-    price: '',
-    maxGuests: '',
-    amenities: '',
-    description: ''
+    price: "",
+    maxGuests: "",
+    amenities: "",
+    description: "",
   });
 
-  // Fetch room types from backend
+  // Local draft state for edit modal
+  const [editDraft, setEditDraft] = useState(null);
+
   useEffect(() => {
     fetchRoomTypes();
+    fetchRooms();
   }, []);
 
   async function fetchRoomTypes() {
     try {
-      const res = await fetch('http://localhost:8080/roomtypes');
-      if (!res.ok) throw new Error('Failed to fetch room types');
-      const data = await res.json();
-      setRoomTypes(data);
+      const res = await fetch("http://localhost:8080/roomtypes");
+      if (!res.ok) throw new Error("Failed to fetch room types");
+      setRoomTypes(await res.json());
     } catch (err) {
       setError(err.message);
     }
   }
 
-  useEffect(() => {
-    fetchRooms();
-  }, []);
-
   async function fetchRooms() {
     setLoading(true);
-    setError('');
+    setError("");
     try {
       const res = await fetch(API_URL);
-      if (!res.ok) throw new Error('Failed to fetch rooms');
-      const data = await res.json();
-      setRooms(data);
+      if (!res.ok) throw new Error("Failed to fetch rooms");
+      setRooms(await res.json());
     } catch (err) {
       setError(err.message);
     } finally {
@@ -94,37 +103,47 @@ export default function Rooms() {
 
   async function handleAddRoom(e) {
     e.preventDefault();
-    setError('');
+    setError("");
+
+    const rt = roomTypes.find((r) => r.id === form.roomTypeId);
+
+    const payload = {
+      roomNumber: parseInt(form.number),
+      roomTypeId: form.roomTypeId,
+      isActive: true,
+    };
+
+    if (form.price && parseFloat(form.price) !== rt?.pricePerNight) {
+      payload.priceOverride = parseFloat(form.price);
+    }
+
+    if (form.maxGuests && parseInt(form.maxGuests) !== rt?.maxGuests) {
+      payload.maxGuestsOverride = parseInt(form.maxGuests);
+    }
+
+    const amenitiesArr = form.amenities
+      ? form.amenities.split(",").map((a) => a.trim())
+      : [];
+
+    if (amenitiesArr.join(",") !== (rt?.amenities?.join(",") ?? "")) {
+      payload.amenitiesOverride = amenitiesArr;
+    }
+
+    if (form.description && form.description !== rt?.description) {
+      payload.descriptionOverride = form.description;
+    }
+
     try {
-      // Build payload matching backend Room model
-      const rt = roomTypes.find(rt => rt.id === form.roomTypeId);
-      const payload = {
-        roomNumber: form.number ? parseInt(form.number) : undefined,
-        roomTypeId: form.roomTypeId,
-        isActive: true,
-      };
-      // Only add override fields if changed from RoomType default
-      if (form.price && parseFloat(form.price) !== (rt?.pricePerNight ?? 0)) {
-        payload.priceOverride = parseFloat(form.price);
-      }
-      if (form.maxGuests && parseInt(form.maxGuests) !== (rt?.maxGuests ?? 0)) {
-        payload.maxGuestsOverride = parseInt(form.maxGuests);
-      }
-      const amenitiesArr = typeof form.amenities === 'string' ? form.amenities.split(',').map(a => a.trim()) : [];
-      if (rt && amenitiesArr.join(',') !== (rt.amenities?.join(',') ?? '')) {
-        payload.amenitiesOverride = amenitiesArr;
-      }
-      if (form.description && form.description !== (rt?.description ?? '')) {
-        payload.descriptionOverride = form.description;
-      }
-      const res = await fetch(API_URL+"/create", {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+      const res = await fetch(`${API_URL}/create`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       });
-      if (!res.ok) throw new Error('Failed to add room');
-      setForm({ number: '', roomTypeId: '', price: '', maxGuests: '', amenities: '', description: '' });
+
+      if (!res.ok) throw new Error("Failed to add room");
+
       setAddModalOpen(false);
+      resetAddForm();
       fetchRooms();
     } catch (err) {
       setError(err.message);
@@ -132,223 +151,197 @@ export default function Rooms() {
   }
 
   async function handleDeleteRoom(id) {
-    setError('');
+    if (!window.confirm("Delete this room?")) return;
     try {
-      const res = await fetch(`${API_URL}/delete/${id}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error('Failed to delete room');
+      const res = await fetch(`${API_URL}/delete/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete room");
       fetchRooms();
     } catch (err) {
       setError(err.message);
     }
   }
 
-
   function handleOpenModal(room) {
     setSelectedRoom(room);
     setEditMode(false);
-    setEditForm({
-      price: room.price ?? '',
-      maxGuests: room.maxGuests ?? '',
-      amenities: room.amenities && room.amenities.length > 0 ? room.amenities.join(', ') : '',
-      description: room.description ?? ''
-    });
+    let amenitiesArr = [];
+    if (Array.isArray(room.amenities)) {
+      amenitiesArr = room.amenities;
+    } else if (typeof room.amenities === 'string') {
+      amenitiesArr = room.amenities.split(',').map(a => a.trim()).filter(a => a);
+    } else {
+      amenitiesArr = [""];
+    }
+    const initial = {
+      price: room.price ?? "",
+      maxGuests: room.maxGuests ?? "",
+      amenities: amenitiesArr.length ? amenitiesArr : [""],
+      description: room.description ?? "",
+    };
+    setEditForm(initial);
+    setEditDraft(initial);
     setModalOpen(true);
-  }
-
-  function handleEditChange(field, value) {
-    setEditForm(f => ({ ...f, [field]: value }));
   }
 
   async function handleSaveEdit() {
     if (!selectedRoom) return;
-    // Build a full Room object for PUT
-    const amenitiesArr = typeof editForm.amenities === 'string' ? editForm.amenities.split(',').map(a => a.trim()) : [];
-    const payload = {
-      // Always send these required fields
-      id: selectedRoom.id || selectedRoom._id,
-      roomNumber: selectedRoom.roomNumber,
-      roomTypeId: selectedRoom.roomTypeId,
-      isActive: selectedRoom.isActive !== undefined ? selectedRoom.isActive : true,
-      // Send overrides if changed, else use current values
-      priceOverride: editForm.price && parseFloat(editForm.price) !== (selectedRoom.price ?? 0) ? parseFloat(editForm.price) : selectedRoom.priceOverride,
-      maxGuestsOverride: editForm.maxGuests && parseInt(editForm.maxGuests) !== (selectedRoom.maxGuests ?? 0) ? parseInt(editForm.maxGuests) : selectedRoom.maxGuestsOverride,
-      amenitiesOverride: (selectedRoom.amenities && amenitiesArr.join(',') !== (selectedRoom.amenities.join(',') ?? '')) ? amenitiesArr : selectedRoom.amenitiesOverride,
-      descriptionOverride: editForm.description && editForm.description !== (selectedRoom.description ?? '') ? editForm.description : selectedRoom.descriptionOverride,
-    };
-    // Remove undefined override fields
-    Object.keys(payload).forEach(key => {
-      if (payload[key] === undefined) delete payload[key];
-    });
-    try {
-      const res = await fetch(`${API_URL}/update/${selectedRoom.id || selectedRoom._id}` , {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      if (!res.ok) throw new Error('Failed to update room');
 
-      // Re-fetch the full room list to get the resolved/merged data
-      const updatedRoomsRes = await fetch(API_URL);
-      if (!updatedRoomsRes.ok) throw new Error('Failed to fetch updated rooms');
-      const updatedRooms = await updatedRoomsRes.json();
-      setRooms(updatedRooms);
-      // Find the updated room in the new list and set it for the modal
-      const id = selectedRoom.id || selectedRoom._id;
-      const resolvedRoom = updatedRooms.find(r => r.id === id || r._id === id);
-      setSelectedRoom(resolvedRoom || null);
-      setEditMode(false);
-    } catch (err) {
-      setError(err.message);
-    }
-  }
+    // Copy draft to editForm, then run save logic
+    setEditForm(editDraft);
 
-  function handleCloseModal() {
-    setModalOpen(false);
-    setSelectedRoom(null);
+    // Use a callback to ensure latest draft is used
+    setTimeout(async () => {
+      const amenitiesArr = Array.isArray(editDraft.amenities)
+        ? editDraft.amenities.map(a => a.trim()).filter(a => a)
+        : [];
+
+      const payload = {
+        id: selectedRoom.id || selectedRoom._id,
+        roomNumber: selectedRoom.roomNumber,
+        roomTypeId: selectedRoom.roomTypeId,
+        isActive: selectedRoom.isActive,
+        priceOverride: parseFloat(editDraft.price),
+        maxGuestsOverride: parseInt(editDraft.maxGuests),
+        amenitiesOverride: amenitiesArr,
+        descriptionOverride: editDraft.description,
+      };
+
+      try {
+        const res = await fetch(
+          `${API_URL}/update/${selectedRoom.id || selectedRoom._id}`,
+          {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          }
+        );
+
+        if (!res.ok) throw new Error("Failed to update room");
+
+        // Re-fetch the full rooms list and update state
+        const refreshed = await fetch(API_URL);
+        if (!refreshed.ok) throw new Error("Failed to fetch updated rooms");
+        const updatedRooms = await refreshed.json();
+        setRooms(updatedRooms);
+        // Find the updated room and update selectedRoom
+        const id = selectedRoom.id || selectedRoom._id;
+        const updatedRoom = updatedRooms.find(r => r.id === id || r._id === id);
+        setSelectedRoom(updatedRoom || null);
+        setEditMode(false);
+      } catch (err) {
+        setError(err.message);
+      }
+    }, 0);
   }
 
   return (
-    <Box sx={{ maxWidth: 1100, mx: 'auto', mt: 5, p: 3 }}>
-      <Typography variant="h3" fontWeight={700} mb={4} color="primary.main" sx={{ letterSpacing: 1 }}>Rooms</Typography>
-      {error && (
-        <Box mb={2}>
-          <Chip label={error} color="error" />
-        </Box>
-      )}
-      <Button
-        variant="contained"
-        color="primary"
-        startIcon={<AddIcon />}
-        sx={{ mb: 3, fontWeight: 600, borderRadius: 2, px: 3, py: 1 }}
-        onClick={() => setAddModalOpen(true)}
-      >
-        Add Room
-      </Button>
+    <Box sx={{ width: "100%", minHeight: "100vh", bgcolor: "white" }}>
+      <RoomsHeader />
 
-      {/* Add Room Modal */}
-      <Dialog open={addModalOpen} onClose={() => setAddModalOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Add Room</DialogTitle>
-        <DialogContent dividers>
-          <Box component="form" onSubmit={handleAddRoom} sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
-            <TextField
-              label="Room Number"
-              value={form.number}
-              onChange={e => setForm(f => ({ ...f, number: e.target.value }))}
-              required
-              size="small"
-            />
-            <FormControl size="small" required>
-              <InputLabel id="room-type-label">Room Type</InputLabel>
-              <Select
-                labelId="room-type-label"
-                value={form.roomTypeId}
-                label="Room Type"
-                onChange={e => {
-                  const roomTypeId = e.target.value;
-                  const rt = roomTypes.find(rt => rt.id === roomTypeId);
-                  setForm(f => ({
-                    ...f,
-                    roomTypeId,
-                    price: rt?.pricePerNight ?? '',
-                    maxGuests: rt?.maxGuests ?? '',
-                    amenities: rt?.amenities ? rt.amenities.join(', ') : '',
-                    description: rt?.description ?? ''
-                  }));
-                }}
-              >
-                {roomTypes.map(rt => (
-                  <MenuItem key={rt.id} value={rt.id}>{rt.roomCategory}</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            <TextField
-              label="Price"
-              type="number"
-              value={form.price}
-              onChange={e => setForm(f => ({ ...f, price: e.target.value }))}
-              required
-              size="small"
-            />
-            <TextField
-              label="Max Guests"
-              type="number"
-              value={form.maxGuests}
-              onChange={e => setForm(f => ({ ...f, maxGuests: e.target.value }))}
-              required
-              size="small"
-            />
-            <TextField
-              label="Amenities (comma separated)"
-              value={form.amenities}
-              onChange={e => setForm(f => ({ ...f, amenities: e.target.value }))}
-              size="small"
-            />
-            <TextField
-              label="Description"
-              value={form.description}
-              onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-              size="small"
-              multiline
-              minRows={2}
-            />
-            <DialogActions sx={{ px: 0 }}>
-              <Button onClick={() => setAddModalOpen(false)} color="secondary">Cancel</Button>
-              <Button type="submit" variant="contained" color="primary">Add Room</Button>
-            </DialogActions>
+      <Box sx={{ width: "100vw", px: 0, py: 4 }}>
+        <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 3 }}>
+          <Box sx={{ ml: 'auto', pr: 2 }}>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => setAddModalOpen(true)}
+            >
+              Add Room
+            </Button>
           </Box>
-        </DialogContent>
-      </Dialog>
-      {loading ? (
-        <Typography>Loading...</Typography>
-      ) : (
-        rooms.length === 0 ? (
-          <Typography>No rooms found.</Typography>
+        </Box>
+
+        {error && <Chip label={error} color="error" sx={{ mb: 2 }} />}
+
+        {loading ? (
+          <Typography>Loading…</Typography>
         ) : (
-          <Grid container spacing={3}>
-            {rooms.map(room => (
-              <Grid item xs={12} sm={6} md={4} key={room.id || room._id}>
+          <Grid container spacing={3} justifyContent="flex-start" alignItems="flex-start" sx={{ width: 1 }}>
+            {rooms.map((room) => (
+              <Grid item xs={12} sm={6} md={4} lg={3} key={room.id || room._id}>
                 <Card
-                  elevation={6}
                   sx={{
-                    cursor: 'pointer',
                     borderRadius: 3,
-                    transition: 'box-shadow 0.2s, transform 0.2s',
-                    '&:hover': { boxShadow: 12, transform: 'translateY(-4px) scale(1.02)' },
-                    background: 'linear-gradient(135deg, #f7fafc 80%, #e3e8ee 100%)',
+                    overflow: "hidden",
+                    cursor: "pointer",
+                    transition: "0.2s",
+                    "&:hover": { transform: "translateY(-4px)" },
                   }}
                   onClick={() => handleOpenModal(room)}
                 >
-                  <CardContent sx={{ pb: 1 }}>
-                    <Stack direction="row" alignItems="center" mb={1}>
-                      <Stack direction="row" alignItems="center" spacing={3}>
-                        <Typography variant="h6" fontWeight={700} color="primary.main">
-                          <BedIcon sx={{ mr: 1, fontSize: 22, verticalAlign: 'middle' }} />
-                          Room #{room.roomNumber}
-                        </Typography>
-                        <Chip label={room.roomCategory || 'N/A'} color="info" size="small" sx={{ fontWeight: 600 }} />
-                      </Stack>
+                  <Box
+                    component="img"
+                    src={
+                      room.images?.length
+                        ? room.images[0]
+                        : "https://picsum.photos/400/250"
+                    }
+                    alt={`Room ${room.roomNumber}`}
+                    sx={{
+                      width: "100%",
+                      height: 160,
+                      objectFit: "cover",
+                    }}
+                  />
+
+                  <CardContent>
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <BedIcon fontSize="small" />
+                      <Typography fontWeight={700}>
+                        Room #{room.roomNumber}
+                      </Typography>
                     </Stack>
-                    <Stack direction="row" alignItems="center" justifyContent="space-between" mb={1}>
+
+                    <Chip
+                      label={room.roomCategory}
+                      size="small"
+                      sx={{ my: 1 }}
+                    />
+
+                    <Stack
+                      direction="row"
+                      justifyContent="space-between"
+                      alignItems="center"
+                    >
                       <Chip
-                        icon={room.booked ? <CancelIcon /> : <CheckCircleIcon />}
-                        label={room.booked ? 'Booked' : 'Available'}
-                        color={room.booked ? 'error' : 'success'}
+                        icon={
+                          room.booked ? (
+                            <CancelIcon />
+                          ) : (
+                            <CheckCircleIcon />
+                          )
+                        }
+                        label={room.booked ? "Booked" : "Available"}
+                        color={room.booked ? "error" : "success"}
                         size="small"
-                        sx={{ fontWeight: 600 }}
                       />
-                      <Typography variant="subtitle1" fontWeight={600} color="secondary.dark">
+
+                      <Typography fontWeight={700}>
                         ${room.price}
                       </Typography>
                     </Stack>
                   </CardContent>
-                  <CardActions sx={{ justifyContent: 'flex-end', pb: 2 }}>
+
+                  <CardActions sx={{ justifyContent: "flex-end" }}>
                     <Tooltip title="Delete Room">
-                      <IconButton size="small" color="error" onClick={e => { e.stopPropagation(); handleDeleteRoom(room.id || room._id); }}>
+                      <IconButton
+                        color="error"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteRoom(room.id || room._id);
+                        }}
+                      >
                         <DeleteIcon />
                       </IconButton>
                     </Tooltip>
+
                     <Tooltip title="View Details">
-                      <IconButton size="small" color="primary" onClick={e => { e.stopPropagation(); handleOpenModal(room); }}>
+                      <IconButton
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleOpenModal(room);
+                        }}
+                      >
                         <InfoOutlinedIcon />
                       </IconButton>
                     </Tooltip>
@@ -357,128 +350,403 @@ export default function Rooms() {
               </Grid>
             ))}
           </Grid>
-        )
-      )}
+        )}
+      </Box>
 
-      {/* Room Details Modal */}
-      <Dialog open={modalOpen} onClose={handleCloseModal} maxWidth="md" fullWidth>
-        <DialogTitle sx={{ fontWeight: 700, letterSpacing: 1 }}>Room Details</DialogTitle>
-        <DialogContent dividers>
-          {selectedRoom && (
-            <Grid container spacing={3}>
-              <Grid item xs={12} md={6}>
-                <Stack spacing={1}>
-                  <Typography variant="h6" fontWeight={700} color="primary.main" mb={1}>
-                    <BedIcon sx={{ mr: 1, fontSize: 22, verticalAlign: 'middle' }} />
-                    Room #{selectedRoom.roomNumber}
-                  </Typography>
-                  <Stack direction="row" spacing={1} alignItems="center">
-                    <Chip label={selectedRoom.roomCategory || 'N/A'} color="info" size="small" />
-                    <Chip
-                      icon={selectedRoom.booked ? <CancelIcon /> : <CheckCircleIcon />}
-                      label={selectedRoom.booked ? 'Booked' : 'Available'}
-                      color={selectedRoom.booked ? 'error' : 'success'}
-                      size="small"
-                    />
-                  </Stack>
-                  {editMode ? (
-                    <>
-                      <TextField
-                        label="Price"
-                        type="number"
-                        value={editForm.price}
-                        onChange={e => handleEditChange('price', e.target.value)}
-                        size="small"
-                        fullWidth
-                        sx={{ mb: 1 }}
-                      />
-                      <TextField
-                        label="Max Guests"
-                        type="number"
-                        value={editForm.maxGuests}
-                        onChange={e => handleEditChange('maxGuests', e.target.value)}
-                        size="small"
-                        fullWidth
-                        sx={{ mb: 1 }}
-                      />
-                      <TextField
-                        label="Amenities (comma separated)"
-                        value={editForm.amenities}
-                        onChange={e => handleEditChange('amenities', e.target.value)}
-                        size="small"
-                        fullWidth
-                        sx={{ mb: 1 }}
-                      />
-                      <TextField
-                        label="Description"
-                        value={editForm.description}
-                        onChange={e => handleEditChange('description', e.target.value)}
-                        size="small"
-                        fullWidth
-                        multiline
-                        minRows={2}
-                        sx={{ mb: 1 }}
-                      />
-                    </>
-                  ) : (
-                    <>
-                      <Typography variant="subtitle1" fontWeight={600} color="secondary.dark" mb={1}>
-                        ${selectedRoom.price}
-                      </Typography>
-                      <Divider sx={{ my: 1 }} />
-                      <Typography variant="body2" mb={1}><strong>Max Guests:</strong> {selectedRoom.maxGuests}</Typography>
-                      <Typography variant="body2" mb={1}><strong>Amenities:</strong> {selectedRoom.amenities && selectedRoom.amenities.length > 0 ? selectedRoom.amenities.join(', ') : 'None'}</Typography>
-                      <Typography variant="body2" mb={1}><strong>Description:</strong> {selectedRoom.description || 'No description'}</Typography>
-                    </>
-                  )}
-                </Stack>
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <Box mb={1}>
-                  <Typography variant="body2" fontWeight={600} mb={1}>Images:</Typography>
-                  {selectedRoom.images && selectedRoom.images.length > 0 ? (
-                    <ImageList cols={2} gap={8} sx={{ width: '100%', maxHeight: 220 }}>
-                      {selectedRoom.images.map((img, idx) => (
-                        <ImageListItem key={idx} sx={{ width: 160, height: 120 }}>
-                          <img
-                            src={img}
-                            alt={`Room ${selectedRoom.roomNumber} img ${idx+1}`}
-                            style={{
-                              borderRadius: '8px',
-                              width: '160px',
-                              height: '120px',
-                              objectFit: 'cover',
-                              display: 'block'
-                            }}
-                          />
-                        </ImageListItem>
-                      ))}
-                    </ImageList>
-                  ) : (
-                    <Typography variant="caption">No images</Typography>
-                  )}
-                </Box>
-              </Grid>
-            </Grid>
-          )}
+      {/* ADD ROOM MODAL */}
+      <Dialog open={addModalOpen} onClose={() => { setAddModalOpen(false); resetAddForm(); }}>
+        <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pr: 1 }}>
+          Add Room
+          <IconButton size="small" color="error" onClick={() => { setAddModalOpen(false); resetAddForm(); }}>
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent>
+          <Box component="form" onSubmit={handleAddRoom}>
+            <TextField
+              label="Room Number"
+              fullWidth
+              margin="dense"
+              required
+              value={form.number}
+              onChange={(e) =>
+                setForm({ ...form, number: e.target.value })
+              }
+            />
+
+            <FormControl fullWidth margin="dense">
+              <InputLabel>Room Type</InputLabel>
+              <Select
+                value={form.roomTypeId}
+                label="Room Type"
+                onChange={(e) => {
+                  const rt = roomTypes.find(
+                    (r) => r.id === e.target.value
+                  );
+                  setForm({
+                    ...form,
+                    roomTypeId: e.target.value,
+                    price: rt?.pricePerNight ?? "",
+                    maxGuests: rt?.maxGuests ?? "",
+                    amenities: rt?.amenities?.join(", ") ?? "",
+                    description: rt?.description ?? "",
+                  });
+                }}
+              >
+                {roomTypes.map((rt) => (
+                  <MenuItem key={rt.id} value={rt.id}>
+                    {rt.roomCategory}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            <TextField
+              label="Price"
+              fullWidth
+              margin="dense"
+              value={form.price}
+              onChange={(e) =>
+                setForm({ ...form, price: e.target.value })
+              }
+            />
+
+            <TextField
+              label="Max Guests"
+              fullWidth
+              margin="dense"
+              value={form.maxGuests}
+              onChange={(e) =>
+                setForm({ ...form, maxGuests: e.target.value })
+              }
+            />
+
+            <TextField
+              label="Amenities"
+              fullWidth
+              margin="dense"
+              value={form.amenities}
+              onChange={(e) =>
+                setForm({ ...form, amenities: e.target.value })
+              }
+            />
+
+            <TextField
+              label="Description"
+              fullWidth
+              margin="dense"
+              multiline
+              rows={2}
+              value={form.description}
+              onChange={(e) =>
+                setForm({ ...form, description: e.target.value })
+              }
+            />
+          </Box>
         </DialogContent>
+
         <DialogActions>
-          {editMode ? (
-            <>
-              <Button onClick={() => setEditMode(false)} color="secondary" variant="outlined">Cancel</Button>
-              <Button color="primary" variant="contained" onClick={handleSaveEdit}>Save</Button>
-            </>
-          ) : (
-            <>
-              <Button onClick={handleCloseModal} color="primary" variant="outlined">Close</Button>
-              <Button onClick={() => setEditMode(true)} color="primary" variant="contained">Edit</Button>
-              {selectedRoom && (
-                <Button color="error" variant="contained" startIcon={<DeleteIcon />} onClick={() => { handleDeleteRoom(selectedRoom.id || selectedRoom._id); handleCloseModal(); }}>Delete</Button>
-              )}
-            </>
-          )}
+          <Button onClick={() => { setAddModalOpen(false); resetAddForm(); }}>Cancel</Button>
+          <Button variant="contained" onClick={handleAddRoom}>
+            Add
+          </Button>
         </DialogActions>
       </Dialog>
+
+      {/* DETAILS / EDIT MODAL */}
+<Dialog
+  open={modalOpen}
+  onClose={() => {
+    setModalOpen(false);
+    setEditMode(false);
+  }}
+  maxWidth="md"
+  fullWidth
+>
+  <DialogTitle
+    sx={{
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      pb: 1.5,
+      borderBottom: "1px solid",
+      borderColor: "divider",
+    }}
+  >
+    <Typography variant="h6" fontWeight={700} component="span">
+      Room Details
+    </Typography>
+
+    <IconButton
+      size="small"
+      color="error"
+      onClick={() => {
+        setModalOpen(false);
+        setEditMode(false);
+      }}
+    >
+      <CloseIcon fontSize="small" />
+    </IconButton>
+  </DialogTitle>
+
+  <DialogContent dividers sx={{ pt: 3, pb: 3 }}>
+    {selectedRoom && (
+      <Grid container spacing={4}>
+        {/*DETAILS */}
+        <Grid item xs={12} md={5}>
+          <Stack spacing={2}>
+            {editMode ? (
+              editDraft && (
+                <>
+                  <TextField
+                    label="Price"
+                    fullWidth
+                    value={editDraft.price}
+                    InputLabelProps={{ sx: { fontWeight: '700 !important' } }}
+                    onChange={e =>
+                      setEditDraft(d => ({ ...d, price: e.target.value }))
+                    }
+                  />
+                  <TextField
+                    label="Max Guests"
+                    fullWidth
+                    value={editDraft.maxGuests}
+                    InputLabelProps={{ sx: { fontWeight: '700 !important' } }}
+                    onChange={e =>
+                      setEditDraft(d => ({ ...d, maxGuests: e.target.value }))
+                    }
+                  />
+                  <Box sx={{ mb: 1 }}>
+                    <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700, letterSpacing: 1, mb: 1, display: 'block' }}>
+                      Amenities
+                    </Typography>
+                    <Grid container spacing={2} columns={{ xs: 1, sm: 2 }}>
+                      {editDraft.amenities.map((amenity, idx) => (
+                        <Grid item xs={1} sm={1} key={idx} sx={{ display: 'flex', alignItems: 'center' }}>
+                          <TextField
+                            label={`Amenity ${idx + 1}`}
+                            fullWidth
+                            margin="dense"
+                            value={amenity}
+                            InputLabelProps={{ sx: { fontWeight: '700 !important' } }}
+                            onChange={e => {
+                              setEditDraft(d => {
+                                const newAmenities = [...d.amenities];
+                                newAmenities[idx] = e.target.value;
+                                return { ...d, amenities: newAmenities };
+                              });
+                            }}
+                          />
+                          <IconButton
+                            aria-label="Remove amenity"
+                            color="error"
+                            size="small"
+                            sx={{ ml: 1, mt: 1 }}
+                            disabled={editDraft.amenities.length === 1}
+                            onClick={() => {
+                              if (editDraft.amenities.length > 1) {
+                                setEditDraft(d => ({
+                                  ...d,
+                                  amenities: d.amenities.filter((_, i) => i !== idx)
+                                }));
+                              }
+                            }}
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </Grid>
+                      ))}
+                    </Grid>
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      startIcon={<AddIcon />}
+                      fullWidth
+                      sx={{ mt: 2 }}
+                      onClick={() => setEditDraft(d => ({ ...d, amenities: [...d.amenities, ""] }))}
+                    >
+                      Add Amenity
+                    </Button>
+                  </Box>
+                  <TextField
+                    label="Description"
+                    fullWidth
+                    multiline
+                    rows={3}
+                    value={editDraft.description}
+                    InputLabelProps={{ sx: { fontWeight: '700 !important' } }}
+                    onChange={e =>
+                      setEditDraft(d => ({ ...d, description: e.target.value }))
+                    }
+                  />
+                </>
+              )
+            ) : (
+              <Stack spacing={2}>
+                <Paper variant="outlined" sx={{ p: 2, pt: 3, bgcolor: 'grey.50', position: 'relative', overflow: 'visible' }}>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 12,
+                      transform: 'translateY(-50%)',
+                      bgcolor: 'background.paper',
+                      px: 0.5,
+                      fontWeight: '700 !important',
+                      letterSpacing: 1,
+                      zIndex: 1,
+                    }}
+                  >
+                    Price
+                  </Typography>
+                  <Typography variant="h6">
+                    ${selectedRoom.price}
+                  </Typography>
+                </Paper>
+                <Paper variant="outlined" sx={{ p: 2, pt: 3, bgcolor: 'grey.50', position: 'relative', overflow: 'visible' }}>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 12,
+                      transform: 'translateY(-50%)',
+                      bgcolor: 'background.paper',
+                      px: 0.5,
+                      fontWeight: '700 !important',
+                      letterSpacing: 1,
+                      zIndex: 1,
+                    }}
+                  >
+                    Max Guests
+                  </Typography>
+                  <Typography variant="h6">
+                    {selectedRoom.maxGuests}
+                  </Typography>
+                </Paper>
+                <Paper variant="outlined" sx={{ p: 2, pt: 3, bgcolor: 'grey.50', position: 'relative', overflow: 'visible' }}>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 12,
+                      transform: 'translateY(-50%)',
+                      bgcolor: 'background.paper',
+                      px: 0.5,
+                      fontWeight: '700 !important',
+                      letterSpacing: 1,
+                      zIndex: 1,
+                    }}
+                  >
+                    Amenities
+                  </Typography>
+                  <Typography variant="body1">
+                    {selectedRoom.amenities?.join(", ") || "None"}
+                  </Typography>
+                </Paper>
+                <Paper variant="outlined" sx={{ p: 2, pt: 3, bgcolor: 'grey.50', position: 'relative', overflow: 'visible' }}>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 12,
+                      transform: 'translateY(-50%)',
+                      bgcolor: 'background.paper',
+                      px: 0.5,
+                      fontWeight: '700 !important',
+                      letterSpacing: 1,
+                      zIndex: 1,
+                    }}
+                  >
+                    Description
+                  </Typography>
+                  <Typography variant="body1">
+                    {selectedRoom.description || "None"}
+                  </Typography>
+                </Paper>
+              </Stack>
+            )}
+          </Stack>
+        </Grid>
+
+        {/* IMAGES */}
+        <Grid item xs={12} md={7}>
+          {selectedRoom.images?.length ? (
+            <Grid container spacing={2}>
+              {selectedRoom.images.map((img, i) => (
+                <Grid item xs={6} key={i}>
+                  <Box
+                    component="img"
+                    src={img}
+                    alt={`Room image ${i}`}
+                    sx={{
+                      width: "100%",
+                      height: 160,
+                      objectFit: "cover",
+                      borderRadius: 2,
+                    }}
+                  />
+                </Grid>
+              ))}
+            </Grid>
+          ) : (
+            <Typography color="text.secondary">
+              No images available
+            </Typography>
+          )}
+        </Grid>
+      </Grid>
+    )}
+  </DialogContent>
+
+  <DialogActions
+    sx={{
+      px: 3,
+      py: 2,
+      borderTop: "1px solid",
+      borderColor: "divider",
+      display: "flex",
+      justifyContent: "space-between",
+    }}
+  >
+    <Button
+      color="error"
+      variant="contained"
+      onClick={() => {
+        if (selectedRoom)
+          handleDeleteRoom(selectedRoom.id || selectedRoom._id);
+        setModalOpen(false);
+        setEditMode(false);
+      }}
+    >
+      Delete
+    </Button>
+
+    {editMode ? (
+              <Stack direction="row" spacing={1}>
+                <Button variant="outlined" onClick={() => {
+                  setEditMode(false);
+                  setEditDraft(editForm); // Reset draft to original values
+                }}>Cancel</Button>
+                <Button variant="contained" onClick={handleSaveEdit}>
+                  Save
+                </Button>
+              </Stack>
+            ) : (
+              <Button variant="contained" onClick={() => setEditMode(true)}>
+                Edit
+              </Button>
+            )}
+  </DialogActions>
+</Dialog>
+
     </Box>
   );
 }
