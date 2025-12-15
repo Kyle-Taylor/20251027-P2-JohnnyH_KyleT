@@ -1,4 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
+import Pagination from '@mui/material/Pagination';
+import useMediaQuery from '@mui/material/useMediaQuery';
+import { useTheme } from '@mui/material/styles';
 // Initial form state for Add Room
 const INITIAL_FORM = {
   number: "",
@@ -41,12 +44,17 @@ import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
 import RoomsHeader from "./RoomsHeader";
+import RoomsSideNav from "./RoomsSideNav";
 import CloseIcon from '@mui/icons-material/Close';
+import PhotoCamera from "@mui/icons-material/PhotoCamera";
+
 
 const API_URL = "http://localhost:8080/rooms";
 
 export default function Rooms() {
   const [rooms, setRooms] = useState([]);
+  const [page, setPage] = useState(1);
+  const itemsPerPage = 18;
   const [roomTypes, setRoomTypes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -71,6 +79,9 @@ export default function Rooms() {
 
   // Local draft state for edit modal
   const [editDraft, setEditDraft] = useState(null);
+  // State for selected images in edit modal
+  const [editImages, setEditImages] = useState([]);
+  const fileInputRef = useRef();
 
   useEffect(() => {
     fetchRoomTypes();
@@ -87,13 +98,15 @@ export default function Rooms() {
     }
   }
 
-  async function fetchRooms() {
+  async function fetchRooms(callback) {
     setLoading(true);
     setError("");
     try {
       const res = await fetch(API_URL);
       if (!res.ok) throw new Error("Failed to fetch rooms");
-      setRooms(await res.json());
+      const data = await res.json();
+      setRooms(data);
+      if (callback) callback(data);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -144,6 +157,7 @@ export default function Rooms() {
 
       setAddModalOpen(false);
       resetAddForm();
+      // Stay on the same page after adding
       fetchRooms();
     } catch (err) {
       setError(err.message);
@@ -180,16 +194,15 @@ export default function Rooms() {
     };
     setEditForm(initial);
     setEditDraft(initial);
+    setEditImages([]); // Reset new uploads
     setModalOpen(true);
   }
 
   async function handleSaveEdit() {
     if (!selectedRoom) return;
 
-    // Copy draft to editForm, then run save logic
     setEditForm(editDraft);
 
-    // Use a callback to ensure latest draft is used
     setTimeout(async () => {
       const amenitiesArr = Array.isArray(editDraft.amenities)
         ? editDraft.amenities.map(a => a.trim()).filter(a => a)
@@ -207,27 +220,34 @@ export default function Rooms() {
       };
 
       try {
+        // Use FormData for multipart/form-data
+        const formData = new FormData();
+        formData.append("room", new Blob([JSON.stringify(payload)], { type: "application/json" }));
+        // Append selected images
+        if (editImages && editImages.length > 0) {
+          for (let i = 0; i < editImages.length; i++) {
+            formData.append("images", editImages[i]);
+          }
+        }
+
         const res = await fetch(
           `${API_URL}/update/${selectedRoom.id || selectedRoom._id}`,
           {
             method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
+            body: formData,
           }
         );
 
         if (!res.ok) throw new Error("Failed to update room");
 
-        // Re-fetch the full rooms list and update state
-        const refreshed = await fetch(API_URL);
-        if (!refreshed.ok) throw new Error("Failed to fetch updated rooms");
-        const updatedRooms = await refreshed.json();
-        setRooms(updatedRooms);
-        // Find the updated room and update selectedRoom
-        const id = selectedRoom.id || selectedRoom._id;
-        const updatedRoom = updatedRooms.find(r => r.id === id || r._id === id);
-        setSelectedRoom(updatedRoom || null);
-        setEditMode(false);
+        fetchRooms((updatedRooms) => {
+          setRooms(updatedRooms);
+          const id = selectedRoom.id || selectedRoom._id;
+          const updatedRoom = updatedRooms.find(r => r.id === id || r._id === id);
+          setSelectedRoom(updatedRoom || null);
+          setEditMode(false);
+          setEditImages([]);
+        });
       } catch (err) {
         setError(err.message);
       }
@@ -235,122 +255,216 @@ export default function Rooms() {
   }
 
   return (
-    <Box sx={{ width: "100%", minHeight: "100vh", bgcolor: "white" }}>
-      <RoomsHeader />
+  <Box>
+      <RoomsHeader 
+      setRooms={setRooms}
+      setLoading={setLoading}
+      setError={setError}
+      />
 
-      <Box sx={{ width: "100vw", px: 0, py: 4 }}>
-        <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 3 }}>
-          <Box sx={{ ml: 'auto', pr: 2 }}>
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              onClick={() => setAddModalOpen(true)}
-            >
-              Add Room
-            </Button>
-          </Box>
-        </Box>
+      <Box sx={{ width: "100%"}}>
 
         {error && <Chip label={error} color="error" sx={{ mb: 2 }} />}
 
-        {loading ? (
-          <Typography>Loading…</Typography>
-        ) : (
-          <Grid container spacing={3} justifyContent="flex-start" alignItems="flex-start" sx={{ width: 1 }}>
-            {rooms.map((room) => (
-              <Grid item xs={12} sm={6} md={4} lg={3} key={room.id || room._id}>
-                <Card
-                  sx={{
-                    borderRadius: 3,
-                    overflow: "hidden",
-                    cursor: "pointer",
-                    transition: "0.2s",
-                    "&:hover": { transform: "translateY(-4px)" },
-                  }}
-                  onClick={() => handleOpenModal(room)}
-                >
-                  <Box
-                    component="img"
-                    src={
-                      room.images?.length
-                        ? room.images[0]
-                        : "https://picsum.photos/400/250"
-                    }
-                    alt={`Room ${room.roomNumber}`}
-                    sx={{
-                      width: "100%",
-                      height: 160,
-                      objectFit: "cover",
-                    }}
-                  />
+        <Box
+          sx={{
+            display: "flex",
+            width: "100vw",
+            maxWidth: "100vw",
+            minHeight: "100%",
+            alignItems: "stretch",
+            overflowX: "hidden",
+          }}
+        >
+          {/* Left side nav bar */}
+          <RoomsSideNav />
 
-                  <CardContent>
-                    <Stack direction="row" spacing={1} alignItems="center">
-                      <BedIcon fontSize="small" />
-                      <Typography fontWeight={700}>
-                        Room #{room.roomNumber}
-                      </Typography>
-                    </Stack>
+          {/* Center stage for grid */}
+          <Box
+            sx={{
+            flexGrow: 1,
+            minWidth: 0,
+            bgcolor: "#2c2b2bff",
+            borderLeft: "2px solid #232323",
+            borderRight: "2px solid #232323",
+            px: { xs: 1, sm: 2, md: 4 },
+            py: 2,
+            minHeight: "100vh",
+            display: "flex",
+            flexDirection: "column",
+            }}
+          >
+            <Box
+            sx={{
+              width: "100%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              mb: 3,
+            }}
+          >
+            <Box sx={{ flex: 1 }} />
 
-                    <Chip
-                      label={room.roomCategory}
-                      size="small"
-                      sx={{ my: 1 }}
+            <Pagination
+              count={Math.ceil(rooms.length / itemsPerPage)}
+              page={page}
+              onChange={(_, value) => setPage(value)}
+              sx={{
+                '& .MuiPaginationItem-root': {
+                  color: '#222',
+                  backgroundColor: '#fff',
+                  border: '1px solid #ccc',
+                },
+                '& .Mui-selected': {
+                  backgroundColor: '#fff',
+                  color: '#1976d2',
+                  border: '2px solid #1976d2',
+                },
+              }}
+            />
+
+            <Box sx={{ flex: 1, display: "flex", justifyContent: "flex-end" }}>
+              <Button
+                variant="contained"
+                startIcon={<AddIcon />}
+                onClick={() => setAddModalOpen(true)}
+              >
+                Add Room
+              </Button>
+            </Box>
+          </Box>
+
+
+            {loading ? (
+              <Typography>Loading…</Typography>
+            ) : (
+              <Box sx={{ width: '100%' }}>
+                <Grid container spacing={3} justifyContent="center" alignItems="flex-start">
+                  {rooms
+                    .slice((page - 1) * itemsPerPage, page * itemsPerPage)
+                    .map((room) => (
+                      <Grid item xs={12} sm={6} md={4} lg={2.4} key={room.id || room._id}>
+                        <Card
+                          sx={{
+                            borderRadius: 3,
+                            overflow: "hidden",
+                            cursor: "pointer",
+                            transition: "0.2s",
+                            "&:hover": { transform: "translateY(-4px)" },
+                          }}
+                          onClick={() => handleOpenModal(room)}
+                        >
+                          <Box
+                            component="img"
+                            src={
+                              room.images?.length
+                                ? room.images[0]
+                                : "https://picsum.photos/400/250"
+                            }
+                            alt={`Room ${room.roomNumber}`}
+                            sx={{
+                              width: "100%",
+                              height: 160,
+                              objectFit: "cover",
+                            }}
+                          />
+
+                          <CardContent>
+                            <Stack direction="row" spacing={1} alignItems="center">
+                              <BedIcon fontSize="small" />
+                              <Typography fontWeight={700}>
+                                Room #{room.roomNumber}
+                              </Typography>
+                            </Stack>
+
+                            <Chip
+                              label={room.roomCategory}
+                              size="small"
+                              sx={{ my: 1 }}
+                            />
+
+                            <Stack
+                              direction="row"
+                              justifyContent="space-between"
+                              alignItems="center"
+                            >
+                              <Chip
+                                icon={
+                                  room.booked ? (
+                                    <CancelIcon />
+                                  ) : (
+                                    <CheckCircleIcon />
+                                  )
+                                }
+                                label={room.booked ? "Booked" : "Available"}
+                                color={room.booked ? "error" : "success"}
+                                size="small"
+                              />
+
+                              <Typography fontWeight={700}>
+                                ${room.price}
+                              </Typography>
+                            </Stack>
+                          </CardContent>
+
+                          <CardActions sx={{ justifyContent: "flex-end" }}>
+                            <Tooltip title="Delete Room">
+                              <IconButton
+                                color="error"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteRoom(room.id || room._id);
+                                }}
+                              >
+                                <DeleteIcon />
+                              </IconButton>
+                            </Tooltip>
+
+                            <Tooltip title="View Details">
+                              <IconButton
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleOpenModal(room);
+                                }}
+                              >
+                                <InfoOutlinedIcon />
+                              </IconButton>
+                            </Tooltip>
+                          </CardActions>
+                        </Card>
+                      </Grid>
+                    ))}
+                </Grid>
+                {/* Pagination below grid */}
+                {rooms.length > itemsPerPage && (
+                  <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+                    <Pagination
+                      count={Math.ceil(rooms.length / itemsPerPage)}
+                      page={page}
+                      onChange={(_, value) => setPage(value)}
+                      sx={{
+                        '& .MuiPaginationItem-root': {
+                          color: '#222',
+                          backgroundColor: '#fff',
+                          border: '1px solid #ccc',
+                        },
+                        '& .Mui-selected': {
+                          backgroundColor: '#fff',
+                          color: '#1976d2',
+                          border: '2px solid #1976d2',
+                        },
+                        '& .MuiPaginationItem-root:hover': {
+                          backgroundColor: '#f5f5f5',
+                        },
+                      }}
+                      color="standard"
                     />
-
-                    <Stack
-                      direction="row"
-                      justifyContent="space-between"
-                      alignItems="center"
-                    >
-                      <Chip
-                        icon={
-                          room.booked ? (
-                            <CancelIcon />
-                          ) : (
-                            <CheckCircleIcon />
-                          )
-                        }
-                        label={room.booked ? "Booked" : "Available"}
-                        color={room.booked ? "error" : "success"}
-                        size="small"
-                      />
-
-                      <Typography fontWeight={700}>
-                        ${room.price}
-                      </Typography>
-                    </Stack>
-                  </CardContent>
-
-                  <CardActions sx={{ justifyContent: "flex-end" }}>
-                    <Tooltip title="Delete Room">
-                      <IconButton
-                        color="error"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteRoom(room.id || room._id);
-                        }}
-                      >
-                        <DeleteIcon />
-                      </IconButton>
-                    </Tooltip>
-
-                    <Tooltip title="View Details">
-                      <IconButton
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleOpenModal(room);
-                        }}
-                      >
-                        <InfoOutlinedIcon />
-                      </IconButton>
-                    </Tooltip>
-                  </CardActions>
-                </Card>
-              </Grid>
-            ))}
-          </Grid>
-        )}
+                  </Box>
+                )}
+              </Box>
+            )}
+          </Box>
+        </Box>
       </Box>
 
       {/* ADD ROOM MODAL */}
@@ -502,7 +616,6 @@ export default function Rooms() {
                     label="Price"
                     fullWidth
                     value={editDraft.price}
-                    InputLabelProps={{ sx: { fontWeight: '700 !important' } }}
                     onChange={e =>
                       setEditDraft(d => ({ ...d, price: e.target.value }))
                     }
@@ -511,7 +624,6 @@ export default function Rooms() {
                     label="Max Guests"
                     fullWidth
                     value={editDraft.maxGuests}
-                    InputLabelProps={{ sx: { fontWeight: '700 !important' } }}
                     onChange={e =>
                       setEditDraft(d => ({ ...d, maxGuests: e.target.value }))
                     }
@@ -528,7 +640,6 @@ export default function Rooms() {
                             fullWidth
                             margin="dense"
                             value={amenity}
-                            InputLabelProps={{ sx: { fontWeight: '700 !important' } }}
                             onChange={e => {
                               setEditDraft(d => {
                                 const newAmenities = [...d.amenities];
@@ -574,7 +685,6 @@ export default function Rooms() {
                     multiline
                     rows={3}
                     value={editDraft.description}
-                    InputLabelProps={{ sx: { fontWeight: '700 !important' } }}
                     onChange={e =>
                       setEditDraft(d => ({ ...d, description: e.target.value }))
                     }
@@ -594,7 +704,7 @@ export default function Rooms() {
                       transform: 'translateY(-50%)',
                       bgcolor: 'background.paper',
                       px: 0.5,
-                      fontWeight: '700 !important',
+                      fontWeight: 700,
                       letterSpacing: 1,
                       zIndex: 1,
                     }}
@@ -616,7 +726,7 @@ export default function Rooms() {
                       transform: 'translateY(-50%)',
                       bgcolor: 'background.paper',
                       px: 0.5,
-                      fontWeight: '700 !important',
+                      fontWeight: 700,
                       letterSpacing: 1,
                       zIndex: 1,
                     }}
@@ -638,7 +748,7 @@ export default function Rooms() {
                       transform: 'translateY(-50%)',
                       bgcolor: 'background.paper',
                       px: 0.5,
-                      fontWeight: '700 !important',
+                      fontWeight: 700,
                       letterSpacing: 1,
                       zIndex: 1,
                     }}
@@ -660,7 +770,7 @@ export default function Rooms() {
                       transform: 'translateY(-50%)',
                       bgcolor: 'background.paper',
                       px: 0.5,
-                      fontWeight: '700 !important',
+                      fontWeight: 700,
                       letterSpacing: 1,
                       zIndex: 1,
                     }}
@@ -678,28 +788,99 @@ export default function Rooms() {
 
         {/* IMAGES */}
         <Grid item xs={12} md={7}>
-          {selectedRoom.images?.length ? (
-            <Grid container spacing={2}>
-              {selectedRoom.images.map((img, i) => (
-                <Grid item xs={6} key={i}>
-                  <Box
-                    component="img"
-                    src={img}
-                    alt={`Room image ${i}`}
-                    sx={{
-                      width: "100%",
-                      height: 160,
-                      objectFit: "cover",
-                      borderRadius: 2,
+          {/* Show preview of new uploads, and always show images from backend */}
+          {editMode && editDraft ? (
+            <>
+              {(selectedRoom.imagesOverride?.length > 0 || selectedRoom.images?.length > 0 || editImages.length > 0) ? (
+                <Grid container spacing={2}>
+                  {/* Existing images from backend */}
+                  {(selectedRoom.imagesOverride || selectedRoom.images || []).map((img, i) => (
+                    <Grid item xs={6} key={i}>
+                      <Box
+                        component="img"
+                        src={img}
+                        alt={`Room image ${i}`}
+                        sx={{
+                          width: "100%",
+                          height: 160,
+                          objectFit: "cover",
+                          borderRadius: 2,
+                        }}
+                      />
+                    </Grid>
+                  ))}
+                  {/* New uploads preview */}
+                  {editImages && editImages.map((file, idx) => (
+                    <Grid item xs={6} key={`new-${idx}`}>
+                      <Box
+                        component="img"
+                        src={URL.createObjectURL(file)}
+                        alt={`preview-${idx}`}
+                        sx={{
+                          width: "100%",
+                          height: 160,
+                          objectFit: "cover",
+                          borderRadius: 2,
+                          border: '2px dashed #1976d2',
+                        }}
+                      />
+                    </Grid>
+                  ))}
+                </Grid>
+              ) : (
+                <Typography color="text.secondary">
+                  No images available
+                </Typography>
+              )}
+              {/* Upload button at the bottom */}
+              <Box sx={{ mt: 2 }}>
+                <Button
+                  variant="outlined"
+                  component="label"
+                  startIcon={<PhotoCamera />}
+                  fullWidth
+                  sx={{ mb: 1 }}
+                >
+                  Upload Images
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    hidden
+                    onChange={e => {
+                      if (e.target.files) {
+                        setEditImages(Array.from(e.target.files));
+                      }
                     }}
                   />
-                </Grid>
-              ))}
-            </Grid>
+                </Button>
+              </Box>
+            </>
           ) : (
-            <Typography color="text.secondary">
-              No images available
-            </Typography>
+            (selectedRoom.imagesOverride?.length > 0 || selectedRoom.images?.length > 0) ? (
+              <Grid container spacing={2}>
+                {(selectedRoom.imagesOverride || selectedRoom.images || []).map((img, i) => (
+                  <Grid item xs={6} key={i}>
+                    <Box
+                      component="img"
+                      src={img}
+                      alt={`Room image ${i}`}
+                      sx={{
+                        width: "100%",
+                        height: 160,
+                        objectFit: "cover",
+                        borderRadius: 2,
+                      }}
+                    />
+                  </Grid>
+                ))}
+              </Grid>
+            ) : (
+              <Typography color="text.secondary">
+                No images available
+              </Typography>
+            )
           )}
         </Grid>
       </Grid>

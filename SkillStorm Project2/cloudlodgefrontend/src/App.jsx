@@ -3,6 +3,7 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login/Login";
 import Rooms from "./pages/Rooms/Rooms";
+import Profile from "./pages/Profile/Profile";
 
 function App() {
   return (
@@ -19,7 +20,9 @@ function App() {
 
         {/* Rooms route */}
         <Route path="/rooms" element={<Rooms />} />
-
+        {/* Profile route */}
+        <Route path="/profile" element={<Profile />} />
+        
         {/* Catch-all 404 */}
         <Route path="*" element={<div>Page not found</div>} />
       </Routes>

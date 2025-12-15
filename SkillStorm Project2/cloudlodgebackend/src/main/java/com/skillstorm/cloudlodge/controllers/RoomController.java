@@ -1,7 +1,10 @@
 package com.skillstorm.cloudlodge.controllers;
 
+import java.io.IOException;
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -11,20 +14,24 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.skillstorm.cloudlodge.models.ResolvedRoom;
 import com.skillstorm.cloudlodge.models.Room;
 import com.skillstorm.cloudlodge.services.RoomService;
+import com.skillstorm.cloudlodge.services.S3Service;
 
 
 @RestController
 @RequestMapping("/rooms")
 public class RoomController {
     private final RoomService roomService;
+    private final S3Service s3Service;
 
-    public RoomController(RoomService roomService) {
+    public RoomController(RoomService roomService, S3Service s3Service) {
         this.roomService = roomService;
+        this.s3Service = s3Service;
     }
 
     // GET all resolved rooms
@@ -42,7 +49,7 @@ public class RoomController {
     }
 
     // GET room by ID
-    @GetMapping("/{id}")
+    @GetMapping("/{id:[a-fA-F0-9]{24}}")
     public ResponseEntity<Room> getRoomById(@PathVariable String id) {
         try {
             Room room = roomService.findById(id)
@@ -76,15 +83,30 @@ public class RoomController {
         }
     }
 
-    //UPDATE room by ID
-    @PutMapping("/update/{id}")
-    public ResponseEntity<Room> updateRoom(@PathVariable String id, @RequestBody Room room) {
+    // UPDATE room by ID
+    @PutMapping(value = "/update/{id}", consumes = {"multipart/form-data"})
+    public ResponseEntity<Room> updateRoomWithPhotos(
+            @PathVariable String id,
+            @org.springframework.web.bind.annotation.RequestPart("room") Room room,
+            @org.springframework.web.bind.annotation.RequestPart(value = "images", required = false) List<org.springframework.web.multipart.MultipartFile> images
+    ) {
         try {
             room.setId(id);
+
+            // Handle image upload/override
+            if (images != null && !images.isEmpty()) {
+                List<String> imageUrls = new java.util.ArrayList<>();
+                for (org.springframework.web.multipart.MultipartFile file : images) {
+                    String url = s3Service.uploadFile(file, "images");
+                    imageUrls.add(url);
+                }
+                room.setImagesOverride(imageUrls);
+            }
+            // If images is null, do not change imagesOverride (keep existing or clear if needed)
+
             Room updatedRoom = roomService.save(room);
             return new ResponseEntity<>(updatedRoom, HttpStatus.OK);
-        }
-        catch (Exception e) {
+        } catch (IOException e) {
             return ResponseEntity.internalServerError()
                     .header("Error", "Sorry! We have an internal Error! Please check back later.")
                     .build();
@@ -103,6 +125,21 @@ public class RoomController {
                     .header("Error", "Sorry! We have an internal Error! Please check back later.")
                     .build();
         }
+    }
+
+    @GetMapping("/search")
+    public Page<ResolvedRoom> searchRooms(
+        @RequestParam(required = false) Integer roomNumber,
+        @RequestParam(required = false) Boolean isActive,
+        @RequestParam(required = false) String roomCategory,
+        Pageable pageable
+    ) {
+        return roomService.searchResolvedRooms(
+            roomNumber,
+            isActive,
+            roomCategory,
+            pageable
+        );
     }
 
 }
