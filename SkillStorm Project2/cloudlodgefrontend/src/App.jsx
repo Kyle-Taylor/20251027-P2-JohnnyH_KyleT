@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import Login from "./pages/Login/Login";
 import Rooms from "./pages/Rooms/Rooms";
 import Profile from "./pages/Profile/Profile";
+import RoomTypes from "./pages/RoomTypes/RoomTypes";
 
 function App() {
   return (
@@ -20,6 +21,10 @@ function App() {
 
         {/* Rooms route */}
         <Route path="/rooms" element={<Rooms />} />
+
+        {/* Room Types route */}
+        <Route path="/roomtypes" element={<RoomTypes />} />
+        
         {/* Profile route */}
         <Route path="/profile" element={<Profile />} />
         

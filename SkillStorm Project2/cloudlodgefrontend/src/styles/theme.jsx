@@ -3,6 +3,7 @@ import { createTheme } from "@mui/material/styles";
 // Create a custom MUI theme
 const theme = createTheme({
   palette: {
+    mode: 'dark',
     primary: {
       main: "#1976d2", // blue
     },
@@ -10,7 +11,8 @@ const theme = createTheme({
       main: "#f50057", // pink
     },
     background: {
-      default: "#f5f5f5", // light gray
+      default: "#181a1b", // dark background
+      paper: "#23272a", // dark dialog background
     },
   },
   typography: {

@@ -43,8 +43,8 @@ import BedIcon from "@mui/icons-material/Bed";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
-import RoomsHeader from "./RoomsHeader";
-import RoomsSideNav from "./RoomsSideNav";
+import Header from "../../assets/components/Header";
+import SideNav from "../../assets/components/SideNav";
 import CloseIcon from '@mui/icons-material/Close';
 import PhotoCamera from "@mui/icons-material/PhotoCamera";
 
@@ -164,15 +164,25 @@ export default function Rooms() {
     }
   }
 
+  // Delete confirmation modal state
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [roomToDelete, setRoomToDelete] = useState(null);
+
   async function handleDeleteRoom(id) {
-    if (!window.confirm("Delete this room?")) return;
     try {
       const res = await fetch(`${API_URL}/delete/${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Failed to delete room");
+      setModalOpen(false); // Always close the view modal after delete
+      if (selectedRoom && (selectedRoom.id === id || selectedRoom._id === id)) {
+        setEditMode(false);
+        setSelectedRoom(null);
+      }
       fetchRooms();
     } catch (err) {
       setError(err.message);
     }
+    setDeleteModalOpen(false);
+    setRoomToDelete(null);
   }
 
   function handleOpenModal(room) {
@@ -254,9 +264,51 @@ export default function Rooms() {
     }, 0);
   }
 
+   function resizeTo1500x1000(file) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = 1500;
+        canvas.height = 1000;
+
+        const ctx = canvas.getContext("2d");
+
+        // center-crop to avoid stretching
+        const srcRatio = img.width / img.height;
+        const targetRatio = 1500 / 1000;
+
+        let sx, sy, sw, sh;
+
+        if (srcRatio > targetRatio) {
+          sh = img.height;
+          sw = sh * targetRatio;
+          sx = (img.width - sw) / 2;
+          sy = 0;
+        } else {
+          sw = img.width;
+          sh = sw / targetRatio;
+          sx = 0;
+          sy = (img.height - sh) / 2;
+        }
+
+        ctx.drawImage(img, sx, sy, sw, sh, 0, 0, 1500, 1000);
+
+        canvas.toBlob(
+          blob => blob ? resolve(blob) : reject(),
+          "image/jpeg",
+          0.9
+        );
+      };
+      img.onerror = reject;
+      img.src = URL.createObjectURL(file);
+    });
+  }
+
+
   return (
   <Box>
-      <RoomsHeader 
+      <Header 
       setRooms={setRooms}
       setLoading={setLoading}
       setError={setError}
@@ -277,7 +329,7 @@ export default function Rooms() {
           }}
         >
           {/* Left side nav bar */}
-          <RoomsSideNav />
+          <SideNav />
 
           {/* Center stage for grid */}
           <Box
@@ -311,14 +363,18 @@ export default function Rooms() {
               onChange={(_, value) => setPage(value)}
               sx={{
                 '& .MuiPaginationItem-root': {
-                  color: '#222',
-                  backgroundColor: '#fff',
-                  border: '1px solid #ccc',
+                  color: '#fff',
+                  backgroundColor: '#232323',
+                  border: '1px solid #444',
+                  transition: 'background 0.2s',
                 },
                 '& .Mui-selected': {
-                  backgroundColor: '#fff',
-                  color: '#1976d2',
+                  backgroundColor: '#1976d2',
+                  color: '#fff',
                   border: '2px solid #1976d2',
+                },
+                '& .MuiPaginationItem-root:hover': {
+                  backgroundColor: '#333',
                 },
               }}
             />
@@ -350,6 +406,7 @@ export default function Rooms() {
                             overflow: "hidden",
                             cursor: "pointer",
                             transition: "0.2s",
+                            bgcolor: "#383838",
                             "&:hover": { transform: "translateY(-4px)" },
                           }}
                           onClick={() => handleOpenModal(room)}
@@ -401,7 +458,7 @@ export default function Rooms() {
                                 size="small"
                               />
 
-                              <Typography fontWeight={700}>
+                              <Typography>
                                 ${room.price}
                               </Typography>
                             </Stack>
@@ -413,12 +470,29 @@ export default function Rooms() {
                                 color="error"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  handleDeleteRoom(room.id || room._id);
+                                  setRoomToDelete(room.id || room._id);
+                                  setDeleteModalOpen(true);
                                 }}
                               >
                                 <DeleteIcon />
                               </IconButton>
                             </Tooltip>
+                            {/* DELETE CONFIRMATION MODAL */}
+                            <Dialog
+                              open={deleteModalOpen}
+                              onClose={() => setDeleteModalOpen(false)}
+                              hideBackdrop
+                              onClick={e => e.stopPropagation()}
+                            >
+                              <DialogTitle>Delete this room?</DialogTitle>
+                              <DialogContent>
+                                <Typography>Are you sure you want to delete this room? This action cannot be undone.</Typography>
+                              </DialogContent>
+                              <DialogActions>
+                                <Button onClick={() => setDeleteModalOpen(false)} color="inherit">Cancel</Button>
+                                <Button onClick={() => handleDeleteRoom(roomToDelete)} color="error" variant="contained">Delete</Button>
+                              </DialogActions>
+                            </Dialog>
 
                             <Tooltip title="View Details">
                               <IconButton
@@ -444,20 +518,20 @@ export default function Rooms() {
                       onChange={(_, value) => setPage(value)}
                       sx={{
                         '& .MuiPaginationItem-root': {
-                          color: '#222',
-                          backgroundColor: '#fff',
-                          border: '1px solid #ccc',
+                          color: '#fff',
+                          backgroundColor: '#232323',
+                          border: '1px solid #444',
+                          transition: 'background 0.2s',
                         },
                         '& .Mui-selected': {
-                          backgroundColor: '#fff',
-                          color: '#1976d2',
+                          backgroundColor: '#1976d2',
+                          color: '#fff',
                           border: '2px solid #1976d2',
                         },
                         '& .MuiPaginationItem-root:hover': {
-                          backgroundColor: '#f5f5f5',
+                          backgroundColor: '#333',
                         },
                       }}
-                      color="standard"
                     />
                   </Box>
                 )}
@@ -469,13 +543,13 @@ export default function Rooms() {
 
       {/* ADD ROOM MODAL */}
       <Dialog open={addModalOpen} onClose={() => { setAddModalOpen(false); resetAddForm(); }}>
-        <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pr: 1 }}>
+        <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pr: 1, bgcolor: 'background.default', color: 'text.primary' }}>
           Add Room
           <IconButton size="small" color="error" onClick={() => { setAddModalOpen(false); resetAddForm(); }}>
             <CloseIcon fontSize="small" />
           </IconButton>
         </DialogTitle>
-        <DialogContent>
+        <DialogContent sx={{ bgcolor: 'background.default', color: 'text.primary' }}>
           <Box component="form" onSubmit={handleAddRoom}>
             <TextField
               label="Room Number"
@@ -559,7 +633,7 @@ export default function Rooms() {
           </Box>
         </DialogContent>
 
-        <DialogActions>
+        <DialogActions sx={{ bgcolor: 'background.default', color: 'text.primary' }}>
           <Button onClick={() => { setAddModalOpen(false); resetAddForm(); }}>Cancel</Button>
           <Button variant="contained" onClick={handleAddRoom}>
             Add
@@ -585,6 +659,8 @@ export default function Rooms() {
       pb: 1.5,
       borderBottom: "1px solid",
       borderColor: "divider",
+      bgcolor: 'background.default',
+      color: 'text.primary',
     }}
   >
     <Typography variant="h6" fontWeight={700} component="span">
@@ -603,7 +679,7 @@ export default function Rooms() {
     </IconButton>
   </DialogTitle>
 
-  <DialogContent dividers sx={{ pt: 3, pb: 3 }}>
+  <DialogContent dividers sx={{ pt: 3, pb: 3, bgcolor: 'background.default', color: 'text.primary' }}>
     {selectedRoom && (
       <Grid container spacing={4}>
         {/*DETAILS */}
@@ -693,7 +769,7 @@ export default function Rooms() {
               )
             ) : (
               <Stack spacing={2}>
-                <Paper variant="outlined" sx={{ p: 2, pt: 3, bgcolor: 'grey.50', position: 'relative', overflow: 'visible' }}>
+                <Paper variant="outlined" sx={{ p: 2, pt: 3, bgcolor: 'background.paper', color: 'text.primary', position: 'relative', overflow: 'visible' }}>
                   <Typography
                     variant="caption"
                     color="text.secondary"
@@ -715,7 +791,7 @@ export default function Rooms() {
                     ${selectedRoom.price}
                   </Typography>
                 </Paper>
-                <Paper variant="outlined" sx={{ p: 2, pt: 3, bgcolor: 'grey.50', position: 'relative', overflow: 'visible' }}>
+                <Paper variant="outlined" sx={{ p: 2, pt: 3, bgcolor: 'background.paper', color: 'text.primary', position: 'relative', overflow: 'visible' }}>
                   <Typography
                     variant="caption"
                     color="text.secondary"
@@ -737,7 +813,7 @@ export default function Rooms() {
                     {selectedRoom.maxGuests}
                   </Typography>
                 </Paper>
-                <Paper variant="outlined" sx={{ p: 2, pt: 3, bgcolor: 'grey.50', position: 'relative', overflow: 'visible' }}>
+                <Paper variant="outlined" sx={{ p: 2, pt: 3, bgcolor: 'background.paper', color: 'text.primary', position: 'relative', overflow: 'visible' }}>
                   <Typography
                     variant="caption"
                     color="text.secondary"
@@ -759,7 +835,7 @@ export default function Rooms() {
                     {selectedRoom.amenities?.join(", ") || "None"}
                   </Typography>
                 </Paper>
-                <Paper variant="outlined" sx={{ p: 2, pt: 3, bgcolor: 'grey.50', position: 'relative', overflow: 'visible' }}>
+                <Paper variant="outlined" sx={{ p: 2, pt: 3, bgcolor: 'background.paper', color: 'text.primary', position: 'relative', overflow: 'visible' }}>
                   <Typography
                     variant="caption"
                     color="text.secondary"
@@ -848,9 +924,13 @@ export default function Rooms() {
                     accept="image/*"
                     multiple
                     hidden
-                    onChange={e => {
+                    onChange={async e => {
                       if (e.target.files) {
-                        setEditImages(Array.from(e.target.files));
+                        const images = Array.from(e.target.files);
+                        const resizedImage = await Promise.all(
+                          images.map(file => resizeTo1500x1000(file))
+                        );
+                        setEditImages(resizedImage);
                       }
                     }}
                   />
@@ -895,16 +975,18 @@ export default function Rooms() {
       borderColor: "divider",
       display: "flex",
       justifyContent: "space-between",
+      bgcolor: 'background.default',
+      color: 'text.primary',
     }}
   >
     <Button
       color="error"
       variant="contained"
       onClick={() => {
-        if (selectedRoom)
-          handleDeleteRoom(selectedRoom.id || selectedRoom._id);
-        setModalOpen(false);
-        setEditMode(false);
+        if (selectedRoom) {
+          setRoomToDelete(selectedRoom.id || selectedRoom._id);
+          setDeleteModalOpen(true);
+        }
       }}
     >
       Delete

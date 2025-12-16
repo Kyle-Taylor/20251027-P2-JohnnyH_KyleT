@@ -21,7 +21,7 @@ import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 const API_URL = "http://localhost:8080/rooms";
 const DEBOUNCE_MS = 300;
 
-export default function RoomsHeader({ setRooms, setLoading, setError }) {
+export default function Header({ setRooms, setLoading, setError }) {
   const [query, setQuery] = useState("");
   const timeoutRef = useRef(null);
 
