@@ -15,7 +15,9 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.skillstorm.cloudlodge.models.ResolvedRoom;
 import com.skillstorm.cloudlodge.models.Room;
@@ -85,10 +87,10 @@ public class RoomController {
 
     // UPDATE room by ID
     @PutMapping(value = "/update/{id}", consumes = {"multipart/form-data"})
-    public ResponseEntity<Room> updateRoomWithPhotos(
+    public ResponseEntity<Room> updateRoom(
             @PathVariable String id,
-            @org.springframework.web.bind.annotation.RequestPart("room") Room room,
-            @org.springframework.web.bind.annotation.RequestPart(value = "images", required = false) List<org.springframework.web.multipart.MultipartFile> images
+            @RequestPart("room") Room room,
+            @RequestPart(value = "images", required = false) List<MultipartFile> images
     ) {
         try {
             room.setId(id);
@@ -101,6 +103,7 @@ public class RoomController {
                     imageUrls.add(url);
                 }
                 room.setImagesOverride(imageUrls);
+                return new ResponseEntity<>(room, HttpStatus.OK);
             }
             // If images is null, do not change imagesOverride (keep existing or clear if needed)
 
