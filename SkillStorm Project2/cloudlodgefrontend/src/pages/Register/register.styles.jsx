@@ -1,36 +1,34 @@
-// login.styles.jsx
 import { styled } from '@mui/material/styles';
 import { Box, Paper, Typography } from '@mui/material';
 
-// Main container: two columns, responsive
-export const LoginContainer = styled(Box)(({ theme }) => ({
+// Main container: two columns
+export const RegisterContainer = styled(Box)(({ theme }) => ({
   display: 'flex',
   flexDirection: 'row',
   width: '100vw',
   height: '100vh',
   justifyContent: 'center',
-  alignItems: 'center',
+  alignItems: 'stretch',
   gap: '2rem',
-  padding: '2rem',
   boxSizing: 'border-box',
   backgroundColor: '#1976d2',
 
   [theme.breakpoints.down('md')]: {
-    flexDirection: 'column', // stack on small screens
+    flexDirection: 'column',
     height: 'auto',
     padding: '1rem',
   },
 }));
 
 // LEFT PANEL
-export const LoginLeft = styled(Box)(({ theme }) => ({
+export const RegisterLeft = styled(Box)(({ theme }) => ({
   flex: 1,
+  height: '100%',
   display: 'flex',
   flexDirection: 'column',
   justifyContent: 'center',
   alignItems: 'flex-start',
   padding: '2rem',
-  minHeight: '400px',
   color: '#fff',
 
   [theme.breakpoints.down('md')]: {
@@ -40,24 +38,25 @@ export const LoginLeft = styled(Box)(({ theme }) => ({
   },
 }));
 
-export const LoginTitle = styled(Typography)({
+export const RegisterTitle = styled(Typography)({
   fontSize: '3rem',
   fontWeight: 700,
   marginBottom: '1rem',
 });
 
-export const LoginSubtitle = styled(Typography)({
+export const RegisterSubtitle = styled(Typography)({
   fontSize: '1.2rem',
   fontWeight: 400,
 });
 
 // RIGHT PANEL
-export const LoginRight = styled(Box)(({ theme }) => ({
+export const RegisterRight = styled(Box)(({ theme }) => ({
   flex: 1,
+  height: '100%',
   display: 'flex',
   justifyContent: 'center',
   alignItems: 'center',
-  minHeight: '400px',
+  backgroundColor: '#1976d2',
 
   [theme.breakpoints.down('md')]: {
     width: '100%',
@@ -66,7 +65,7 @@ export const LoginRight = styled(Box)(({ theme }) => ({
   },
 }));
 
-export const LoginCard = styled(Paper)({
+export const RegisterCard = styled(Paper)({
   width: '100%',
   maxWidth: '400px',
   padding: '2rem',
