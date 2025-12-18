@@ -1,115 +1,149 @@
+// login.jsx
 import React, { useState } from "react";
-import { Box, Button, TextField } from "@mui/material";
+import { TextField, Button, Box } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 
-// Import styled components
 import {
   LoginContainer,
   LoginLeft,
   LoginTitle,
   LoginSubtitle,
   LoginRight,
+  LoginCard,
   FormTitle,
+  FormWrapper,
   SmallLink,
   SmallText
 } from "./login.styles";
 
 const Login = () => {
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  // TEMP placeholder login handler
-  const handleLogin = (e) => {
+  const navigate = useNavigate();
+
+  const handleLogin = async (e) => {
     e.preventDefault();
-    console.log("Logging in with:", username, password);
-    // Later this will call your Auth API
+    setLoading(true);
+    setError("");
+
+    try {
+      const response = await fetch("http://localhost:8080/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.message || "Login failed");
+        return;
+      }
+
+      console.log("Login successful:", data);
+      navigate("/dashboard");
+
+    } catch (err) {
+      console.error(err);
+      setError("Error connecting to backend.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <LoginContainer>
-      {/* LEFT PANEL (Branding) */}
+      {/* LEFT PANEL */}
       <LoginLeft>
         <LoginTitle>CloudLodge</LoginTitle>
         <LoginSubtitle>Welcome back. Sign in to continue.</LoginSubtitle>
       </LoginLeft>
 
-      {/* RIGHT PANEL (Form) */}
-      <LoginRight elevation={6}>
-        <FormTitle>Sign In</FormTitle>
+      {/* RIGHT PANEL */}
+      <LoginRight>
+        <LoginCard elevation={6}>
+          <FormTitle>Sign In</FormTitle>
 
-        {/* FORM */}
-        <Box
-          component="form"
-          onSubmit={handleLogin}
-          sx={{ width: "100%", mt: 2 }}
-        >
-          <TextField
-            label="Email or Username"
-            variant="outlined"
-            fullWidth
-            required
-            margin="normal"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-          />
+          <FormWrapper>
+            {/* FORM */}
+            <Box component="form" onSubmit={handleLogin}>
+              <TextField
+                label="Email"
+                variant="outlined"
+                fullWidth
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                sx={{ mb: 2 }}
+              />
+              <TextField
+                label="Password"
+                variant="outlined"
+                type="password"
+                fullWidth
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                sx={{ mb: 2 }}
+              />
 
-          <TextField
-            label="Password"
-            variant="outlined"
-            type="password"
-            fullWidth
-            required
-            margin="normal"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
+              {error && (
+                <Box sx={{ color: "error.main", textAlign: "center", mb: 2 }}>
+                  {error}
+                </Box>
+              )}
 
-          <Button
-            type="submit"
-            variant="contained"
-            fullWidth
-            sx={{ mt: 3, py: 1.2, fontSize: "1rem" }}
-          >
-            Login
-          </Button>
-        </Box>
+              <Button
+                type="submit"
+                variant="contained"
+                fullWidth
+                disabled={loading}
+              >
+                {loading ? "Signing in..." : "Login"}
+              </Button>
+            </Box>
 
-        {/* FORGOT PASSWORD & SIGN UP */}
-        <Box mt={3} textAlign="center">
-          <SmallLink href="#">Forgot password?</SmallLink>
-          <br /><br />
-          <SmallText>Don’t have an account?</SmallText>{" "}
-          <SmallLink href="#">Sign up</SmallLink>
-        </Box>
+            {/* Forgot password / signup */}
+            <Box textAlign="center" mt={3}>
+              <SmallLink href="#">Forgot password?</SmallLink>
+              <br /><br />
+              <SmallText>Don’t have an account?</SmallText>{" "}
+              {/* Updated sign up link */}
+              <SmallLink
+                component="button"
+                onClick={() => navigate("/register")}
+                sx={{ cursor: "pointer", border: "none", background: "none", padding: 0 }}
+              >
+                Sign up
+              </SmallLink>
+            </Box>
 
-        {/* GOOGLE OAUTH */}
-        <Button
-          variant="outlined"
-          fullWidth
-          sx={{ mt: 4, py: 1.2 }}
-          onClick={() => {
-            window.location.href = "/api/auth/oauth2/google"; 
-          }}
-        >
-          Continue with Google
-        </Button>
-
-        {/* Okta Button Placeholder */}
-        <Button
-          variant="outlined"
-          color="primary"
-          fullWidth
-          sx={{
-            textTransform: "none",
-            fontWeight: 600,
-            py: 1.2,
-            borderRadius: 1.5,
-          }}
-          onClick={() => console.log("Okta login clicked (placeholder)")}
-        >
-          Sign in with Okta
-        </Button>
+            {/* Google / Okta buttons */}
+            <Button
+              variant="outlined"
+              fullWidth
+              sx={{ mt: 4 }}
+              onClick={() =>
+                (window.location.href = "http://localhost:8080/auth/oauth2/google")
+              }
+            >
+              Continue with Google
+            </Button>
+            <Button
+              variant="outlined"
+              color="primary"
+              fullWidth
+              sx={{ mt: 2 }}
+              onClick={() => console.log("Okta login clicked")}
+            >
+              Continue with Okta
+            </Button>
+          </FormWrapper>
+        </LoginCard>
       </LoginRight>
-
     </LoginContainer>
   );
 };

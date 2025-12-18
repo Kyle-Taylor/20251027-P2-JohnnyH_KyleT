@@ -5,6 +5,7 @@ import Login from "./pages/Login/Login";
 import Rooms from "./pages/Rooms/Rooms";
 import Profile from "./pages/Profile/Profile";
 import RoomTypes from "./pages/RoomTypes/RoomTypes";
+import Register from "./pages/Register/Register";
 
 function App() {
   return (
@@ -15,6 +16,9 @@ function App() {
 
         {/* Login route */}
         <Route path="/login" element={<Login />} />
+
+        {/* Register route */}
+        <Route path="/register" element={<Register />} />
 
         {/* Placeholder dashboard route */}
         <Route path="/dashboard" element={<div>Dashboard (coming soon)</div>} />
