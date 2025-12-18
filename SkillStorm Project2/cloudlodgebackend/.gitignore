@@ -31,3 +31,9 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Local-only Spring Boot configuration (contains OAuth keys) ###
+src/main/resources/application.properties
+
+# Environment variables
+.env
