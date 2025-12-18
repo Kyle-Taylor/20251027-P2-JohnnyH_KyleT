@@ -13,7 +13,7 @@ import {
 import { GlobalStyles } from "@mui/material";
 import { useEffect, useRef, useState } from "react";
 
-import CloudLodgeLogo from "../../assets/images/CloudLodge.png";
+import CloudLodgeLogo from "../assets/images/CloudLodge.png";
 import SearchIcon from "@mui/icons-material/Search";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";

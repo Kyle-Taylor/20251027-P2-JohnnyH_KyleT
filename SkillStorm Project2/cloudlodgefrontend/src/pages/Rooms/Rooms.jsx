@@ -43,8 +43,8 @@ import BedIcon from "@mui/icons-material/Bed";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
-import Header from "../../assets/components/Header";
-import SideNav from "../../assets/components/SideNav";
+import Header from "../../components/Header";
+import SideNav from "../../components/SideNav";
 import CloseIcon from '@mui/icons-material/Close';
 import PhotoCamera from "@mui/icons-material/PhotoCamera";
 
@@ -322,7 +322,7 @@ export default function Rooms() {
           sx={{
             display: "flex",
             width: "100vw",
-            maxWidth: "100vw",
+            maxWidth: "99.2vw",
             minHeight: "100%",
             alignItems: "stretch",
             overflowX: "hidden",
@@ -356,29 +356,6 @@ export default function Rooms() {
             }}
           >
             <Box sx={{ flex: 1 }} />
-
-            <Pagination
-              count={Math.ceil(rooms.length / itemsPerPage)}
-              page={page}
-              onChange={(_, value) => setPage(value)}
-              sx={{
-                '& .MuiPaginationItem-root': {
-                  color: '#fff',
-                  backgroundColor: '#232323',
-                  border: '1px solid #444',
-                  transition: 'background 0.2s',
-                },
-                '& .Mui-selected': {
-                  backgroundColor: '#1976d2',
-                  color: '#fff',
-                  border: '2px solid #1976d2',
-                },
-                '& .MuiPaginationItem-root:hover': {
-                  backgroundColor: '#333',
-                },
-              }}
-            />
-
             <Box sx={{ flex: 1, display: "flex", justifyContent: "flex-end" }}>
               <Button
                 variant="contained"

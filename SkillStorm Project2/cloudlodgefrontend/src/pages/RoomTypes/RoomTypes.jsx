@@ -4,8 +4,8 @@ import { Box, Card, CardContent, CardActions, Typography, Button, Grid, Chip, Di
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
-import Header from "../../assets/components/Header";
-import SideNav from "../../assets/components/SideNav";
+import Header from "../../components/Header";
+import SideNav from "../../components/SideNav";
 import CloseIcon from '@mui/icons-material/Close';
 import BedIcon from "@mui/icons-material/Bed";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
@@ -208,9 +208,14 @@ export default function RoomTypes() {
     }, 0);
   }
 
-
   return (
+      
     <Box>
+      <Header 
+        setRooms={() => {}} 
+        setLoading={setLoading}
+        setError={setError}
+      />
       {/* <Header setLoading={setLoading} setError={setError} /> */}
       <Box sx={{ width: "100%" }}>
         {error && <Chip label={error} color="error" sx={{ mb: 2 }} />}
@@ -218,7 +223,7 @@ export default function RoomTypes() {
           sx={{
             display: "flex",
             width: "100vw",
-            maxWidth: "100vw",
+            maxWidth: "99.2vw",
             minHeight: "100%",
             alignItems: "stretch",
             overflowX: "hidden",

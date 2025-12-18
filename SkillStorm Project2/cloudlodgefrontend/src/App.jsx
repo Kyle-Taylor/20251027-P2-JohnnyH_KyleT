@@ -3,7 +3,6 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login/Login";
 import Rooms from "./pages/Rooms/Rooms";
-import Profile from "./pages/Profile/Profile";
 import RoomTypes from "./pages/RoomTypes/RoomTypes";
 import Register from "./pages/Register/Register";
 
@@ -28,10 +27,7 @@ function App() {
 
         {/* Room Types route */}
         <Route path="/roomtypes" element={<RoomTypes />} />
-        
-        {/* Profile route */}
-        <Route path="/profile" element={<Profile />} />
-        
+              
         {/* Catch-all 404 */}
         <Route path="*" element={<div>Page not found</div>} />
       </Routes>
