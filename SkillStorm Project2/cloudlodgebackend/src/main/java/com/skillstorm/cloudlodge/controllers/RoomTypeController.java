@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
@@ -68,20 +67,31 @@ public class RoomTypeController {
                     .build();
         }
     }
-
-    // CREATE new room type (/roomtypes/create)
-    @PostMapping("/create")
-    public ResponseEntity<RoomType> createRoomType(@RequestBody RoomType roomType) {
+    // CREATE new room type
+    @PostMapping(value = "/create", consumes = "multipart/form-data")
+    public ResponseEntity<RoomType> createRoomType(
+        @RequestPart("roomType") String roomTypeJson,
+        @RequestPart(value = "images", required = false) List<MultipartFile> images
+    ) {
         try {
-            RoomType createdRoomType = roomTypeService.save(roomType);
-            return new ResponseEntity<>(createdRoomType, HttpStatus.CREATED);
+            RoomType roomType = objectMapper.readValue(roomTypeJson, RoomType.class);
+
+            List<String> imageUrls = new ArrayList<>();
+            if (images != null) {
+                for (MultipartFile file : images) {
+                    imageUrls.add(s3Service.uploadFile(file, "images"));
+                }
+            }
+            roomType.setImages(imageUrls);
+
+            RoomType created = roomTypeService.save(roomType);
+            return new ResponseEntity<>(created, HttpStatus.CREATED);
         }
         catch (Exception e) {
-            return ResponseEntity.internalServerError()
-                    .header("Error", "Sorry! We have an internal Error! Please check back later.")
-                    .build();
+            return ResponseEntity.internalServerError().build();
         }
     }
+
 
     //UPDATE room type by ID
     @PutMapping(value = "/update/{id}", consumes = "multipart/form-data")

@@ -60,7 +60,7 @@ public class RoomService {
             images = null;
         }
         Integer maxGuests = room.getMaxGuestsOverride() != null ? room.getMaxGuestsOverride() : (roomType != null ? roomType.getMaxGuests() : null);
-        String roomCategory = roomType != null && roomType.getRoomCategory() != null ? roomType.getRoomCategory().name() : null;
+        String roomCategory = roomType != null && roomType.getRoomCategory() != null ? roomType.getRoomCategory() : null;
 
         // Determine if the room is booked for today
         boolean booked = false;

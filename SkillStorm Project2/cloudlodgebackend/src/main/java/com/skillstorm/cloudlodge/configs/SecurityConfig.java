@@ -48,8 +48,9 @@ public class SecurityConfig {
                     "/users/login",
                     "/oauth2/**",
                     "/dashboard",
-                    "/rooms",
-                    "/roomtypes"
+                    "/rooms/**",
+                    "/roomtypes/**",
+                    "/reservations/**"
                 ).permitAll()
                 .anyRequest().authenticated()
             )

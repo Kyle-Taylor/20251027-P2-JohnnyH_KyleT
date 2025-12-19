@@ -12,14 +12,12 @@ public class RoomType {
     @Id
     private String id;
 
-    private RoomCategory roomCategory;
+    private String roomCategory;
     private Double pricePerNight;
     private Integer maxGuests;
     private List<String> amenities;
     private String description;
     private List<String> images;
-
-    public enum RoomCategory {STANDARD,DELUXE,SUITE,PENTHOUSE}
 
     //default constructor
     public RoomType() {}
@@ -28,8 +26,8 @@ public class RoomType {
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
 
-    public RoomCategory getRoomCategory() { return roomCategory; }
-    public void setRoomCategory(RoomCategory roomCategory) { this.roomCategory = roomCategory; }
+    public String getRoomCategory() { return roomCategory; }
+    public void setRoomCategory(String roomCategory) { this.roomCategory = roomCategory; }
 
     public Double getPricePerNight() { return pricePerNight; }
     public void setPricePerNight(Double pricePerNight) { this.pricePerNight = pricePerNight; }

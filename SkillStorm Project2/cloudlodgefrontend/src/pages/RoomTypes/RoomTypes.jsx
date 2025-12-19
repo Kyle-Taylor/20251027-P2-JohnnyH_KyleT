@@ -77,11 +77,17 @@ export default function RoomTypes() {
       : [];
     
     const formData = new FormData();
-    formData.append("roomCategory", form.roomCategory);
-    formData.append("pricePerNight", parseFloat(form.pricePerNight));
-    formData.append("maxGuests", parseInt(form.maxGuests));
-    formData.append("amenities", JSON.stringify(amenitiesArr));
-    formData.append("description", form.description);
+    formData.append(
+      "roomType",
+      JSON.stringify({
+        roomCategory: form.roomCategory,
+        pricePerNight: parseFloat(form.pricePerNight),
+        maxGuests: parseInt(form.maxGuests),
+        amenities: amenitiesArr,
+        description: form.description,
+        images: []
+      })
+    );
     
     // Append images
     selectedImages.forEach((image) => {

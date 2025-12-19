@@ -1,5 +1,6 @@
 package com.skillstorm.cloudlodge.controllers;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
@@ -14,15 +15,20 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.skillstorm.cloudlodge.models.Reservation;
+import com.skillstorm.cloudlodge.models.RoomAvailability;
 import com.skillstorm.cloudlodge.services.ReservationService;
+import com.skillstorm.cloudlodge.services.RoomAvailabilityService;
 
 @RestController
 @RequestMapping("/reservations")
 public class ReservationController {
 
     private final ReservationService reservationService;
-    public ReservationController(ReservationService reservationService) {
+    private final RoomAvailabilityService roomAvailabilityService;
+
+    public ReservationController(ReservationService reservationService, RoomAvailabilityService roomAvailabilityService) {
         this.reservationService = reservationService;
+        this.roomAvailabilityService = roomAvailabilityService;
     }
 
     // GET all reservations
@@ -109,6 +115,18 @@ public class ReservationController {
     public ResponseEntity<Reservation> createReservation(@RequestBody Reservation reservation) {
         try {
             Reservation saved = reservationService.save(reservation);
+            // Create RoomAvailability entries for each day in the reservation
+            LocalDate start = saved.getCheckInDate();
+            LocalDate end = saved.getCheckOutDate();
+            if (start != null && end != null && start.isBefore(end)) {
+                for (LocalDate date = start; date.isBefore(end); date = date.plusDays(1)) {
+                    RoomAvailability availability = new RoomAvailability();
+                    availability.setRoomUnitId(saved.getRoomUnitId());
+                    availability.setDate(date);
+                    availability.setReservationId(saved.getId());
+                    roomAvailabilityService.save(availability);
+                }
+            }
             return new ResponseEntity<>(saved, HttpStatus.CREATED);
         }
         catch (Exception e) {

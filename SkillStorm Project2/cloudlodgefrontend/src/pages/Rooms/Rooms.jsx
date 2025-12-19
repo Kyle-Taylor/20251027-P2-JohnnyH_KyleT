@@ -641,7 +641,7 @@ export default function Rooms() {
     }}
   >
     <Typography variant="h6" fontWeight={700} component="span">
-      Room Details
+      Room Details {selectedRoom ? `#${selectedRoom.roomNumber}` : ""}
     </Typography>
 
     <IconButton

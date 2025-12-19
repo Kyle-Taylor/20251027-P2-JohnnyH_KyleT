@@ -7,6 +7,7 @@ import {
   ListItemIcon,
   ListItemText,
 } from "@mui/material";
+import EventAvailableIcon from "@mui/icons-material/EventAvailable";
 import HotelIcon from "@mui/icons-material/Hotel";
 import HomeIcon from "@mui/icons-material/Home";
 import MeetingRoomIcon from "@mui/icons-material/MeetingRoom";
@@ -29,6 +30,24 @@ export default function SideNav() {
     >
       <Box sx={{ flexGrow: 1, pt: 3 }}>
         <List>
+
+          <ListItem
+            selected={location.pathname === "/create-reservation"}
+            onClick={() => navigate("/create-reservation")}
+            button
+            sx={{
+              cursor: 'pointer',
+              '&:hover': { bgcolor: '#232b3b' },
+              bgcolor: location.pathname === '/create-reservation' ? '#26324a' : 'inherit',
+              color: location.pathname === '/create-reservation' ? '#90caf9' : 'inherit',
+            }}
+          >
+            <ListItemIcon sx={{ color: "#90caf9" }}>
+              <EventAvailableIcon />
+            </ListItemIcon>
+            <ListItemText primary="Create Reservation" />
+          </ListItem>
+
           <ListItem
             selected={location.pathname === "/rooms"}
             onClick={() => navigate("/rooms")}
