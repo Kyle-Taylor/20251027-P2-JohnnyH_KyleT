@@ -44,7 +44,7 @@ const Login = () => {
       }
 
       console.log("Login successful:", data);
-      navigate("/dashboard");
+      navigate("/profile");
 
     } catch (err) {
       console.error(err);

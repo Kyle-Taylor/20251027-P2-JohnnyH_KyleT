@@ -15,10 +15,10 @@ public class JwtUtils {
 
     @Value("${jwt.secret}")
     private String jwtSecret;
-
+    
     @Value("${jwt.expirationMs}")
     private long jwtExpirationMs;
-
+    
     // Convert string secret to Key object (correct way for HS256)
     private Key getSigningKey() {
         return Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
