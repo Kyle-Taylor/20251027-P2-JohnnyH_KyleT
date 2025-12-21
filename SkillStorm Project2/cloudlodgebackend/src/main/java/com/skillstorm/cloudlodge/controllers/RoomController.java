@@ -116,6 +116,31 @@ public class RoomController {
         }
     }
 
+    // Set room active/inactive
+    @PutMapping("/set-active/{id}")
+    public ResponseEntity<Room> setRoomActiveStatus(
+            @PathVariable String id,
+            @RequestParam Boolean isActive
+    ) {
+        try {
+            Room room = roomService.findById(id)
+                    .orElseThrow(() -> new IllegalArgumentException("Room not found with id " + id));
+            room.setIsActive(isActive);
+            Room updatedRoom = roomService.save(room);
+            return new ResponseEntity<>(updatedRoom, HttpStatus.OK);
+        }
+        catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .header("Error", e.getMessage())
+                    .build();
+        }
+        catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                    .header("Error", "Sorry! We have an internal Error! Please check back later.")
+                    .build();
+        }
+    }
+
     // DELETE room by ID
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<Void> deleteRoom(@PathVariable String id) {

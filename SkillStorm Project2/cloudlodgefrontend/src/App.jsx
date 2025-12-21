@@ -6,6 +6,7 @@ import Rooms from "./pages/Rooms/Rooms";
 import RoomTypes from "./pages/RoomTypes/RoomTypes";
 import Register from "./pages/Register/Register";
 import CreateReservation from "./pages/CreateReservation/CreateReservation";
+import Dashboard from "./pages/Dashboard/Dashboard";
 
 function App() {
   return (
@@ -21,7 +22,7 @@ function App() {
         <Route path="/register" element={<Register />} />
 
         {/* Placeholder dashboard route */}
-        <Route path="/dashboard" element={<div>Dashboard (coming soon)</div>} />
+        <Route path="/dashboard" element={<Dashboard />} />
 
         {/* Rooms route */}
         <Route path="/rooms" element={<Rooms />} />

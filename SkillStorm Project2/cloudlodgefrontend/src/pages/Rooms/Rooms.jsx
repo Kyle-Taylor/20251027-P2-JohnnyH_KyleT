@@ -48,6 +48,7 @@ import SideNav from "../../components/SideNav";
 import CloseIcon from '@mui/icons-material/Close';
 import EditModal from '../../components/EditModal';
 import PhotoCamera from "@mui/icons-material/PhotoCamera";
+import DeleteConfirmationModal from '../../components/DeleteConfirmationModal';
 
 
 const API_URL = "http://localhost:8080/rooms";
@@ -55,7 +56,7 @@ const API_URL = "http://localhost:8080/rooms";
 export default function Rooms() {
   const [rooms, setRooms] = useState([]);
   const [page, setPage] = useState(1);
-  const itemsPerPage = 18;
+  const itemsPerPage = 16;
   const [roomTypes, setRoomTypes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -352,19 +353,23 @@ export default function Rooms() {
               width: "100%",
               display: "flex",
               alignItems: "center",
-              justifyContent: "space-between",
+              justifyContent: "center",
               mb: 3,
             }}
           >
-            <Box sx={{ flex: 1 }} />
-            <Box sx={{ flex: 1, display: "flex", justifyContent: "flex-end" }}>
-              <Button
-                variant="contained"
-                startIcon={<AddIcon />}
-                onClick={() => setAddModalOpen(true)}
-              >
-                Add Room
-              </Button>
+            <Box sx={{ maxWidth: 1380, width: "100%", display: "flex", justifyContent: "flex-start", gap: 3 }}>
+              <Box sx={{ width: "50%" }} /> {/* Spacer for first card */}
+              <Box sx={{ width: "50%" }} /> {/* Spacer for second card */}
+              <Box sx={{ width: "50%" }} /> {/* Spacer for third card */}
+              <Box sx={{ width: "20%", display: "flex", alignItems: "center" }}>
+                <Button
+                  variant="contained"
+                  startIcon={<AddIcon />}
+                  onClick={() => setAddModalOpen(true)}
+                >
+                  Add Room
+                </Button>
+              </Box>
             </Box>
           </Box>
 
@@ -372,19 +377,24 @@ export default function Rooms() {
             {loading ? (
               <Typography>Loading…</Typography>
             ) : (
-              <Box sx={{ width: '100%' }}>
-                <Grid container spacing={3} justifyContent="center" alignItems="flex-start">
-                  {rooms
-                    .slice((page - 1) * itemsPerPage, page * itemsPerPage)
-                    .map((room) => (
-                      <Grid item xs={12} sm={6} md={4} lg={2.4} key={room.id || room._id}>
-                        <Card
+              <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <Box sx={{ maxWidth: 1380, width: '100%' }}>
+                  <Grid container spacing={3} justifyContent="flex-start">
+                    {rooms
+                      .slice((page - 1) * itemsPerPage, page * itemsPerPage)
+                      .map((room) => (
+                        <Grid item key={room.id || room._id}>
+                          <Card
                           sx={{
                             borderRadius: 3,
                             overflow: "hidden",
                             cursor: "pointer",
                             transition: "0.2s",
                             bgcolor: "#383838",
+                            width: 320,
+                            minWidth: 320,
+                            maxWidth: 320,
+                            mx: "auto",
                             "&:hover": { transform: "translateY(-4px)" },
                           }}
                           onClick={() => handleOpenModal(room)}
@@ -398,9 +408,13 @@ export default function Rooms() {
                             }
                             alt={`Room ${room.roomNumber}`}
                             sx={{
-                              width: "100%",
+                              width: 320,
+                              minWidth: 320,
+                              maxWidth: 320,
                               height: 160,
                               objectFit: "cover",
+                              display: "block",
+                              mx: "auto"
                             }}
                           />
 
@@ -415,7 +429,7 @@ export default function Rooms() {
                             <Chip
                               label={room.roomCategory}
                               size="small"
-                              sx={{ my: 1 }}
+                              sx={{ my: 1, bgcolor: '#1976d2', color: '#fff', fontWeight: 700, letterSpacing: 1 }}
                             />
 
                             <Stack
@@ -425,21 +439,69 @@ export default function Rooms() {
                             >
                               <Chip
                                 icon={
-                                  room.booked ? (
-                                    <CancelIcon />
-                                  ) : (
-                                    <CheckCircleIcon />
-                                  )
+                                  room.isActive === false ? <CancelIcon /> : (room.booked ? <CancelIcon /> : <CheckCircleIcon />)
                                 }
-                                label={room.booked ? "Booked" : "Available"}
-                                color={room.booked ? "error" : "success"}
+                                label={room.isActive === false ? "Maintenance" : (room.booked ? "Booked" : "Available")}
+                                color={room.isActive === false ? "warning" : (room.booked ? "error" : "success")}
                                 size="small"
                               />
-
                               <Typography>
                                 ${room.price}
                               </Typography>
                             </Stack>
+                            
+                            <Box sx={{ height: 40, mt: 1, display: "flex", alignItems: "center" }}>
+                              {/* Maintenance/Active Toggle Button */}
+                              {room.isActive === false ? (
+                                <Button
+                                  variant="outlined"
+                                  color="success"
+                                  size="small"
+                                  fullWidth
+                                  onClick={async (e) => {
+                                    e.stopPropagation();
+                                    try {
+                                      const res = await fetch(`${API_URL}/set-active/${room.id || room._id}?isActive=true`, {
+                                        method: "PUT"
+                                      });
+                                      if (!res.ok) throw new Error("Failed to update room");
+                                      const updatedRoom = await res.json();
+                                      setRooms(prevRooms => prevRooms.map(r =>
+                                        (r.id === updatedRoom.id || r._id === updatedRoom.id) ? { ...r, ...updatedRoom } : r
+                                      ));
+                                    } catch (err) {
+                                      setError(err.message);
+                                    }
+                                  }}
+                                >
+                                  Set Active
+                                </Button>
+                              ) : (!room.booked ? (
+                                <Button
+                                  variant="outlined"
+                                  color="warning"
+                                  size="small"
+                                  fullWidth
+                                  onClick={async (e) => {
+                                    e.stopPropagation();
+                                    try {
+                                      const res = await fetch(`${API_URL}/set-active/${room.id || room._id}?isActive=false`, {
+                                        method: "PUT"
+                                      });
+                                      if (!res.ok) throw new Error("Failed to update room");
+                                      const updatedRoom = await res.json();
+                                      setRooms(prevRooms => prevRooms.map(r =>
+                                        (r.id === updatedRoom.id || r._id === updatedRoom.id) ? { ...r, ...updatedRoom } : r
+                                      ));
+                                    } catch (err) {
+                                      setError(err.message);
+                                    }
+                                  }}
+                                >
+                                  Set Inactive
+                                </Button>
+                              ) : null)}
+                            </Box>
                           </CardContent>
 
                           <CardActions sx={{ justifyContent: "flex-end" }}>
@@ -451,27 +513,11 @@ export default function Rooms() {
                                   setRoomToDelete(room.id || room._id);
                                   setDeleteModalOpen(true);
                                 }}
+                                onMouseDown={e => e.stopPropagation()}
                               >
                                 <DeleteIcon />
                               </IconButton>
                             </Tooltip>
-                            {/* DELETE CONFIRMATION MODAL */}
-                            <Dialog
-                              open={deleteModalOpen}
-                              onClose={() => setDeleteModalOpen(false)}
-                              hideBackdrop
-                              onClick={e => e.stopPropagation()}
-                            >
-                              <DialogTitle>Delete this room?</DialogTitle>
-                              <DialogContent>
-                                <Typography>Are you sure you want to delete this room? This action cannot be undone.</Typography>
-                              </DialogContent>
-                              <DialogActions>
-                                <Button onClick={() => setDeleteModalOpen(false)} color="inherit">Cancel</Button>
-                                <Button onClick={() => handleDeleteRoom(roomToDelete)} color="error" variant="contained">Delete</Button>
-                              </DialogActions>
-                            </Dialog>
-
                             <Tooltip title="View Details">
                               <IconButton
                                 onClick={(e) => {
@@ -482,14 +528,27 @@ export default function Rooms() {
                                 <InfoOutlinedIcon />
                               </IconButton>
                             </Tooltip>
+                                {/* Global Delete Confirmation Modal - only rendered when open */}
+                                {deleteModalOpen && (
+                                  <DeleteConfirmationModal
+                                    open={deleteModalOpen}
+                                    onClose={e => {
+                                      if (e && e.stopPropagation) e.stopPropagation();
+                                      setDeleteModalOpen(false);
+                                    }}
+                                    onConfirm={() => handleDeleteRoom(roomToDelete)}
+                                    text="Are you sure you want to delete this room? This action cannot be undone."
+                                  />
+                                )}
                           </CardActions>
                         </Card>
                       </Grid>
                     ))}
-                </Grid>
+                  </Grid>
+                </Box>
                 {/* Pagination below grid */}
                 {rooms.length > itemsPerPage && (
-                  <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4, width: '100%' }}>
                     <Pagination
                       count={Math.ceil(rooms.length / itemsPerPage)}
                       page={page}

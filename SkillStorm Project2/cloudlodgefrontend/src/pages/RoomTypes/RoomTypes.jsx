@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import Pagination from '@mui/material/Pagination';
-import { Box, Card, CardContent, CardActions, Typography, Button, Grid, Chip, Dialog, DialogTitle, DialogContent, DialogActions, Stack, Tooltip, IconButton, Paper, TextField } from '@mui/material';
+import { Box, Card, CardContent, CardActions, Typography, Button, Grid, Chip, Dialog, DialogTitle, DialogContent, DialogActions, Stack, Tooltip, IconButton, Paper, TextField} from '@mui/material';
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
@@ -11,6 +11,7 @@ import BedIcon from "@mui/icons-material/Bed";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import PhotoCamera from "@mui/icons-material/PhotoCamera";
 import EditModal from "../../components/EditModal";
+import DeleteConfirmationModal from '../../components/DeleteConfirmationModal';
 
 const INITIAL_FORM = {
   roomCategory: "",
@@ -747,20 +748,14 @@ export default function RoomTypes() {
         </Box>
       </Box>
       
-      <Dialog
-        open={deleteModalOpen}
-        onClose={() => setDeleteModalOpen(false)}
-        onClick={e => e.stopPropagation()}
-      >
-        <DialogTitle>Delete this room type?</DialogTitle>
-        <DialogContent>
-          <Typography>Are you sure you want to delete this room type? This action cannot be undone.</Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteModalOpen(false)} color="inherit">Cancel</Button>
-          <Button onClick={() => handleDeleteRoomType(roomTypeToDelete)} color="error" variant="contained">Delete</Button>
-        </DialogActions>
-      </Dialog>
+      {deleteModalOpen && (
+        <DeleteConfirmationModal
+          open={deleteModalOpen}
+          onClose={() => setDeleteModalOpen(false)}
+          onConfirm={() => handleDeleteRoomType(roomTypeToDelete)}
+          text="Are you sure you want to delete this room type? This action cannot be undone."
+        />
+      )}
 
       <Dialog open={addModalOpen} onClose={() => { setAddModalOpen(false); resetAddForm(); }} maxWidth="md" fullWidth>
         <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pr: 1, bgcolor: 'background.default', color: 'text.primary' }}>

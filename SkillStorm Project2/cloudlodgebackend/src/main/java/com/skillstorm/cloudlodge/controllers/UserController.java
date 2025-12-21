@@ -23,6 +23,20 @@ public class UserController {
         this.userService = userService;
     }
 
+    // GET ALL USERS
+    @GetMapping
+    public ResponseEntity<Iterable<User>> getAllUsers() {
+        try {
+            Iterable<User> users = userService.findAll();
+            return new ResponseEntity<>(users, HttpStatus.OK);
+        }
+        catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                    .header("Error", "Sorry! We have an internal Error! Please check back later.")
+                    .build();
+        }
+    }   
+    
     // GET /users/{id}
     @GetMapping("/{id}")
     public ResponseEntity<User> getUser(@PathVariable String id) {

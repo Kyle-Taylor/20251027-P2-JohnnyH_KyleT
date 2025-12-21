@@ -81,8 +81,18 @@ export default function SideNav() {
             </ListItemIcon>
             <ListItemText primary="Room Types" />
           </ListItem>
-
-          <ListItem button sx={{ cursor: 'pointer', '&:hover': { bgcolor: '#232b3b' } }}>
+          
+          <ListItem
+            selected={location.pathname === "/dashboard"}
+            onClick={() => navigate("/dashboard")}
+            button
+            sx={{
+              cursor: 'pointer',
+              '&:hover': { bgcolor: '#232b3b' },
+              bgcolor: location.pathname === '/dashboard' ? '#26324a' : 'inherit',
+              color: location.pathname === '/dashboard' ? '#90caf9' : 'inherit',
+            }}
+          >
             <ListItemIcon sx={{ color: "#bdbdbd" }}>
               <HomeIcon />
             </ListItemIcon>
