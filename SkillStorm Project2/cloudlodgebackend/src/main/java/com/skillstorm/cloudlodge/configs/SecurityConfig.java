@@ -50,7 +50,8 @@ public class SecurityConfig {
                     "/dashboard",
                     "/rooms/**",
                     "/roomtypes/**",
-                    "/reservations/**"
+                    "/reservations/**",
+                    "/availability/**"
                 ).permitAll()
                 .anyRequest().authenticated()
             )

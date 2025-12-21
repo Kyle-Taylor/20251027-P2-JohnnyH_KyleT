@@ -3,29 +3,28 @@ import {
   Toolbar,
   Typography,
   Box,
-  Paper,
-  InputBase,
   IconButton,
   Avatar,
   Menu,
   MenuItem
 } from "@mui/material";
 import { GlobalStyles } from "@mui/material";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 
 import CloudLodgeLogo from "../assets/images/CloudLodge.png";
-import SearchIcon from "@mui/icons-material/Search";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
+import HeroSearch from "./HeroSearch";
 
-const API_URL = "http://localhost:8080/rooms";
-const DEBOUNCE_MS = 300;
+const API_URL = "http://localhost:8080";
 
-export default function Header({ setRooms, setLoading, setError }) {
-  const [query, setQuery] = useState("");
-  const timeoutRef = useRef(null);
+export default function Header({
+  setRooms,
+  setLoading,
+  setError,
+  showSearch = true
+}) {
 
-  // user menu
   const [anchorEl, setAnchorEl] = useState(null);
   const menuOpen = Boolean(anchorEl);
 
@@ -42,52 +41,29 @@ export default function Header({ setRooms, setLoading, setError }) {
     console.log("Sign out");
   };
 
-  async function runSearch(value) {
-    const trimmed = value.trim();
+  async function runSearch({ startDate, endDate, guests }) {
+    if (!setRooms || !setLoading || !setError) return;
 
     try {
       setLoading(true);
       setError("");
 
-      let url = API_URL;
+      const params = new URLSearchParams({
+        startDate,
+        endDate,
+        guests
+      });
 
-      if (trimmed.length > 0) {
-        const params = new URLSearchParams();
-
-        if (!isNaN(trimmed)) {
-          params.append("roomNumber", trimmed);
-        } else {
-          params.append("roomCategory", trimmed);
-        }
-
-        url = `${API_URL}/search?${params.toString()}`;
-      }
-
-      const res = await fetch(url);
+      const res = await fetch(`${API_URL}/rooms/search?${params.toString()}`);
       if (!res.ok) throw new Error("Search failed");
 
       const data = await res.json();
-      setRooms(data.content ?? data);
+      setRooms(data.content || data);
     } catch (err) {
-      setError(err.message);
+      setError(err.message || "Search failed");
     } finally {
       setLoading(false);
     }
-  }
-
-  useEffect(() => {
-    if (timeoutRef.current) clearTimeout(timeoutRef.current);
-
-    timeoutRef.current = setTimeout(() => {
-      runSearch(query);
-    }, DEBOUNCE_MS);
-
-    return () => clearTimeout(timeoutRef.current);
-  }, [query]);
-
-  function handleImmediateSearch() {
-    if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    runSearch(query);
   }
 
   return (
@@ -116,7 +92,7 @@ export default function Header({ setRooms, setLoading, setError }) {
             />
             <Typography
               sx={{
-                fontFamily: "'Playfair Display', serif",
+                fontFamily: "'Dancing Script', cursive",
                 fontWeight: 700,
                 letterSpacing: "0.12em",
                 color: "#e3e6ea",
@@ -126,40 +102,12 @@ export default function Header({ setRooms, setLoading, setError }) {
             </Typography>
           </Box>
 
-          {/* Search */}
-          <Box sx={{ flex: 1, display: "flex", justifyContent: "center" }}>
-            <Paper
-              sx={{
-                px: 2,
-                py: 0.5,
-                display: "flex",
-                alignItems: "center",
-                width: 480,
-                borderRadius: 999,
-                border: "1px solid",
-                borderColor: "#23272a",
-                bgcolor: "#23272a",
-                boxShadow: "none",
-              }}
-            >
-              <InputBase
-                placeholder="Search by room # or type"
-                fullWidth
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") handleImmediateSearch();
-                }}
-                sx={{
-                  color: "#e3e6ea",
-                  '::placeholder': { color: '#b0b3b8', opacity: 1 },
-                }}
-              />
-              <IconButton onClick={handleImmediateSearch} sx={{ color: "#b0b3b8" }}>
-                <SearchIcon />
-              </IconButton>
-            </Paper>
-          </Box>
+          {/* Search (optional) */}
+          {showSearch && (
+            <Box sx={{ flex: 1, display: "flex", justifyContent: "center" }}>
+              <HeroSearch onSearchChange={runSearch} />
+            </Box>
+          )}
 
           {/* User menu */}
           <Box sx={{ ml: "auto" }}>
@@ -167,7 +115,14 @@ export default function Header({ setRooms, setLoading, setError }) {
               onClick={handleMenuOpen}
               sx={{ display: "flex", gap: 0, p: 0.5 }}
             >
-              <Avatar sx={{ width: 36, height: 36, bgcolor: "#23272a", color: "#e3e6ea" }}>
+              <Avatar
+                sx={{
+                  width: 36,
+                  height: 36,
+                  bgcolor: "#23272a",
+                  color: "#e3e6ea"
+                }}
+              >
                 <AccountCircleIcon />
               </Avatar>
               <ArrowDropDownIcon
@@ -193,8 +148,8 @@ export default function Header({ setRooms, setLoading, setError }) {
                 },
               }}
             >
-              <MenuItem onClick={handleProfile} sx={{ color: "#e3e6ea" }}>Profile</MenuItem>
-              <MenuItem onClick={handleSignOut} sx={{ color: "#e3e6ea" }}>Sign Out</MenuItem>
+              <MenuItem onClick={handleProfile}>Profile</MenuItem>
+              <MenuItem onClick={handleSignOut}>Sign Out</MenuItem>
             </Menu>
           </Box>
         </Toolbar>

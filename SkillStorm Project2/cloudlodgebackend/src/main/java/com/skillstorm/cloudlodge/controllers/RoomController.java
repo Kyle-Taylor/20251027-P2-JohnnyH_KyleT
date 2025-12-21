@@ -135,12 +135,18 @@ public class RoomController {
         @RequestParam(required = false) Integer roomNumber,
         @RequestParam(required = false) Boolean isActive,
         @RequestParam(required = false) String roomCategory,
+        @RequestParam(required = false) String startDate,
+        @RequestParam(required = false) String endDate,
+        @RequestParam(required = false) Integer guests,
         Pageable pageable
     ) {
         return roomService.searchResolvedRooms(
             roomNumber,
             isActive,
             roomCategory,
+            startDate,
+            endDate,
+            guests,
             pageable
         );
     }

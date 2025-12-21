@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import com.skillstorm.cloudlodge.models.Reservation;
@@ -27,4 +28,17 @@ public interface ReservationRepository extends MongoRepository<Reservation, Stri
 
     // find reservations where check-out falls within a range
     List<Reservation> findByCheckOutDateBetween(LocalDate start, LocalDate end);
+
+    // find reservations that overlap a date range for a specific room unit
+    @Query("""
+    {
+    'checkInDate': { $lt: ?1 },
+    'checkOutDate': { $gt: ?0 }
+    }
+    """)
+    List<Reservation> findOverlappingReservations(
+        LocalDate start,
+        LocalDate end
+    );
+
 }

@@ -11,52 +11,40 @@ import com.skillstorm.cloudlodge.repositories.RoomAvailabilityRepository;
 @Service
 public class RoomAvailabilityService {
 
-    private final RoomAvailabilityRepository repo;
-    public RoomAvailabilityService(RoomAvailabilityRepository repo) {
-        this.repo = repo;
+    private final RoomAvailabilityRepository roomAvailabilityRepository;
+
+    public RoomAvailabilityService(RoomAvailabilityRepository roomAvailabilityRepository) {
+        this.roomAvailabilityRepository = roomAvailabilityRepository;
     }
 
-    // Get all room availabilities
     public List<RoomAvailability> findAll() {
-        return repo.findAll();
+        return roomAvailabilityRepository.findAll();
     }
 
-    // Get room availability for a room unit
     public List<RoomAvailability> findByRoomUnitId(String roomUnitId) {
-        return repo.findByRoomUnitId(roomUnitId);
+        return roomAvailabilityRepository.findByRoomUnitId(roomUnitId);
     }
 
-    // Get room availability by date (LocalDate)
-    // Convert LocalDate to UTC Date range and attempt to match DateTime-stored documents.
     public List<RoomAvailability> findByDate(LocalDate date) {
-        try {
-            java.time.ZoneOffset zone = java.time.ZoneOffset.UTC;
-            java.time.Instant startInstant = date.atStartOfDay().toInstant(zone);
-            java.time.Instant endInstant = date.plusDays(1).atStartOfDay().toInstant(zone).minusNanos(1);
-
-            java.util.Date startDate = java.util.Date.from(startInstant);
-            java.util.Date endDate = java.util.Date.from(endInstant);
-
-            return repo.findByDateBetweenDates(startDate, endDate);
-        }
-        catch (Exception e) {
-            // Fallback to direct LocalDate equality if the repository supports it
-            return repo.findByDate(date);
-        }
+        return roomAvailabilityRepository.findByDate(date);
     }
 
-    // Get room availability by reservation ID
     public List<RoomAvailability> findByReservationId(String reservationId) {
-        return repo.findByReservationId(reservationId);
+        return roomAvailabilityRepository.findByReservationId(reservationId);
     }
 
-    // Save or update room availability
+    public List<RoomAvailability> findBookedInRange(
+            LocalDate start,
+            LocalDate end
+    ) {
+        return roomAvailabilityRepository.findBookedInRange(start, end);
+    }
+
     public RoomAvailability save(RoomAvailability availability) {
-        return repo.save(availability);
+        return roomAvailabilityRepository.save(availability);
     }
 
-    // Delete room availability by ID
     public void delete(String id) {
-        repo.deleteById(id);
+        roomAvailabilityRepository.deleteById(id);
     }
 }

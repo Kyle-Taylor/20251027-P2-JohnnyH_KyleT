@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import Pagination from '@mui/material/Pagination';
-import { Box, Card, CardContent, CardActions, Typography, Button, Grid, Chip, Dialog, DialogTitle, DialogContent, DialogActions, Stack, Tooltip, IconButton, Paper, FormControl, TextField } from '@mui/material';
+import { Box, Card, CardContent, CardActions, Typography, Button, Grid, Chip, Dialog, DialogTitle, DialogContent, DialogActions, Stack, Tooltip, IconButton, Paper, TextField } from '@mui/material';
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
@@ -9,9 +9,8 @@ import SideNav from "../../components/SideNav";
 import CloseIcon from '@mui/icons-material/Close';
 import BedIcon from "@mui/icons-material/Bed";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import CancelIcon from "@mui/icons-material/Cancel";
 import PhotoCamera from "@mui/icons-material/PhotoCamera";
-
+import EditModal from "../../components/EditModal";
 
 const INITIAL_FORM = {
   roomCategory: "",
@@ -21,7 +20,6 @@ const INITIAL_FORM = {
   description: "",
   images: [],
 };
-
 
 const API_URL = "http://localhost:8080/roomtypes";
 
@@ -89,7 +87,6 @@ export default function RoomTypes() {
       })
     );
     
-    // Append images
     selectedImages.forEach((image) => {
       formData.append("images", image);
     });
@@ -162,7 +159,6 @@ export default function RoomTypes() {
       
       const formData = new FormData();
       
-      // Create roomType JSON payload
       const roomTypePayload = {
         id: selectedRoomType.id || selectedRoomType._id,
         roomCategory: editDraft.roomCategory,
@@ -170,18 +166,15 @@ export default function RoomTypes() {
         maxGuests: parseInt(editDraft.maxGuests),
         amenities: amenitiesArr,
         description: editDraft.description,
-        images: editDraft.images, // Include current images
+        images: editDraft.images,
       };
 
-      // Send roomType as JSON string
       formData.append("roomType", JSON.stringify(roomTypePayload));
       
-      // Send deleteImages as JSON array string
       if (imagesToDelete.length > 0) {
         formData.append("deleteImages", JSON.stringify(imagesToDelete));
       }
       
-      // Append new images
       editImages.forEach((image) => {
         formData.append("images", image);
       });
@@ -214,15 +207,335 @@ export default function RoomTypes() {
     }, 0);
   }
 
+  function handleCancelEdit() {
+    setEditMode(false);
+    setEditDraft(editForm);
+    setImagesToDelete([]);
+    setEditImages([]);
+  }
+
+  function handleCloseModal() {
+    setModalOpen(false);
+    setEditMode(false);
+  }
+
+  function handleDeleteClick() {
+    if (selectedRoomType) {
+      setRoomTypeToDelete(selectedRoomType.id || selectedRoomType._id);
+      setDeleteModalOpen(true);
+    }
+  }
+
+  function renderFormContent() {
+    if (!selectedRoomType) return null;
+
+    if (editMode && editDraft) {
+      return (
+        <Stack spacing={3}>
+          <TextField
+            label="Room Category Name"
+            fullWidth
+            required
+            value={editDraft.roomCategory}
+            onChange={e => setEditDraft(d => ({ ...d, roomCategory: e.target.value }))}
+            placeholder="e.g., Ocean View Suite, Presidential Suite, etc."
+          />
+          <TextField
+            label="Price Per Night"
+            fullWidth
+            required
+            type="number"
+            value={editDraft.pricePerNight}
+            onChange={e => setEditDraft(d => ({ ...d, pricePerNight: e.target.value }))}
+          />
+          <TextField
+            label="Max Guests"
+            fullWidth
+            required
+            type="number"
+            value={editDraft.maxGuests}
+            onChange={e => setEditDraft(d => ({ ...d, maxGuests: e.target.value }))}
+          />
+          
+          <Box>
+            <label style={{ fontSize: 12, marginBottom: 8, color: '#888', display: 'block' }}>Amenities</label>
+            <Grid container spacing={2}>
+              {editDraft.amenities.map((amenity, idx) => (
+                <Grid item xs={12} sm={6} md={4} key={idx}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <TextField
+                      label={`Amenity ${idx + 1}`}
+                      fullWidth
+                      size="small"
+                      value={amenity}
+                      onChange={e => {
+                        const newAmenities = [...editDraft.amenities];
+                        newAmenities[idx] = e.target.value;
+                        setEditDraft(d => ({ ...d, amenities: newAmenities }));
+                      }}
+                    />
+                    <IconButton
+                      aria-label="Remove amenity"
+                      color="error"
+                      size="small"
+                      disabled={editDraft.amenities.length === 1}
+                      onClick={() => {
+                        if (editDraft.amenities.length > 1) {
+                          setEditDraft(d => ({ ...d, amenities: editDraft.amenities.filter((_, i) => i !== idx) }));
+                        }
+                      }}
+                    >
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  </Box>
+                </Grid>
+              ))}
+            </Grid>
+            <Button
+              variant="outlined"
+              size="small"
+              startIcon={<AddIcon />}
+              fullWidth
+              sx={{ mt: 2 }}
+              onClick={() => setEditDraft(d => ({ ...d, amenities: [...editDraft.amenities, ""] }))}
+            >
+              Add Amenity
+            </Button>
+          </Box>
+          
+          <TextField
+            label="Description"
+            fullWidth
+            multiline
+            rows={3}
+            value={editDraft.description}
+            onChange={e => setEditDraft(d => ({ ...d, description: e.target.value }))}
+          />
+
+          <Box sx={{ mt: 3 }}>
+            {editDraft.images && editDraft.images.length > 0 && (
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 2 }}>
+                {editDraft.images.map((img, idx) => (
+                  <Box key={idx} sx={{ position: "relative", width: 200, height: 150 }}>
+                    <img
+                      src={img}
+                      alt={`Room ${idx + 1}`}
+                      style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: 8 }}
+                    />
+                    <IconButton
+                      size="small"
+                      sx={{
+                        position: "absolute",
+                        top: 6,
+                        right: 6,
+                        bgcolor: "error.main",
+                        '&:hover': { bgcolor: 'error.dark' },
+                      }}
+                      onClick={() => {
+                        setImagesToDelete(prev => [...prev, img]);
+                        setEditDraft(d => ({
+                          ...d,
+                          images: d.images.filter(i => i !== img),
+                        }));
+                      }}
+                    >
+                      <CloseIcon fontSize="small" />
+                    </IconButton>
+                  </Box>
+                ))}
+              </Box>
+            )}
+            
+            <Box sx={{ mt: 2 }}>
+              <Button
+                variant="outlined"
+                component="label"
+                fullWidth
+                startIcon={<PhotoCamera />}
+              >
+                Upload Images
+                <input
+                  type="file"
+                  hidden
+                  multiple
+                  accept="image/*"
+                  onChange={(e) => {
+                    const files = Array.from(e.target.files);
+                    setEditImages(prev => [...prev, ...files]);
+                  }}
+                />
+              </Button>
+              {editImages.length > 0 && (
+                <Box sx={{ mt: 2, display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                  {editImages.map((img, idx) => (
+                    <Box key={idx} sx={{ position: 'relative', width: 100, height: 100 }}>
+                      <img
+                        src={URL.createObjectURL(img)}
+                        alt={`Preview ${idx}`}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 8 }}
+                      />
+                      <IconButton
+                        size="small"
+                        sx={{
+                          position: 'absolute',
+                          top: -8,
+                          right: -8,
+                          bgcolor: 'error.main',
+                          '&:hover': { bgcolor: 'error.dark' },
+                        }}
+                        onClick={() => setEditImages(prev => prev.filter((_, i) => i !== idx))}
+                      >
+                        <CloseIcon fontSize="small" />
+                      </IconButton>
+                    </Box>
+                  ))}
+                </Box>
+              )}
+            </Box>
+          </Box>
+        </Stack>
+      );
+    }
+
+    return (
+      <Stack spacing={3}>
+        <Paper variant="outlined" sx={{ p: 2, pt: 3, bgcolor: 'background.paper', color: 'text.primary', position: 'relative', overflow: 'visible' }}>
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{
+              position: 'absolute',
+              top: 0,
+              left: 12,
+              transform: 'translateY(-50%)',
+              bgcolor: 'background.paper',
+              px: 0.5,
+              fontWeight: 700,
+              letterSpacing: 1,
+              zIndex: 1,
+            }}
+          >
+            Room Category
+          </Typography>
+          <Typography variant="h6">
+            {selectedRoomType.roomCategory}
+          </Typography>
+        </Paper>
+        <Paper variant="outlined" sx={{ p: 2, pt: 3, bgcolor: 'background.paper', color: 'text.primary', position: 'relative', overflow: 'visible' }}>
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{
+              position: 'absolute',
+              top: 0,
+              left: 12,
+              transform: 'translateY(-50%)',
+              bgcolor: 'background.paper',
+              px: 0.5,
+              fontWeight: 700,
+              letterSpacing: 1,
+              zIndex: 1,
+            }}
+          >
+            Price
+          </Typography>
+          <Typography variant="h6">
+            ${selectedRoomType.pricePerNight}
+          </Typography>
+        </Paper>
+        <Paper variant="outlined" sx={{ p: 2, pt: 3, bgcolor: 'background.paper', color: 'text.primary', position: 'relative', overflow: 'visible' }}>
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{
+              position: 'absolute',
+              top: 0,
+              left: 12,
+              transform: 'translateY(-50%)',
+              bgcolor: 'background.paper',
+              px: 0.5,
+              fontWeight: 700,
+              letterSpacing: 1,
+              zIndex: 1,
+            }}
+          >
+            Max Guests
+          </Typography>
+          <Typography variant="h6">
+            {selectedRoomType.maxGuests}
+          </Typography>
+        </Paper>
+        <Paper variant="outlined" sx={{ p: 2, pt: 3, bgcolor: 'background.paper', color: 'text.primary', position: 'relative', overflow: 'visible' }}>
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{
+              position: 'absolute',
+              top: 0,
+              left: 12,
+              transform: 'translateY(-50%)',
+              bgcolor: 'background.paper',
+              px: 0.5,
+              fontWeight: 700,
+              letterSpacing: 1,
+              zIndex: 1,
+            }}
+          >
+            Amenities
+          </Typography>
+          <Typography variant="body1">
+            {Array.isArray(selectedRoomType.amenities) ? selectedRoomType.amenities.join(", ") : selectedRoomType.amenities || "None"}
+          </Typography>
+        </Paper>
+        <Paper variant="outlined" sx={{ p: 2, pt: 3, bgcolor: 'background.paper', color: 'text.primary', position: 'relative', overflow: 'visible' }}>
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{
+              position: 'absolute',
+              top: 0,
+              left: 12,
+              transform: 'translateY(-50%)',
+              bgcolor: 'background.paper',
+              px: 0.5,
+              fontWeight: 700,
+              letterSpacing: 1,
+              zIndex: 1,
+            }}
+          >
+            Description
+          </Typography>
+          <Typography variant="body1">
+            {selectedRoomType.description || "None"}
+          </Typography>
+        </Paper>
+
+        {editDraft && editDraft.images && editDraft.images.length > 0 && (
+          <Box sx={{ mt: 3 }}>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+              {editDraft.images.map((img, idx) => (
+                <Box key={idx} sx={{ position: "relative", width: 200, height: 150 }}>
+                  <img
+                    src={img}
+                    alt={`Room ${idx + 1}`}
+                    style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: 8 }}
+                  />
+                </Box>
+              ))}
+            </Box>
+          </Box>
+        )}
+      </Stack>
+    );
+  }
+
   return (
-      
     <Box>
       <Header 
         setRooms={() => {}} 
         setLoading={setLoading}
         setError={setError}
       />
-      {/* <Header setLoading={setLoading} setError={setError} /> */}
       <Box sx={{ width: "100%" }}>
         {error && <Chip label={error} color="error" sx={{ mb: 2 }} />}
         <Box
@@ -297,16 +610,10 @@ export default function RoomTypes() {
               <Box sx={{ width: '100%' }}>
                 <Grid container columns={12} columnSpacing={3} justifyContent="center" alignItems="flex-start">
                   {(() => {
-                    const filtered = roomTypes
-                      .filter(rt =>
-                        rt &&
-                        (rt.id || rt._id) &&
-                        rt.roomCategory
-                      );
+                    const filtered = roomTypes.filter(rt => rt && (rt.id || rt._id) && rt.roomCategory);
                     return filtered
                       .slice((page - 1) * itemsPerPage, page * itemsPerPage)
                       .map((roomType) => {
-                        // Handle both enum object and string for roomCategory
                         let category = roomType.roomCategory;
                         if (category && typeof category === 'object' && category.name) category = category.name;
                         if (!category || typeof category !== 'string') category = 'N/A';
@@ -329,7 +636,6 @@ export default function RoomTypes() {
                               }}
                               onClick={() => handleOpenModal(roomType)}
                             >
-                              {/* Image Display */}
                               <Box
                                 sx={{
                                   width: '100%',
@@ -409,7 +715,6 @@ export default function RoomTypes() {
                       });
                   })()}
                 </Grid>
-                {/* Pagination below grid */}
                 {roomTypes.length > itemsPerPage && (
                   <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
                     <Pagination
@@ -442,7 +747,6 @@ export default function RoomTypes() {
         </Box>
       </Box>
       
-      {/* DELETE CONFIRMATION MODAL */}
       <Dialog
         open={deleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}
@@ -458,7 +762,6 @@ export default function RoomTypes() {
         </DialogActions>
       </Dialog>
 
-      {/* ADD ROOM TYPE MODAL */}
       <Dialog open={addModalOpen} onClose={() => { setAddModalOpen(false); resetAddForm(); }} maxWidth="md" fullWidth>
         <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pr: 1, bgcolor: 'background.default', color: 'text.primary' }}>
           Add Room Type
@@ -494,7 +797,6 @@ export default function RoomTypes() {
               onChange={e => setForm({ ...form, maxGuests: e.target.value })}
             />
             
-            {/* Amenities Section */}
             <Box>
               <label style={{ fontSize: 12, marginBottom: 8, color: '#888', display: 'block' }}>Amenities</label>
               <Grid container spacing={2}>
@@ -550,7 +852,6 @@ export default function RoomTypes() {
               onChange={e => setForm({ ...form, description: e.target.value })}
             />
             
-            {/* Image Upload Section at Bottom */}
             <Box>
               <label style={{ fontSize: 12, marginBottom: 4, color: '#888', display: 'block' }}>Room Images</label>
               <Button
@@ -609,382 +910,18 @@ export default function RoomTypes() {
         </DialogActions>
       </Dialog>
       
-      {/* DETAILS / EDIT MODAL */}
-      <Dialog
+      <EditModal
         open={modalOpen}
-        onClose={() => {
-          setModalOpen(false);
-          setEditMode(false);
-        }}
-        maxWidth="md"
-        fullWidth
+        title="Room Type Details"
+        editMode={editMode}
+        onClose={handleCloseModal}
+        onEdit={() => setEditMode(true)}
+        onCancel={handleCancelEdit}
+        onSave={handleSaveEdit}
+        onDelete={handleDeleteClick}
       >
-        <DialogTitle
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            pb: 1.5,
-            borderBottom: "1px solid",
-            borderColor: "divider",
-            bgcolor: 'background.default',
-            color: 'text.primary',
-          }}
-        >
-          <Typography variant="h6" fontWeight={700} component="span">
-            Room Type Details
-          </Typography>
-          <IconButton
-            size="small"
-            color="error"
-            onClick={() => {
-              setModalOpen(false);
-              setEditMode(false);
-            }}
-          >
-            <CloseIcon fontSize="small" />
-          </IconButton>
-        </DialogTitle>
-        <DialogContent dividers sx={{ pt: 3, pb: 3, bgcolor: 'background.default', color: 'text.primary' }}>
-          {selectedRoomType && (
-            <Stack spacing={3}>
-              {/* FORM FIELDS */}
-              {editMode ? (
-                editDraft && (
-                  <>
-                    <TextField
-                      label="Room Category Name"
-                      fullWidth
-                      required
-                      value={editDraft.roomCategory}
-                      onChange={e => setEditDraft(d => ({ ...d, roomCategory: e.target.value }))}
-                      placeholder="e.g., Ocean View Suite, Presidential Suite, etc."
-                    />
-                    <TextField
-                      label="Price Per Night"
-                      fullWidth
-                      required
-                      type="number"
-                      value={editDraft.pricePerNight}
-                      onChange={e => setEditDraft(d => ({ ...d, pricePerNight: e.target.value }))}
-                    />
-                    <TextField
-                      label="Max Guests"
-                      fullWidth
-                      required
-                      type="number"
-                      value={editDraft.maxGuests}
-                      onChange={e => setEditDraft(d => ({ ...d, maxGuests: e.target.value }))}
-                    />
-                    
-                    {/* Amenities Section */}
-                    <Box>
-                      <label style={{ fontSize: 12, marginBottom: 8, color: '#888', display: 'block' }}>Amenities</label>
-                      <Grid container spacing={2}>
-                        {editDraft.amenities.map((amenity, idx) => (
-                          <Grid item xs={12} sm={6} md={4} key={idx}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                              <TextField
-                                label={`Amenity ${idx + 1}`}
-                                fullWidth
-                                size="small"
-                                value={amenity}
-                                onChange={e => {
-                                  const newAmenities = [...editDraft.amenities];
-                                  newAmenities[idx] = e.target.value;
-                                  setEditDraft(d => ({ ...d, amenities: newAmenities }));
-                                }}
-                              />
-                              <IconButton
-                                aria-label="Remove amenity"
-                                color="error"
-                                size="small"
-                                disabled={editDraft.amenities.length === 1}
-                                onClick={() => {
-                                  if (editDraft.amenities.length > 1) {
-                                    setEditDraft(d => ({ ...d, amenities: editDraft.amenities.filter((_, i) => i !== idx) }));
-                                  }
-                                }}
-                              >
-                                <DeleteIcon fontSize="small" />
-                              </IconButton>
-                            </Box>
-                          </Grid>
-                        ))}
-                      </Grid>
-                      <Button
-                        variant="outlined"
-                        size="small"
-                        startIcon={<AddIcon />}
-                        fullWidth
-                        sx={{ mt: 2 }}
-                        onClick={() => setEditDraft(d => ({ ...d, amenities: [...editDraft.amenities, ""] }))}
-                      >
-                        Add Amenity
-                      </Button>
-                    </Box>
-                    
-                    <TextField
-                      label="Description"
-                      fullWidth
-                      multiline
-                      rows={3}
-                      value={editDraft.description}
-                      onChange={e => setEditDraft(d => ({ ...d, description: e.target.value }))}
-                    />
-                  </>
-                )
-              ) : (
-                <>
-                  <Paper variant="outlined" sx={{ p: 2, pt: 3, bgcolor: 'background.paper', color: 'text.primary', position: 'relative', overflow: 'visible' }}>
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      sx={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 12,
-                        transform: 'translateY(-50%)',
-                        bgcolor: 'background.paper',
-                        px: 0.5,
-                        fontWeight: 700,
-                        letterSpacing: 1,
-                        zIndex: 1,
-                      }}
-                    >
-                      Room Category
-                    </Typography>
-                    <Typography variant="h6">
-                      {selectedRoomType.roomCategory}
-                    </Typography>
-                  </Paper>
-                  <Paper variant="outlined" sx={{ p: 2, pt: 3, bgcolor: 'background.paper', color: 'text.primary', position: 'relative', overflow: 'visible' }}>
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      sx={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 12,
-                        transform: 'translateY(-50%)',
-                        bgcolor: 'background.paper',
-                        px: 0.5,
-                        fontWeight: 700,
-                        letterSpacing: 1,
-                        zIndex: 1,
-                      }}
-                    >
-                      Price
-                    </Typography>
-                    <Typography variant="h6">
-                      ${selectedRoomType.pricePerNight}
-                    </Typography>
-                  </Paper>
-                  <Paper variant="outlined" sx={{ p: 2, pt: 3, bgcolor: 'background.paper', color: 'text.primary', position: 'relative', overflow: 'visible' }}>
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      sx={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 12,
-                        transform: 'translateY(-50%)',
-                        bgcolor: 'background.paper',
-                        px: 0.5,
-                        fontWeight: 700,
-                        letterSpacing: 1,
-                        zIndex: 1,
-                      }}
-                    >
-                      Max Guests
-                    </Typography>
-                    <Typography variant="h6">
-                      {selectedRoomType.maxGuests}
-                    </Typography>
-                  </Paper>
-                  <Paper variant="outlined" sx={{ p: 2, pt: 3, bgcolor: 'background.paper', color: 'text.primary', position: 'relative', overflow: 'visible' }}>
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      sx={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 12,
-                        transform: 'translateY(-50%)',
-                        bgcolor: 'background.paper',
-                        px: 0.5,
-                        fontWeight: 700,
-                        letterSpacing: 1,
-                        zIndex: 1,
-                      }}
-                    >
-                      Amenities
-                    </Typography>
-                    <Typography variant="body1">
-                      {Array.isArray(selectedRoomType.amenities) ? selectedRoomType.amenities.join(", ") : selectedRoomType.amenities || "None"}
-                    </Typography>
-                  </Paper>
-                  <Paper variant="outlined" sx={{ p: 2, pt: 3, bgcolor: 'background.paper', color: 'text.primary', position: 'relative', overflow: 'visible' }}>
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      sx={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 12,
-                        transform: 'translateY(-50%)',
-                        bgcolor: 'background.paper',
-                        px: 0.5,
-                        fontWeight: 700,
-                        letterSpacing: 1,
-                        zIndex: 1,
-                      }}
-                    >
-                      Description
-                    </Typography>
-                    <Typography variant="body1">
-                      {selectedRoomType.description || "None"}
-                    </Typography>
-                  </Paper>
-                </>
-              )}
-              
-              {/* IMAGES SECTION AT BOTTOM */}
-              <Box sx={{ mt: 3 }}>
-                {editDraft && editDraft.images && editDraft.images.length > 0 && (
-                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 2 }}>
-                    {editDraft.images.map((img, idx) => (
-                      <Box
-                        key={idx}
-                        sx={{ position: "relative", width: 200, height: 150 }}
-                      >
-                        <img
-                          src={img}
-                          alt={`Room ${idx + 1}`}
-                          style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: 8 }}
-                        />
-
-                        {editMode && (
-                          <IconButton
-                            size="small"
-                            sx={{
-                              position: "absolute",
-                              top: 6,
-                              right: 6,
-                              bgcolor: "error.main",
-                              '&:hover': { bgcolor: 'error.dark' },
-                            }}
-                            onClick={() => {
-                              setImagesToDelete(prev => [...prev, img]);
-                              setEditDraft(d => ({
-                                ...d,
-                                images: d.images.filter(i => i !== img),
-                              }));
-                            }}
-                          >
-                            <CloseIcon fontSize="small" />
-                          </IconButton>
-                        )}
-                      </Box>
-                    ))}
-                  </Box>
-                )}
-                
-                {/* Image Upload in Edit Mode */}
-                {editMode && (
-                  <Box sx={{ mt: 2 }}>
-                    <Button
-                      variant="outlined"
-                      component="label"
-                      fullWidth
-                      startIcon={<PhotoCamera />}
-                    >
-                      Upload Images
-                      <input
-                        type="file"
-                        hidden
-                        multiple
-                        accept="image/*"
-                        onChange={(e) => {
-                          const files = Array.from(e.target.files);
-                          setEditImages(prev => [...prev, ...files]);
-                        }}
-                      />
-                    </Button>
-                    {editImages.length > 0 && (
-                      <Box sx={{ mt: 2, display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                        {editImages.map((img, idx) => (
-                          <Box key={idx} sx={{ position: 'relative', width: 100, height: 100 }}>
-                            <img
-                              src={URL.createObjectURL(img)}
-                              alt={`Preview ${idx}`}
-                              style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 8 }}
-                            />
-                            <IconButton
-                              size="small"
-                              sx={{
-                                position: 'absolute',
-                                top: -8,
-                                right: -8,
-                                bgcolor: 'error.main',
-                                '&:hover': { bgcolor: 'error.dark' },
-                              }}
-                              onClick={() => setEditImages(prev => prev.filter((_, i) => i !== idx))}
-                            >
-                              <CloseIcon fontSize="small" />
-                            </IconButton>
-                          </Box>
-                        ))}
-                      </Box>
-                    )}
-                  </Box>
-                )}
-              </Box>
-            </Stack>
-          )}
-        </DialogContent>
-        <DialogActions
-          sx={{
-            px: 3,
-            py: 2,
-            borderTop: "1px solid",
-            borderColor: "divider",
-            display: "flex",
-            justifyContent: "space-between",
-            bgcolor: 'background.default',
-            color: 'text.primary',
-          }}
-        >
-          <Button
-            color="error"
-            variant="contained"
-            onClick={() => {
-              if (selectedRoomType) {
-                setRoomTypeToDelete(selectedRoomType.id || selectedRoomType._id);
-                setDeleteModalOpen(true);
-              }
-            }}
-          >
-            Delete
-          </Button>
-          {editMode ? (
-            <Stack direction="row" spacing={1}>
-              <Button variant="outlined" onClick={() => {
-                setEditMode(false);
-                setEditDraft(editForm);
-                setImagesToDelete([]);
-              }}>Cancel</Button>
-              <Button variant="contained" onClick={handleSaveEdit}>
-                Save
-              </Button>
-            </Stack>
-          ) : (
-            <Button variant="contained" onClick={() => setEditMode(true)}>
-              Edit
-            </Button>
-          )}
-        </DialogActions>
-      </Dialog>
+        {renderFormContent()}
+      </EditModal>
     </Box>
   );
 }

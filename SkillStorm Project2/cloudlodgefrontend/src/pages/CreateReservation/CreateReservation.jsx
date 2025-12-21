@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Card,
   CardContent,
@@ -19,15 +19,16 @@ import {
 } from "@mui/material";
 import BedIcon from "@mui/icons-material/Bed";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import CancelIcon from "@mui/icons-material/Cancel";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import NightsStayIcon from "@mui/icons-material/NightsStay";
 import PeopleIcon from "@mui/icons-material/People";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import Header from "../../components/Header";
 import SideNav from "../../components/SideNav";
 import dayjs from "dayjs";
+import BannerPhoto from "../../assets/images/BannerPhoto.png";
 
 const API_URL = "http://localhost:8080/";
 
@@ -35,35 +36,118 @@ export default function BookRoom() {
   const [rooms, setRooms] = useState([]);
   const [page, setPage] = useState(1);
   const itemsPerPage = 18;
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
+
   const [booking, setBooking] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState(false);
   const [bookingError, setBookingError] = useState("");
+
   const [checkInDate, setCheckInDate] = useState(dayjs().format("YYYY-MM-DD"));
-  const [checkOutDate, setCheckOutDate] = useState(dayjs().add(1, "day").format("YYYY-MM-DD"));
+  const [checkOutDate, setCheckOutDate] = useState(
+    dayjs().add(1, "day").format("YYYY-MM-DD")
+  );
   const [numGuests, setNumGuests] = useState(1);
+
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
+  const [roomTypes, setRoomTypes] = useState([]);
+  const [selectedRoomType, setSelectedRoomType] = useState(null);
+
+  const selectedRoomTypeId = useMemo(() => {
+    if (!selectedRoomType) return null;
+    return selectedRoomType.id || selectedRoomType._id || null;
+  }, [selectedRoomType]);
+
+  const selectedRoomTypeCategory = useMemo(() => {
+    if (!selectedRoomType) return null;
+    return selectedRoomType.roomCategory || null;
+  }, [selectedRoomType]);
+
   useEffect(() => {
-    fetchRooms();
+    fetchRoomTypes();
   }, []);
 
-  async function fetchRooms() {
+  async function fetchRoomTypes() {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch(API_URL + "rooms");
-      if (!res.ok) throw new Error("Failed to fetch rooms");
+      const res = await fetch(API_URL + "roomtypes");
+      if (!res.ok) throw new Error("Failed to fetch room types");
       const data = await res.json();
-      setRooms(data);
+      setRoomTypes(Array.isArray(data) ? data : []);
     } catch (err) {
-      setError(err.message);
+      setError(err.message || "Failed to fetch room types");
     } finally {
       setLoading(false);
     }
+  }
+
+  useEffect(() => {
+    if (!selectedRoomType) return;
+    fetchRoomsForSelectedType();
+    // reset paging when changing type
+    setPage(1);
+  }, [selectedRoomType]);
+
+  async function fetchRoomsForSelectedType(paramsOverride) {
+    if (!selectedRoomTypeCategory) return;
+
+    const startDate = paramsOverride?.startDate ?? checkInDate;
+    const endDate = paramsOverride?.endDate ?? checkOutDate;
+    const guests = paramsOverride?.guests ?? numGuests;
+
+    setLoading(true);
+    setError("");
+    try {
+      const qs = new URLSearchParams();
+      qs.set("roomCategory", selectedRoomTypeCategory);
+      qs.set("startDate", startDate);
+      qs.set("endDate", endDate);
+      qs.set("guests", String(guests));
+
+      const res = await fetch(`${API_URL}rooms/search?${qs.toString()}`);
+      if (!res.ok) throw new Error("Failed to fetch rooms");
+
+      const data = await res.json();
+      const list = Array.isArray(data) ? data : (data?.content ?? []);
+      setRooms(Array.isArray(list) ? list : []);
+    } catch (err) {
+      setError(err.message || "Failed to fetch rooms");
+      setRooms([]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function handleSelectRoomType(rt) {
+    setSelectedRoomType(rt);
+    setSelectedRoom(null);
+    setModalOpen(false);
+    setBooking(false);
+    setBookingError("");
+    setBookingSuccess(false);
+
+    // keep defaults
+    setCheckInDate(dayjs().format("YYYY-MM-DD"));
+    setCheckOutDate(dayjs().add(1, "day").format("YYYY-MM-DD"));
+    setNumGuests(1);
+    setCurrentImageIndex(0);
+  }
+
+  function handleBackToRoomTypes() {
+    setSelectedRoomType(null);
+    setRooms([]);
+    setSelectedRoom(null);
+    setModalOpen(false);
+    setBooking(false);
+    setBookingError("");
+    setBookingSuccess(false);
+    setPage(1);
   }
 
   function handleOpenModal(room) {
@@ -71,11 +155,9 @@ export default function BookRoom() {
     setModalOpen(true);
     setBookingError("");
     setBookingSuccess(false);
-    // Reset dates when opening modal
-    setCheckInDate(dayjs().format("YYYY-MM-DD"));
-    setCheckOutDate(dayjs().add(1, "day").format("YYYY-MM-DD"));
-    setNumGuests(1);
     setCurrentImageIndex(0);
+
+    // keep whatever user had picked in the list view; don't force reset
   }
 
   function handleCloseModal() {
@@ -86,7 +168,6 @@ export default function BookRoom() {
     setBookingSuccess(false);
   }
 
-  // Calculate number of nights
   function calculateNights() {
     const checkIn = dayjs(checkInDate);
     const checkOut = dayjs(checkOutDate);
@@ -94,53 +175,68 @@ export default function BookRoom() {
     return nights > 0 ? nights : 0;
   }
 
-  // Calculate total price
   function calculateTotalPrice() {
     if (!selectedRoom) return 0;
     const nights = calculateNights();
-    return nights * selectedRoom.price;
+    return nights * (selectedRoom.price ?? 0);
   }
 
-  // Handle check-in date change
-  function handleCheckInChange(newCheckIn) {
+  async function handleCheckInChange(newCheckIn) {
     setCheckInDate(newCheckIn);
-    // If check-out is before or same as new check-in, adjust it
+
     const checkIn = dayjs(newCheckIn);
     const checkOut = dayjs(checkOutDate);
     if (checkOut.isBefore(checkIn) || checkOut.isSame(checkIn, "day")) {
-      setCheckOutDate(checkIn.add(1, "day").format("YYYY-MM-DD"));
+      const fixed = checkIn.add(1, "day").format("YYYY-MM-DD");
+      setCheckOutDate(fixed);
+      if (selectedRoomType) {
+        await fetchRoomsForSelectedType({ startDate: newCheckIn, endDate: fixed, guests: numGuests });
+      }
+      return;
+    }
+
+    if (selectedRoomType) {
+      await fetchRoomsForSelectedType({ startDate: newCheckIn, endDate: checkOutDate, guests: numGuests });
     }
   }
 
-  // Handle check-out date change
-  function handleCheckOutChange(newCheckOut) {
+  async function handleCheckOutChange(newCheckOut) {
     const checkIn = dayjs(checkInDate);
     const checkOut = dayjs(newCheckOut);
-    // Ensure check-out is after check-in
     if (checkOut.isAfter(checkIn)) {
       setCheckOutDate(newCheckOut);
+      if (selectedRoomType) {
+        await fetchRoomsForSelectedType({ startDate: checkInDate, endDate: newCheckOut, guests: numGuests });
+      }
     }
   }
 
-  // Navigate to previous image
+  async function handleGuestsChange(nextGuests) {
+    const safe = Math.max(1, Math.min(selectedRoom?.maxGuests || 10, Number(nextGuests) || 1));
+    setNumGuests(safe);
+
+    if (selectedRoomType) {
+      await fetchRoomsForSelectedType({ startDate: checkInDate, endDate: checkOutDate, guests: safe });
+    }
+  }
+
   function handlePreviousImage() {
     if (!selectedRoom || !selectedRoom.images || selectedRoom.images.length <= 1) return;
-    setCurrentImageIndex((prev) => 
+    setCurrentImageIndex((prev) =>
       prev === 0 ? selectedRoom.images.length - 1 : prev - 1
     );
   }
 
-  // Navigate to next image
   function handleNextImage() {
     if (!selectedRoom || !selectedRoom.images || selectedRoom.images.length <= 1) return;
-    setCurrentImageIndex((prev) => 
+    setCurrentImageIndex((prev) =>
       prev === selectedRoom.images.length - 1 ? 0 : prev + 1
     );
   }
 
   async function handleBookRoom() {
     if (!selectedRoom) return;
-    
+
     const nights = calculateNights();
     if (nights <= 0) {
       setBookingError("Check-out date must be after check-in date");
@@ -154,9 +250,9 @@ export default function BookRoom() {
     try {
       const payload = {
         roomUnitId: selectedRoom.id || selectedRoom._id,
-        checkInDate: checkInDate,
-        checkOutDate: checkOutDate,
-        numGuests: numGuests
+        checkInDate,
+        checkOutDate,
+        numGuests
       };
 
       const res = await fetch(`${API_URL}reservations/create`, {
@@ -168,21 +264,31 @@ export default function BookRoom() {
       if (!res.ok) throw new Error("Failed to book room");
 
       setBookingSuccess(true);
-      fetchRooms();
+
+      // refresh list after booking (so it disappears for that range)
+      if (selectedRoomType) await fetchRoomsForSelectedType();
+
       setTimeout(() => {
         setModalOpen(false);
         setBookingSuccess(false);
       }, 1500);
     } catch (err) {
-      setBookingError(err.message);
+      setBookingError(err.message || "Failed to book room");
     } finally {
       setBooking(false);
     }
   }
 
+  const visibleRooms = useMemo(() => {
+    if (!selectedRoomTypeId) return rooms;
+    // safety: if backend returns only the category filter, this is redundant
+    return rooms.filter(r => (r.roomTypeId === selectedRoomTypeId) || !r.roomTypeId);
+  }, [rooms, selectedRoomTypeId]);
+
   return (
     <Box>
-      <Header setRooms={setRooms} setLoading={setLoading} setError={setError} />
+      {/* Hide HeroSearch until room type selected */}
+      <Header setRooms={setRooms} setLoading={setLoading} setError={setError} showSearch={Boolean(selectedRoomType)} />
 
       <Box sx={{ width: "100%" }}>
         {error && <Chip label={error} color="error" sx={{ mb: 2 }} />}
@@ -209,76 +315,377 @@ export default function BookRoom() {
               py: 2,
               minHeight: "100vh",
               display: "flex",
-              flexDirection: "column"
+              flexDirection: "column",
+              maxWidth: "100%"
             }}
           >
-            {loading ? (
-              <Typography>Loading…</Typography>
-            ) : (
-              <Grid container spacing={3}>
-                {rooms
-                  .slice((page - 1) * itemsPerPage, page * itemsPerPage)
-                  .map(room => (
-                    <Grid item xs={12} sm={6} md={4} lg={3} key={room.id || room._id}>
-                      <Card
-                        sx={{
-                          borderRadius: 3,
-                          bgcolor: "#383838",
-                          cursor: room.booked ? "not-allowed" : "pointer",
-                          transition: "0.2s",
-                          opacity: room.booked ? 0.6 : 1,
-                          "&:hover": { transform: room.booked ? "none" : "translateY(-4px)" }
-                        }}
-                        onClick={() => {
-                          if (room.booked) {
-                            setBookingError("This room is already booked.");
-                            setBookingSuccess(false);
-                          } else {
-                            handleOpenModal(room);
-                          }
-                        }}
-                      >
-                        <Box
-                          component="img"
-                          src={room.images?.[0] || "https://picsum.photos/400/250"}
-                          alt={`Room ${room.roomNumber}`}
-                          sx={{ width: "100%", height: 160, objectFit: "cover" }}
-                        />
+            {/* ====== ROOM TYPE GRID (2 per row) ====== */}
+            {!selectedRoomType && (
+              <>
+                <Box
+                  sx={{
+                    position: "relative",
+                    width: "100%",
+                    height: { xs: 220, sm: 280, md: 340 },
+                    borderRadius: 3,
+                    overflow: "hidden",
+                    mb: 5,
+                  }}
+                >
+                  {/* Background image */}
+                  <Box
+                    component="img"
+                    src={BannerPhoto}
+                    alt="CloudLodge"
+                    sx={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                      position: "absolute",
+                      inset: 0,
+                    }}
+                  />
 
-                        <CardContent>
-                          <Stack direction="row" spacing={1} alignItems="center">
-                            <BedIcon fontSize="small" />
-                            <Typography fontWeight={700}>
-                              Room #{room.roomNumber}
-                            </Typography>
-                          </Stack>
+                  {/* Dark overlay */}
+                  <Box
+                    sx={{
+                      position: "absolute",
+                      inset: 0,
+                      bgcolor: "rgba(0,0,0,0.55)",
+                    }}
+                  />
 
-                          <Chip label={room.roomCategory} size="small" sx={{ my: 1 }} />
+                  {/* Text content */}
+                  <Box
+                    sx={{
+                      position: "relative",
+                      zIndex: 1,
+                      height: "100%",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      textAlign: "center",
+                      px: 2,
+                    }}
+                  >
+                    <Typography
+                      variant="h2"
+                      sx={{
+                        fontFamily: "'Dancing Script', cursive",
+                        fontWeight: 800,
+                        fontSize: { xs: 28, sm: 40, md: 48 },
+                        color: "#fff",
+                        letterSpacing: 1,
+                        mb: 1,
+                      }}
+                    >
+                      Select Your Perfect Room
+                    </Typography>
 
-                          <Stack direction="row" justifyContent="space-between">
-                            <Chip
-                              icon={room.booked ? <CancelIcon /> : <CheckCircleIcon />}
-                              label={room.booked ? "Booked" : "Available"}
-                              color={room.booked ? "error" : "success"}
-                              size="small"
+                    <Divider
+                      sx={{
+                        width: 80,
+                        borderColor: "primary.main",
+                        borderBottomWidth: 3,
+                        my: 2,
+                      }}
+                    />
+
+                    <Typography
+                      variant="h6"
+                      sx={{
+                        color: "rgba(255,255,255,0.85)",
+                        maxWidth: 700,
+                        fontWeight: 400,
+                        fontFamily: "'Dancing Script', cursive",
+                      }}
+                    >
+                      Choose from our collection of thoughtfully designed spaces
+                    </Typography>
+                  </Box>
+                </Box>
+                {loading ? (
+                  <Typography>Loading…</Typography>
+                ) : roomTypes.length === 0 ? (
+                  <Box sx={{ textAlign: "center", py: 8 }}>
+                    <Typography variant="h6" color="text.secondary">
+                      No room types found
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                      Add room types to display booking options.
+                    </Typography>
+                  </Box>
+                ) : (
+                  <Box sx={{ 
+                    display: "grid",
+                    gridTemplateColumns: { xs: "1fr", md: "repeat(2, 1fr)" },
+                    gap: 3,
+                    width: "100%"
+                  }}>
+                    {roomTypes.map(rt => {
+                      const key = rt.id || rt._id;
+                      return (
+                        <Card
+                          key={key}
+                          sx={{
+                            borderRadius: 3,
+                            bgcolor: "#383838",
+                            cursor: "pointer",
+                            transition: "all 0.3s ease",
+                            "&:hover": { 
+                              transform: "translateY(-6px)",
+                              boxShadow: "0 8px 16px rgba(0,0,0,0.3)"
+                            },
+                            display: "flex",
+                            flexDirection: "column",
+                            width: "100%"
+                          }}
+                          onClick={() => handleSelectRoomType(rt)}
+                        >
+                          <Box
+                            sx={{
+                              width: "100%",
+                              height: 200,
+                              overflow: "hidden",
+                              position: "relative"
+                            }}
+                          >
+                            <Box
+                              component="img"
+                              src={rt.images?.[0] || "https://picsum.photos/800/500"}
+                              alt={rt.roomCategory}
+                              sx={{ 
+                                width: "100%",
+                                height: "100%",
+                                objectFit: "cover",
+                                position: "absolute",
+                                top: 0,
+                                left: 0
+                              }}
                             />
-                            <Typography>${room.price}</Typography>
-                          </Stack>
-                        </CardContent>
-                      </Card>
-                    </Grid>
-                  ))}
-              </Grid>
+                          </Box>
+                          <CardContent sx={{ p: 2.5, flexGrow: 1, display: "flex", flexDirection: "column" }}>
+                            <Typography variant="h5" fontWeight={700} gutterBottom>
+                              {rt.roomCategory}
+                            </Typography>
+                            
+                            <Stack direction="row" spacing={1.5} sx={{ my: 1.5, flexWrap: "wrap" }}>
+                              <Chip 
+                                icon={<PeopleIcon />}
+                                label={`Up to ${rt.maxGuests} guests`}
+                                size="small"
+                                color="primary"
+                                variant="outlined"
+                              />
+                              <Chip 
+                                icon={<BedIcon />}
+                                label={rt.bedType || "Queen Bed"}
+                                size="small"
+                                variant="outlined"
+                              />
+                            </Stack>
+
+                            {rt.description && (
+                              <Typography 
+                                variant="body2" 
+                                color="text.secondary" 
+                                sx={{ 
+                                  mb: 1.5, 
+                                  lineHeight: 1.5,
+                                  display: "-webkit-box",
+                                  WebkitLineClamp: 2,
+                                  WebkitBoxOrient: "vertical",
+                                  overflow: "hidden"
+                                }}
+                              >
+                                {rt.description}
+                              </Typography>
+                            )}
+
+                            {rt.amenities && rt.amenities.length > 0 && (
+                              <Box sx={{ my: 1.5, flexGrow: 1 }}>
+                                <Typography 
+                                  variant="body2" 
+                                  color="text.secondary" 
+                                  gutterBottom
+                                  sx={{ fontWeight: 600, mb: 1 }}
+                                >
+                                  Amenities
+                                </Typography>
+                                <Box sx={{ 
+                                  display: "grid",
+                                  gridTemplateColumns: "repeat(2, 1fr)",
+                                  gap: 0.75
+                                }}>
+                                  {rt.amenities.slice(0, 6).map((amenity, idx) => (
+                                    <Chip 
+                                      key={idx}
+                                      label={amenity} 
+                                      size="small" 
+                                      variant="outlined"
+                                      sx={{ 
+                                        width: "100%",
+                                        height: 24,
+                                        justifyContent: "flex-start",
+                                        fontSize: "0.7rem",
+                                        "& .MuiChip-label": {
+                                          width: "100%",
+                                          px: 1
+                                        }
+                                      }}
+                                    />
+                                  ))}
+                                  {rt.amenities.length > 6 && (
+                                    <Chip 
+                                      label={`+${rt.amenities.length - 6} more`}
+                                      size="small" 
+                                      variant="filled"
+                                      color="default"
+                                      sx={{ 
+                                        width: "100%",
+                                        height: 24,
+                                        fontSize: "0.7rem"
+                                      }}
+                                    />
+                                  )}
+                                </Box>
+                              </Box>
+                            )}
+
+                            <Divider sx={{ my: 1.5, borderColor: "#4a4a4a" }} />
+
+                            <Stack 
+                              direction="row" 
+                              justifyContent="space-between" 
+                              alignItems="center"
+                              sx={{ mt: "auto" }}
+                            >
+                              <Box>
+                                <Typography variant="caption" color="text.secondary">
+                                  Starting from
+                                </Typography>
+                                <Typography variant="h5" fontWeight={700} color="primary">
+                                  ${rt.pricePerNight}
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                  per night
+                                </Typography>
+                              </Box>
+                              <Button 
+                                variant="contained" 
+                                size="medium"
+                                sx={{ 
+                                  px: 3,
+                                  py: 1,
+                                  fontWeight: 600
+                                }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleSelectRoomType(rt);
+                                }}
+                              >
+                                Select
+                              </Button>
+                            </Stack>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                  </Box>
+                )}
+              </>
+            )}
+
+            {/* ====== ROOMS GRID (AFTER TYPE SELECTED) ====== */}
+            {selectedRoomType && (
+              <>
+                <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
+                  <Button
+                    variant="outlined"
+                    startIcon={<ArrowBackIcon />}
+                    onClick={handleBackToRoomTypes}
+                    color="inherit"
+                  >
+                    Room Types
+                  </Button>
+
+                  <Chip
+                    label={selectedRoomTypeCategory || "Selected Type"}
+                    sx={{ ml: 1 }}
+                  />
+                </Stack>
+
+                {loading ? (
+                  <Typography>Loading…</Typography>
+                ) : visibleRooms.length === 0 ? (
+                  <Box sx={{ textAlign: "center", py: 8 }}>
+                    <Typography variant="h6" color="text.secondary">
+                      No rooms available for that range
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                      Try different dates or guest count.
+                    </Typography>
+                  </Box>
+                ) : (
+                  <Grid container spacing={3}>
+                    {visibleRooms
+                      .slice((page - 1) * itemsPerPage, page * itemsPerPage)
+                      .map(room => (
+                        <Grid item xs={12} sm={6} md={4} lg={3} key={room.id || room._id}>
+                          <Card
+                            sx={{
+                              borderRadius: 3,
+                              bgcolor: "#383838",
+                              cursor: "pointer",
+                              transition: "0.2s",
+                              "&:hover": { transform: "translateY(-4px)" }
+                            }}
+                            onClick={() => handleOpenModal(room)}
+                          >
+                            <Box
+                              component="img"
+                              src={room.images?.[0] || "https://picsum.photos/400/250"}
+                              alt={`Room ${room.roomNumber}`}
+                              sx={{ width: "100%", height: 160, objectFit: "cover" }}
+                            />
+
+                            <CardContent>
+                              <Stack direction="row" spacing={1} alignItems="center">
+                                <BedIcon fontSize="small" />
+                                <Typography fontWeight={700}>
+                                  Room #{room.roomNumber}
+                                </Typography>
+                              </Stack>
+
+                              <Chip label={room.roomCategory} size="small" sx={{ my: 1 }} />
+
+                              <Stack direction="row" justifyContent="space-between">
+                                <Chip
+                                  icon={<CheckCircleIcon />}
+                                  label="Available"
+                                  color="success"
+                                  size="small"
+                                />
+                                <Typography>${room.price}</Typography>
+                              </Stack>
+                            </CardContent>
+                          </Card>
+                        </Grid>
+                      ))}
+                  </Grid>
+                )}
+              </>
             )}
           </Box>
         </Box>
       </Box>
 
-      {/* Improved Booking Modal */}
-      <Dialog 
-        open={modalOpen} 
-        onClose={handleCloseModal} 
-        maxWidth="md" 
+      {/* ====== BOOKING MODAL (kept like your original) ====== */}
+      <Dialog
+        open={modalOpen}
+        onClose={handleCloseModal}
+        maxWidth="md"
         fullWidth
         PaperProps={{
           sx: {
@@ -304,17 +711,19 @@ export default function BookRoom() {
                 <Box sx={{ position: "relative", mb: 2 }}>
                   <Box
                     component="img"
-                    src={selectedRoom.images?.[currentImageIndex] || "https://picsum.photos/400/250"}
+                    src={
+                      selectedRoom.images?.[currentImageIndex] ||
+                      "https://picsum.photos/400/250"
+                    }
                     alt={`Room ${selectedRoom.roomNumber}`}
-                    sx={{ 
-                      width: "100%", 
-                      height: 220, 
-                      objectFit: "cover", 
+                    sx={{
+                      width: "100%",
+                      height: 220,
+                      objectFit: "cover",
                       borderRadius: 2
                     }}
                   />
-                  
-                  {/* Navigation Buttons - Only show if there are multiple images */}
+
                   {selectedRoom.images && selectedRoom.images.length > 1 && (
                     <>
                       <IconButton
@@ -355,7 +764,6 @@ export default function BookRoom() {
                         <ChevronRightIcon />
                       </IconButton>
 
-                      {/* Image indicator dots */}
                       <Stack
                         direction="row"
                         spacing={0.5}
@@ -377,7 +785,10 @@ export default function BookRoom() {
                               width: 6,
                               height: 6,
                               borderRadius: "50%",
-                              bgcolor: idx === currentImageIndex ? "white" : "rgba(255, 255, 255, 0.5)",
+                              bgcolor:
+                                idx === currentImageIndex
+                                  ? "white"
+                                  : "rgba(255, 255, 255, 0.5)",
                               transition: "all 0.3s"
                             }}
                           />
@@ -386,18 +797,18 @@ export default function BookRoom() {
                     </>
                   )}
                 </Box>
-                
+
                 <Stack spacing={1.5}>
                   <Typography variant="h6" fontWeight={600}>
                     Room #{selectedRoom.roomNumber}
                   </Typography>
-                  
-                  <Chip 
-                    label={selectedRoom.roomCategory} 
-                    size="small" 
+
+                  <Chip
+                    label={selectedRoom.roomCategory}
+                    size="small"
                     sx={{ width: "fit-content" }}
                   />
-                  
+
                   <Box>
                     <Typography variant="body2" color="text.secondary">
                       Price per night
@@ -418,15 +829,19 @@ export default function BookRoom() {
 
                   {selectedRoom.amenities && selectedRoom.amenities.length > 0 && (
                     <Box>
-                      <Typography variant="body2" color="text.secondary" gutterBottom>
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        gutterBottom
+                      >
                         Amenities
                       </Typography>
                       <Stack direction="row" spacing={1} flexWrap="wrap" gap={1}>
                         {selectedRoom.amenities.map((amenity, idx) => (
-                          <Chip 
-                            key={idx} 
-                            label={amenity} 
-                            size="small" 
+                          <Chip
+                            key={idx}
+                            label={amenity}
+                            size="small"
                             variant="outlined"
                           />
                         ))}
@@ -440,16 +855,24 @@ export default function BookRoom() {
               <Grid item xs={12} md={7}>
                 <Stack spacing={3}>
                   {/* Date Selection */}
-                  <Paper elevation={0} sx={{ p: 2.5, bgcolor: "#2a2a2a", borderRadius: 2 }}>
+                  <Paper
+                    elevation={0}
+                    sx={{ p: 2.5, bgcolor: "#2a2a2a", borderRadius: 2 }}
+                  >
                     <Stack spacing={2.5}>
                       <Box>
-                        <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1.5 }}>
+                        <Stack
+                          direction="row"
+                          spacing={1}
+                          alignItems="center"
+                          sx={{ mb: 1.5 }}
+                        >
                           <CalendarTodayIcon fontSize="small" color="primary" />
                           <Typography variant="subtitle1" fontWeight={600}>
                             Select Dates
                           </Typography>
                         </Stack>
-                        
+
                         <Grid container spacing={2}>
                           <Grid item xs={6}>
                             <TextField
@@ -459,7 +882,6 @@ export default function BookRoom() {
                               onChange={e => handleCheckInChange(e.target.value)}
                               InputLabelProps={{ shrink: true }}
                               fullWidth
-                              disabled={selectedRoom.booked}
                               inputProps={{
                                 min: dayjs().format("YYYY-MM-DD")
                               }}
@@ -478,9 +900,10 @@ export default function BookRoom() {
                               onChange={e => handleCheckOutChange(e.target.value)}
                               InputLabelProps={{ shrink: true }}
                               fullWidth
-                              disabled={selectedRoom.booked}
                               inputProps={{
-                                min: dayjs(checkInDate).add(1, "day").format("YYYY-MM-DD")
+                                min: dayjs(checkInDate)
+                                  .add(1, "day")
+                                  .format("YYYY-MM-DD")
                               }}
                               sx={{
                                 "& .MuiOutlinedInput-root": {
@@ -492,11 +915,10 @@ export default function BookRoom() {
                         </Grid>
                       </Box>
 
-                      {/* Number of Nights Display */}
-                      <Box 
-                        sx={{ 
-                          display: "flex", 
-                          alignItems: "center", 
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
                           gap: 1,
                           p: 1.5,
                           bgcolor: "#383838",
@@ -508,29 +930,40 @@ export default function BookRoom() {
                           Duration:
                         </Typography>
                         <Typography variant="body1" fontWeight={600}>
-                          {calculateNights()} {calculateNights() === 1 ? "night" : "nights"}
+                          {calculateNights()}{" "}
+                          {calculateNights() === 1 ? "night" : "nights"}
                         </Typography>
                       </Box>
                     </Stack>
                   </Paper>
 
                   {/* Guest Selection */}
-                  <Paper elevation={0} sx={{ p: 2.5, bgcolor: "#2a2a2a", borderRadius: 2 }}>
-                    <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1.5 }}>
+                  <Paper
+                    elevation={0}
+                    sx={{ p: 2.5, bgcolor: "#2a2a2a", borderRadius: 2 }}
+                  >
+                    <Stack
+                      direction="row"
+                      spacing={1}
+                      alignItems="center"
+                      sx={{ mb: 1.5 }}
+                    >
                       <PeopleIcon fontSize="small" color="primary" />
                       <Typography variant="subtitle1" fontWeight={600}>
                         Guests
                       </Typography>
                     </Stack>
-                    
+
                     <TextField
                       label="Number of Guests"
                       type="number"
                       value={numGuests}
-                      onChange={e => setNumGuests(Math.max(1, Math.min(selectedRoom?.maxGuests || 10, Number(e.target.value) || 1)))}
-                      inputProps={{ min: 1, max: selectedRoom?.maxGuests || 10 }}
+                      onChange={e => handleGuestsChange(e.target.value)}
+                      inputProps={{
+                        min: 1,
+                        max: selectedRoom?.maxGuests || 10
+                      }}
                       fullWidth
-                      disabled={selectedRoom.booked}
                       sx={{
                         "& .MuiOutlinedInput-root": {
                           bgcolor: "#323232"
@@ -540,11 +973,11 @@ export default function BookRoom() {
                   </Paper>
 
                   {/* Price Breakdown */}
-                  <Paper 
-                    elevation={0} 
-                    sx={{ 
-                      p: 2.5, 
-                      bgcolor: "#2a2a2a", 
+                  <Paper
+                    elevation={0}
+                    sx={{
+                      p: 2.5,
+                      bgcolor: "#2a2a2a",
                       borderRadius: 2,
                       border: "2px solid",
                       borderColor: "primary.main"
@@ -553,20 +986,25 @@ export default function BookRoom() {
                     <Typography variant="subtitle1" fontWeight={600} gutterBottom>
                       Price Details
                     </Typography>
-                    
+
                     <Stack spacing={1.5} sx={{ mt: 2 }}>
                       <Stack direction="row" justifyContent="space-between">
                         <Typography variant="body2" color="text.secondary">
-                          ${selectedRoom.price} × {calculateNights()} {calculateNights() === 1 ? "night" : "nights"}
+                          ${selectedRoom.price} × {calculateNights()}{" "}
+                          {calculateNights() === 1 ? "night" : "nights"}
                         </Typography>
                         <Typography variant="body2">
                           ${selectedRoom.price * calculateNights()}
                         </Typography>
                       </Stack>
-                      
+
                       <Divider sx={{ borderColor: "#383838" }} />
-                      
-                      <Stack direction="row" justifyContent="space-between" alignItems="center">
+
+                      <Stack
+                        direction="row"
+                        justifyContent="space-between"
+                        alignItems="center"
+                      >
                         <Typography variant="h6" fontWeight={600}>
                           Total
                         </Typography>
@@ -579,23 +1017,12 @@ export default function BookRoom() {
 
                   {/* Status Messages */}
                   {bookingError && (
-                    <Chip 
-                      label={bookingError} 
-                      color="error" 
-                      sx={{ width: "100%" }}
-                    />
+                    <Chip label={bookingError} color="error" sx={{ width: "100%" }} />
                   )}
                   {bookingSuccess && (
-                    <Chip 
-                      label="Room booked successfully!" 
-                      color="success" 
-                      sx={{ width: "100%" }}
-                    />
-                  )}
-                  {selectedRoom.booked && (
-                    <Chip 
-                      label="This room is already booked." 
-                      color="error" 
+                    <Chip
+                      label="Room booked successfully!"
+                      color="success"
                       sx={{ width: "100%" }}
                     />
                   )}
@@ -606,17 +1033,18 @@ export default function BookRoom() {
         </DialogContent>
 
         <DialogActions sx={{ p: 2.5, gap: 1 }}>
-          <Button 
+          <Button
             onClick={handleCloseModal}
             variant="outlined"
             size="large"
+            color="error"
           >
             Cancel
           </Button>
           <Button
             variant="contained"
             onClick={handleBookRoom}
-            disabled={booking || (selectedRoom && selectedRoom.booked) || calculateNights() <= 0}
+            disabled={booking || calculateNights() <= 0}
             size="large"
             sx={{ minWidth: 140 }}
           >
