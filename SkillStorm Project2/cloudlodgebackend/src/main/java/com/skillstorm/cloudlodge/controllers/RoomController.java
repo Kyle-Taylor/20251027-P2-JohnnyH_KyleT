@@ -23,6 +23,8 @@ import com.skillstorm.cloudlodge.models.ResolvedRoom;
 import com.skillstorm.cloudlodge.models.Room;
 import com.skillstorm.cloudlodge.services.RoomService;
 import com.skillstorm.cloudlodge.services.S3Service;
+import org.springframework.security.core.Authentication;
+import com.skillstorm.cloudlodge.models.User;
 
 
 @RestController
@@ -36,6 +38,7 @@ public class RoomController {
         this.s3Service = s3Service;
     }
 
+    /*
     // GET all resolved rooms
     @GetMapping
     public ResponseEntity<List<ResolvedRoom>> getAllRooms() {
@@ -49,6 +52,29 @@ public class RoomController {
                     .build();
         }
     }
+    */
+    
+
+    // GET all resolved rooms
+    @GetMapping
+    public ResponseEntity<List<ResolvedRoom>> getAllRooms(Authentication auth) {
+        try {
+            User user = (User) auth.getPrincipal();
+
+            // Convert enum to string for consistency across app
+            String role = user.getRole() != null ? user.getRole().name() : "GUEST";
+
+            // Pass role string to service for filtering
+            List<ResolvedRoom> rooms = roomService.findAllResolvedForRole(role);
+
+            return new ResponseEntity<>(rooms, HttpStatus.OK);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                    .header("Error", "Sorry! We have an internal Error! Please check back later.")
+                    .build();
+        }
+    }
+
 
     // GET room by ID
     @GetMapping("/{id:[a-fA-F0-9]{24}}")

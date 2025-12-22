@@ -5,6 +5,7 @@ import Login from "./pages/Login/Login";
 import Rooms from "./pages/Rooms/Rooms";
 import RoomTypes from "./pages/RoomTypes/RoomTypes";
 import Register from "./pages/Register/Register";
+import Profile from "./pages/Profile/Profile";
 
 function App() {
   return (
@@ -27,6 +28,9 @@ function App() {
 
         {/* Room Types route */}
         <Route path="/roomtypes" element={<RoomTypes />} />
+
+        {/* Profile route */}
+        <Route path="/profile" element={<Profile />} />
               
         {/* Catch-all 404 */}
         <Route path="*" element={<div>Page not found</div>} />

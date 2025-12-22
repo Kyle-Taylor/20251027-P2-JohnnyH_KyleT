@@ -45,19 +45,19 @@ public class SecurityConfig {
                     "/css/**", "/js/**", "/images/**",
                     "/auth/**",
                     "/users/register",
-                    "/users/login",
-                    "/oauth2/**",
-                    "/dashboard",
-                    "/rooms",
-                    "/roomtypes"
+                    "/users/login"
                 ).permitAll()
+                .requestMatchers("/dashboard", "/rooms/**", "/roomtypes/**").hasRole("ADMIN")
+                .requestMatchers("/profile").authenticated()
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form.disable())
-            .httpBasic(basic -> basic.disable())
+            .httpBasic(basic -> basic.disable()
+            /*
             .oauth2Login(oauth2 -> oauth2
                 .defaultSuccessUrl("/dashboard")
                 .failureUrl("/login?error")
+            */
             );
 
         // Add JWT filter BEFORE default authentication filter

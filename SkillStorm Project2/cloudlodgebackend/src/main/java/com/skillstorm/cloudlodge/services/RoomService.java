@@ -43,6 +43,12 @@ public class RoomService {
         return resolvedRooms;
     }
 
+    // New method for role-based filtering (stub for now)
+    public List<ResolvedRoom> findAllResolvedForRole(String role) {
+        // TODO implement filtering logic based on role
+        return findAllResolved();
+    }
+
     private ResolvedRoom mergeRoomWithType(Room room, RoomType roomType) {
         // Use override if present, else fallback to roomType
         Double price = room.getPriceOverride() != null ? room.getPriceOverride() : (roomType != null ? roomType.getPricePerNight() : null);

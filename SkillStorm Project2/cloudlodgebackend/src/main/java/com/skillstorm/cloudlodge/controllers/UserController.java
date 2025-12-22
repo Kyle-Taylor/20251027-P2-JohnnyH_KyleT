@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.skillstorm.cloudlodge.models.User;
 import com.skillstorm.cloudlodge.services.UserService;
+import org.springframework.security.core.Authentication;
 
 @RestController
 @RequestMapping("/users")
@@ -106,4 +107,19 @@ public class UserController {
                     .build();
         }
     }
+
+    @GetMapping("/profile")
+    public ResponseEntity<?> getProfile(Authentication authentication) {
+        if (authentication == null) {
+            return ResponseEntity.status(401).build();
+        }
+
+        String email = authentication.getName(); // comes from JWT
+        User user = userService.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("User not found with email " + email));
+
+        return ResponseEntity.ok(user);
+    }
+    
+
 }

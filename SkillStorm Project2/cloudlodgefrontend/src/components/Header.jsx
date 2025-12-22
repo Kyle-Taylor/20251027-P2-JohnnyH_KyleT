@@ -17,6 +17,7 @@ import CloudLodgeLogo from "../assets/images/CloudLodge.png";
 import SearchIcon from "@mui/icons-material/Search";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
+import { useNavigate } from "react-router-dom";  
 
 const API_URL = "http://localhost:8080/rooms";
 const DEBOUNCE_MS = 300;
@@ -24,6 +25,7 @@ const DEBOUNCE_MS = 300;
 export default function Header({ setRooms, setLoading, setError }) {
   const [query, setQuery] = useState("");
   const timeoutRef = useRef(null);
+  const navigate = useNavigate();
 
   // user menu
   const [anchorEl, setAnchorEl] = useState(null);
@@ -34,11 +36,14 @@ export default function Header({ setRooms, setLoading, setError }) {
 
   const handleProfile = () => {
     handleMenuClose();
-    window.location.href = "/profile";
+    navigate("/profile");
+    console.log("Go to profile");
   };
 
   const handleSignOut = () => {
     handleMenuClose();
+    localStorage.removeItem("token");
+    navigate("/login");
     console.log("Sign out");
   };
 

@@ -43,8 +43,17 @@ const Login = () => {
         return;
       }
 
+      // Store the token locally
+      if (data.token) {
+        localStorage.setItem("token", data.token);
+        console.log("Token stored in localStorage");
+      } else {
+        setError("No token returned from backend.");
+        return;
+      }
+
       console.log("Login successful:", data);
-      navigate("/dashboard");
+      navigate("/rooms");
 
     } catch (err) {
       console.error(err);

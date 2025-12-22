@@ -55,7 +55,7 @@ public class AuthController {
         return ResponseEntity.ok(user);
     }
 
-    // Add this logout endpoint
+    // Add this logout endpoint (not used)
     @PostMapping("/logout")
     public ResponseEntity<?> logout() {
         // Client should remove the JWT from storage
