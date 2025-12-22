@@ -37,49 +37,33 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         final String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
 
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            filterChain.doFilter(request, response);
-            return;
-        }
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String jwtToken = authHeader.substring(7);
 
-        String jwtToken = authHeader.substring(7);
+            if (jwtUtils.validateJwtToken(jwtToken)) {
+                String userId = jwtUtils.getUserIdFromJwt(jwtToken);
+                String roleFromJwt = jwtUtils.getRoleFromJwt(jwtToken);
 
-        if (!jwtUtils.validateJwtToken(jwtToken)) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.getWriter().write("Invalid JWT token");
-            return;
-        }
+                if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                    User user = userRepository.findById(userId).orElse(null);
 
-        String userId = jwtUtils.getUserIdFromJwt(jwtToken);
-        String role = jwtUtils.getRoleFromJwt(jwtToken);
+                    if (user != null) {
+                        String role = "ROLE_" + roleFromJwt.toUpperCase();
+                        List<SimpleGrantedAuthority> authorities = List.of(new SimpleGrantedAuthority(role));
 
-        if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            User user = userRepository.findById(userId).orElse(null);
+                        UsernamePasswordAuthenticationToken authToken =
+                                new UsernamePasswordAuthenticationToken(user, null, authorities);
 
-            if (user != null) {
-                // Normalize role
-                String normalizedRole = "ROLE_" + role.toUpperCase();
-                List<SimpleGrantedAuthority> authorities = List.of(
-                        new SimpleGrantedAuthority(normalizedRole)
-                );
-
-                // Optional: block non-admins from protected routes
-                String path = request.getRequestURI();
-                if ((path.startsWith("/rooms") || path.startsWith("/roomtypes") || path.equals("/dashboard"))
-                        && !normalizedRole.equals("ROLE_ADMIN")) {
-                    response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                    response.getWriter().write("Forbidden: insufficient role");
-                    return;
+                        authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                        SecurityContextHolder.getContext().setAuthentication(authToken);
+                    }
                 }
-
-                UsernamePasswordAuthenticationToken authToken =
-                        new UsernamePasswordAuthenticationToken(user, null, authorities);
-
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+            } else {
+                System.out.println("Invalid JWT token: " + jwtToken);
             }
         }
 
+        // Always continue filter chain; Spring Security will handle access control
         filterChain.doFilter(request, response);
     }
 }

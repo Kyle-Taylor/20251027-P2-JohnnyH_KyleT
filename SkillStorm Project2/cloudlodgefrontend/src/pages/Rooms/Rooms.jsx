@@ -2,40 +2,11 @@ import React, { useEffect, useState, useRef } from "react";
 import Pagination from '@mui/material/Pagination';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
-// Initial form state for Add Room
-const INITIAL_FORM = {
-  number: "",
-  roomTypeId: "",
-  price: "",
-  maxGuests: "",
-  amenities: "",
-  description: "",
-};
 import {
-  Card,
-  CardContent,
-  CardActions,
-  Typography,
-  Button,
-  Grid,
-  Chip,
-  Box,
-  TextField,
-  ImageList,
-  ImageListItem,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Divider,
-  Select,
-  MenuItem,
-  InputLabel,
-  FormControl,
-  Stack,
-  Tooltip,
-  IconButton,
-  Paper,
+  Card, CardContent, CardActions, Typography, Button, Grid, Chip,
+  Box, TextField, Dialog, DialogTitle, DialogContent, DialogActions,
+  Divider, Select, MenuItem, InputLabel, FormControl, Stack,
+  Tooltip, IconButton, Paper
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -43,44 +14,36 @@ import BedIcon from "@mui/icons-material/Bed";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
-import Header from "../../components/Header";
-import SideNav from "../../components/SideNav";
 import CloseIcon from '@mui/icons-material/Close';
 import PhotoCamera from "@mui/icons-material/PhotoCamera";
 
+import Header from "../../components/Header";
+import SideNav from "../../components/SideNav";
+import { apiFetch } from "../../api/apiFetch";
 
-const API_URL = "http://localhost:8080/rooms";
+const INITIAL_FORM = {
+  number: "", roomTypeId: "", price: "", maxGuests: "", amenities: "", description: ""
+};
 
 export default function Rooms() {
   const [rooms, setRooms] = useState([]);
-  const [page, setPage] = useState(1);
-  const itemsPerPage = 18;
   const [roomTypes, setRoomTypes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  const [page, setPage] = useState(1);
+  const itemsPerPage = 18;
 
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [editMode, setEditMode] = useState(false);
-
   const [form, setForm] = useState(INITIAL_FORM);
-
-  function resetAddForm() {
-    setForm(INITIAL_FORM);
-  }
-
-  const [editForm, setEditForm] = useState({
-    price: "",
-    maxGuests: "",
-    amenities: "",
-    description: "",
-  });
-
-  // Local draft state for edit modal
+  const [editForm, setEditForm] = useState({ price: "", maxGuests: "", amenities: "", description: "" });
   const [editDraft, setEditDraft] = useState(null);
-  // State for selected images in edit modal
   const [editImages, setEditImages] = useState([]);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [roomToDelete, setRoomToDelete] = useState(null);
   const fileInputRef = useRef();
 
   useEffect(() => {
@@ -88,23 +51,22 @@ export default function Rooms() {
     fetchRooms();
   }, []);
 
+  // Fetch all room types
   async function fetchRoomTypes() {
     try {
-      const res = await fetch("http://localhost:8080/roomtypes");
-      if (!res.ok) throw new Error("Failed to fetch room types");
-      setRoomTypes(await res.json());
+      const data = await apiFetch("/roomtypes");
+      setRoomTypes(data);
     } catch (err) {
       setError(err.message);
     }
   }
 
+  // Fetch all rooms
   async function fetchRooms(callback) {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch(API_URL);
-      if (!res.ok) throw new Error("Failed to fetch rooms");
-      const data = await res.json();
+      const data = await apiFetch("/rooms");
       setRooms(data);
       if (callback) callback(data);
     } catch (err) {
@@ -114,65 +76,46 @@ export default function Rooms() {
     }
   }
 
+  function resetAddForm() {
+    setForm(INITIAL_FORM);
+  }
+
+  // Add a room
   async function handleAddRoom(e) {
     e.preventDefault();
     setError("");
 
-    const rt = roomTypes.find((r) => r.id === form.roomTypeId);
+    const rt = roomTypes.find(r => r.id === form.roomTypeId);
 
     const payload = {
       roomNumber: parseInt(form.number),
       roomTypeId: form.roomTypeId,
-      isActive: true,
+      isActive: true
     };
 
-    if (form.price && parseFloat(form.price) !== rt?.pricePerNight) {
-      payload.priceOverride = parseFloat(form.price);
-    }
+    if (form.price && parseFloat(form.price) !== rt?.pricePerNight) payload.priceOverride = parseFloat(form.price);
+    if (form.maxGuests && parseInt(form.maxGuests) !== rt?.maxGuests) payload.maxGuestsOverride = parseInt(form.maxGuests);
 
-    if (form.maxGuests && parseInt(form.maxGuests) !== rt?.maxGuests) {
-      payload.maxGuestsOverride = parseInt(form.maxGuests);
-    }
-
-    const amenitiesArr = form.amenities
-      ? form.amenities.split(",").map((a) => a.trim())
-      : [];
-
-    if (amenitiesArr.join(",") !== (rt?.amenities?.join(",") ?? "")) {
-      payload.amenitiesOverride = amenitiesArr;
-    }
-
-    if (form.description && form.description !== rt?.description) {
-      payload.descriptionOverride = form.description;
-    }
+    const amenitiesArr = form.amenities ? form.amenities.split(",").map(a => a.trim()) : [];
+    if (amenitiesArr.join(",") !== (rt?.amenities?.join(",") ?? "")) payload.amenitiesOverride = amenitiesArr;
+    if (form.description && form.description !== rt?.description) payload.descriptionOverride = form.description;
 
     try {
-      const res = await fetch(`${API_URL}/create`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) throw new Error("Failed to add room");
-
+      await apiFetch("/rooms/create", { method: "POST", body: payload });
       setAddModalOpen(false);
       resetAddForm();
-      // Stay on the same page after adding
       fetchRooms();
     } catch (err) {
       setError(err.message);
     }
   }
 
-  // Delete confirmation modal state
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [roomToDelete, setRoomToDelete] = useState(null);
-
+  // Delete a room
   async function handleDeleteRoom(id) {
+    setError("");
     try {
-      const res = await fetch(`${API_URL}/delete/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Failed to delete room");
-      setModalOpen(false); // Always close the view modal after delete
+      await apiFetch(`/rooms/delete/${id}`, { method: "DELETE" });
+      setModalOpen(false);
       if (selectedRoom && (selectedRoom.id === id || selectedRoom._id === id)) {
         setEditMode(false);
         setSelectedRoom(null);
@@ -180,42 +123,44 @@ export default function Rooms() {
       fetchRooms();
     } catch (err) {
       setError(err.message);
+    } finally {
+      setDeleteModalOpen(false);
+      setRoomToDelete(null);
     }
-    setDeleteModalOpen(false);
-    setRoomToDelete(null);
   }
 
+  // Open edit modal
   function handleOpenModal(room) {
     setSelectedRoom(room);
     setEditMode(false);
-    let amenitiesArr = [];
-    if (Array.isArray(room.amenities)) {
-      amenitiesArr = room.amenities;
-    } else if (typeof room.amenities === 'string') {
-      amenitiesArr = room.amenities.split(',').map(a => a.trim()).filter(a => a);
-    } else {
-      amenitiesArr = [""];
-    }
+
+    const amenitiesArr = Array.isArray(room.amenities)
+      ? room.amenities
+      : typeof room.amenities === "string"
+        ? room.amenities.split(",").map(a => a.trim()).filter(Boolean)
+        : [""];
+
     const initial = {
       price: room.price ?? "",
       maxGuests: room.maxGuests ?? "",
-      amenities: amenitiesArr.length ? amenitiesArr : [""],
-      description: room.description ?? "",
+      amenities: amenitiesArr,
+      description: room.description ?? ""
     };
+
     setEditForm(initial);
     setEditDraft(initial);
-    setEditImages([]); // Reset new uploads
+    setEditImages([]);
     setModalOpen(true);
   }
 
+  // Save edited room
   async function handleSaveEdit() {
     if (!selectedRoom) return;
-
     setEditForm(editDraft);
 
     setTimeout(async () => {
       const amenitiesArr = Array.isArray(editDraft.amenities)
-        ? editDraft.amenities.map(a => a.trim()).filter(a => a)
+        ? editDraft.amenities.map(a => a.trim()).filter(Boolean)
         : [];
 
       const payload = {
@@ -226,34 +171,19 @@ export default function Rooms() {
         priceOverride: parseFloat(editDraft.price),
         maxGuestsOverride: parseInt(editDraft.maxGuests),
         amenitiesOverride: amenitiesArr,
-        descriptionOverride: editDraft.description,
+        descriptionOverride: editDraft.description
       };
 
       try {
-        // Use FormData for multipart/form-data
         const formData = new FormData();
         formData.append("room", new Blob([JSON.stringify(payload)], { type: "application/json" }));
-        // Append selected images
-        if (editImages && editImages.length > 0) {
-          for (let i = 0; i < editImages.length; i++) {
-            formData.append("images", editImages[i]);
-          }
-        }
+        editImages.forEach(img => formData.append("images", img));
 
-        const res = await fetch(
-          `${API_URL}/update/${selectedRoom.id || selectedRoom._id}`,
-          {
-            method: "PUT",
-            body: formData,
-          }
-        );
+        await apiFetch(`/rooms/update/${selectedRoom.id || selectedRoom._id}`, { method: "PUT", body: formData });
 
-        if (!res.ok) throw new Error("Failed to update room");
-
-        fetchRooms((updatedRooms) => {
+        fetchRooms(updatedRooms => {
           setRooms(updatedRooms);
-          const id = selectedRoom.id || selectedRoom._id;
-          const updatedRoom = updatedRooms.find(r => r.id === id || r._id === id);
+          const updatedRoom = updatedRooms.find(r => r.id === selectedRoom.id || r._id === selectedRoom._id);
           setSelectedRoom(updatedRoom || null);
           setEditMode(false);
           setEditImages([]);
@@ -264,22 +194,18 @@ export default function Rooms() {
     }, 0);
   }
 
-   function resizeTo1500x1000(file) {
+  // Resize uploaded images
+  function resizeTo1500x1000(file) {
     return new Promise((resolve, reject) => {
       const img = new Image();
       img.onload = () => {
         const canvas = document.createElement("canvas");
         canvas.width = 1500;
         canvas.height = 1000;
-
         const ctx = canvas.getContext("2d");
-
-        // center-crop to avoid stretching
         const srcRatio = img.width / img.height;
         const targetRatio = 1500 / 1000;
-
         let sx, sy, sw, sh;
-
         if (srcRatio > targetRatio) {
           sh = img.height;
           sw = sh * targetRatio;
@@ -291,20 +217,13 @@ export default function Rooms() {
           sx = 0;
           sy = (img.height - sh) / 2;
         }
-
         ctx.drawImage(img, sx, sy, sw, sh, 0, 0, 1500, 1000);
-
-        canvas.toBlob(
-          blob => blob ? resolve(blob) : reject(),
-          "image/jpeg",
-          0.9
-        );
+        canvas.toBlob(blob => blob ? resolve(blob) : reject(), "image/jpeg", 0.9);
       };
       img.onerror = reject;
       img.src = URL.createObjectURL(file);
     });
   }
-
 
   return (
   <Box>

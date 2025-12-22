@@ -18,6 +18,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import { useNavigate } from "react-router-dom";  
+import { apiFetch } from "../api/apiFetch";
 
 const API_URL = "http://localhost:8080/rooms";
 const DEBOUNCE_MS = 300;
@@ -67,7 +68,6 @@ export default function Header({ setRooms, setLoading, setError }) {
 
         url = `${API_URL}/search?${params.toString()}`;
       }
-
       const res = await fetch(url);
       if (!res.ok) throw new Error("Search failed");
 
