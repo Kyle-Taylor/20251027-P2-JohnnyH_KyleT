@@ -16,8 +16,8 @@ import {
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import DeleteConfirmationModal from "./DeleteConfirmationModal";
+import { apiFetch } from "../api/apiFetch";
 
-const API_URL = "http://localhost:8080/users";
 
 export default function UsersTable() {
 
@@ -28,8 +28,7 @@ export default function UsersTable() {
   const [userToDelete, setUserToDelete] = useState(null);
   async function handleDeleteUser(id) {
     try {
-      const res = await fetch(`${API_URL}/delete/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Failed to delete user");
+      const data = await apiFetch(`/delete/${id}`, { method: "DELETE" });
       setUsers(users.filter(u => (u.id || u._id) !== id));
     } catch (err) {
       setError(err.message);
@@ -46,9 +45,7 @@ export default function UsersTable() {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch(API_URL);
-      if (!res.ok) throw new Error("Failed to fetch users");
-      const data = await res.json();
+      const data = await apiFetch("/users");
       setUsers(data);
     } catch (err) {
       setError(err.message);

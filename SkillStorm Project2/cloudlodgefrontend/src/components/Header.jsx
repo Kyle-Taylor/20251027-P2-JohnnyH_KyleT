@@ -9,14 +9,14 @@ import {
   MenuItem
 } from "@mui/material";
 import { GlobalStyles } from "@mui/material";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import CloudLodgeLogo from "../assets/images/CloudLodge.png";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import HeroSearch from "./HeroSearch";
-
-const API_URL = "http://localhost:8080";
+import { apiFetch } from "../api/apiFetch";
+import { useNavigate } from "react-router-dom";
 
 export default function Header({
   setRooms,
@@ -24,21 +24,63 @@ export default function Header({
   setError,
   showSearch = true
 }) {
-
+  const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState(null);
   const menuOpen = Boolean(anchorEl);
+  const [userInfo, setUserInfo] = useState(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setUserInfo(null);
+      return undefined;
+    }
+
+    async function loadProfile() {
+      try {
+        const data = await apiFetch("/profile");
+        if (!isMounted) return;
+        const fullName = data?.fullName || data?.full_name || "";
+        const role = data?.role || "";
+        setUserInfo({
+          name: fullName || "Guest",
+          role: role ? role.toString().toUpperCase() : "GUEST"
+        });
+      } catch {
+        if (!isMounted) return;
+        try {
+          const payload = JSON.parse(atob(token.split(".")[1]));
+          const role = payload.role || "";
+          setUserInfo({
+            name: "Guest",
+            role: role ? role.toString().toUpperCase() : "GUEST"
+          });
+        } catch {
+          setUserInfo(null);
+        }
+      }
+    }
+
+    loadProfile();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const handleMenuOpen = (e) => setAnchorEl(e.currentTarget);
   const handleMenuClose = () => setAnchorEl(null);
 
   const handleProfile = () => {
     handleMenuClose();
-    window.location.href = "/profile";
+    navigate("/profile");
+    console.log("Go to profile");
   };
 
   const handleSignOut = () => {
     handleMenuClose();
-    console.log("Sign out");
+    localStorage.removeItem("token");
+    navigate("/login");
   };
 
   async function runSearch({ startDate, endDate, guests }) {
@@ -54,10 +96,7 @@ export default function Header({
         guests
       });
 
-      const res = await fetch(`${API_URL}/rooms/search?${params.toString()}`);
-      if (!res.ok) throw new Error("Search failed");
-
-      const data = await res.json();
+      const data = await apiFetch(`/rooms/search?${params.toString()}`);
       setRooms(data.content || data);
     } catch (err) {
       setError(err.message || "Search failed");
@@ -110,7 +149,17 @@ export default function Header({
           )}
 
           {/* User menu */}
-          <Box sx={{ ml: "auto" }}>
+          <Box sx={{ ml: "auto", display: "flex", alignItems: "center" }}>
+            {userInfo && (
+              <Box sx={{ mr: 1.5, textAlign: "right" }}>
+                <Typography sx={{ fontSize: 14, fontWeight: 600, color: "#e3e6ea" }}>
+                  {userInfo.name}
+                </Typography>
+                <Typography sx={{ fontSize: 11, letterSpacing: 1, color: "#9aa4b2" }}>
+                  {userInfo.role}
+                </Typography>
+              </Box>
+            )}
             <IconButton
               onClick={handleMenuOpen}
               sx={{ display: "flex", gap: 0, p: 0.5 }}

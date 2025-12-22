@@ -21,8 +21,6 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
-        {/* Placeholder dashboard route */}
-        <Route path="/dashboard" element={<Dashboard />} />
         {/* Protected routes */}
         <Route 
           path="/rooms" 
@@ -60,7 +58,14 @@ function App() {
         />
         
         {/* Create Reservation route */}
-        <Route path="/create-reservation" element={<CreateReservation />} />
+        <Route 
+          path="/create-reservation" 
+          element={
+            <ProtectedRoute requiredRole={["GUEST", "ADMIN", "MANAGER"]}>
+              <CreateReservation />
+            </ProtectedRoute>
+          } 
+        />
 
         {/* Catch-all 404 */}
         <Route path="*" element={<div>Page not found</div>} />

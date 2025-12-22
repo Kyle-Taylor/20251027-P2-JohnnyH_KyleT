@@ -17,6 +17,7 @@ import CancelIcon from "@mui/icons-material/Cancel";
 import CloseIcon from '@mui/icons-material/Close';
 import EditModal from '../../components/EditModal';
 import PhotoCamera from "@mui/icons-material/PhotoCamera";
+import DetailsModal from '../../components/DetailsModal';
 import DeleteConfirmationModal from '../../components/DeleteConfirmationModal';
 
 import Header from "../../components/Header";

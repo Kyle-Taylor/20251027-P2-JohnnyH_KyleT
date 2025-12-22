@@ -17,8 +17,7 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import CancelBookingButton from "./CancelBookingButton";
-
-const API_URL = "http://localhost:8080/";
+import { apiFetch } from "../api/apiFetch";
 
 export default function UpcomingReservations() {
   const [reservationMonth, setReservationMonth] = useState(() => {
@@ -39,8 +38,7 @@ export default function UpcomingReservations() {
         ).padStart(2, "0")}`
       );
 
-      const res = await fetch(`${API_URL}dashboard?${params.toString()}`);
-      const data = await res.json();
+      const data = await apiFetch(`/dashboard?${params.toString()}`);
       setUpcomingReservations(data.upcomingReservations || []);
     } catch {
       setUpcomingReservations([]);

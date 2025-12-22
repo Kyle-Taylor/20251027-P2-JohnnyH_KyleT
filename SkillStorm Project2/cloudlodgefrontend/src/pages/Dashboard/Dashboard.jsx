@@ -26,8 +26,7 @@ import { format } from 'date-fns';
 import UsersTable from '../../components/UsersTable';
 import CancelBookingButton from '../../components/CancelBookingButton';
 import UpcomingReservations from "../../components/UpcomingReservations";
-
-const API_URL = "http://localhost:8080/";
+import { apiFetch } from "../../api/apiFetch";
 
 export default function Dashboard() {
   const [loading, setLoading] = useState(true);
@@ -58,8 +57,7 @@ export default function Dashboard() {
         if (reservationMonth) {
           params.append("reservationMonth", `${reservationMonth.getFullYear()}-${String(reservationMonth.getMonth() + 1).padStart(2, '0')}`);
         }
-        const res = await fetch(`${API_URL}dashboard?${params.toString()}`);
-        const data = await res.json();
+        const data = await apiFetch(`/dashboard?${params.toString()}`);
         setUpcomingReservations(data.upcomingReservations || []);
       } catch (err) {
         setUpcomingReservations([]);
@@ -89,8 +87,7 @@ export default function Dashboard() {
         // Send as yyyy-MM
         params.append("reservationMonth", `${reservationMonth.getFullYear()}-${String(reservationMonth.getMonth() + 1).padStart(2, '0')}`);
       }
-      const res = await fetch(`${API_URL}dashboard?${params.toString()}`);
-      const data = await res.json();
+      const data = await apiFetch(`/dashboard?${params.toString()}`);
       setStats(data);
     } catch (err) {
       setStats(null);

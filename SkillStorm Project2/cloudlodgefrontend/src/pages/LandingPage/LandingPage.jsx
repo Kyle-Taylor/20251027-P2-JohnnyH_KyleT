@@ -25,6 +25,7 @@ import LocalTaxiIcon from "@mui/icons-material/LocalTaxi";
 import EmailIcon from "@mui/icons-material/Email";
 import PhoneIcon from "@mui/icons-material/Phone";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
+import { apiFetch } from "../../api/apiFetch";
 
 const HIGHLIGHTS = [
   {
@@ -96,8 +97,6 @@ const STATS = [
   { label: "Onsite dining", value: "4.7", star: true }
 ];
 
-const API_URL = "http://localhost:8080/roomtypes";
-
 export default function LandingPage() {
   const navigate = useNavigate();
   const [roomTypes, setRoomTypes] = useState([]);
@@ -106,9 +105,7 @@ export default function LandingPage() {
   useEffect(() => {
     async function fetchRoomTypes() {
       try {
-        const res = await fetch(API_URL);
-        if (!res.ok) throw new Error("Failed to fetch room types");
-        const data = await res.json();
+        const data = await apiFetch("/roomtypes");
         setRoomTypes(Array.isArray(data) ? data : []);
         setRoomTypeError("");
       } catch (err) {

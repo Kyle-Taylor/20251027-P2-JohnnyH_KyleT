@@ -30,6 +30,7 @@ import SideNav from "../../components/SideNav";
 import dayjs from "dayjs";
 import BannerPhoto from "../../assets/images/BannerPhoto.png";
 import CalendarPopup from "../../components/CalandarPopup";
+import { apiFetch } from "../../api/apiFetch";
 
 const API_URL = "http://localhost:8080/";
 
@@ -82,9 +83,7 @@ export default function BookRoom() {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch(API_URL + "roomtypes");
-      if (!res.ok) throw new Error("Failed to fetch room types");
-      const data = await res.json();
+      const data = await apiFetch("/roomtypes");
       setRoomTypes(Array.isArray(data) ? data : []);
     } catch (err) {
       setError(err.message || "Failed to fetch room types");
@@ -116,10 +115,7 @@ export default function BookRoom() {
       qs.set("endDate", endDate);
       qs.set("guests", String(guests));
 
-      const res = await fetch(`${API_URL}rooms/search?${qs.toString()}`);
-      if (!res.ok) throw new Error("Failed to fetch rooms");
-
-      const data = await res.json();
+      const data = await apiFetch(`/rooms/search?${qs.toString()}`);
       const list = Array.isArray(data) ? data : (data?.content ?? []);
       setRooms(Array.isArray(list) ? list : []);
     } catch (err) {
@@ -159,11 +155,7 @@ export default function BookRoom() {
       setLoading(true);
       setError("");
       const params = new URLSearchParams({ startDate: today, endDate: tomorrow, guests: 1 });
-      fetch(`http://localhost:8080/rooms/search?${params.toString()}`)
-        .then(res => {
-          if (!res.ok) throw new Error("Search failed");
-          return res.json();
-        })
+      apiFetch(`/rooms/search?${params.toString()}`)
         .then(data => setRooms(data.content || data))
         .catch(err => setError(err.message || "Search failed"))
         .finally(() => setLoading(false));
@@ -199,13 +191,8 @@ export default function BookRoom() {
     }
     // Fetch booked dates for this room
     try {
-      const res = await fetch(`${API_URL}availability/room/${room.id || room._id}`);
-      if (res.ok) {
-        const data = await res.json();
-        setBookedDates(Array.isArray(data) ? data.map(a => a.date) : []);
-      } else {
-        setBookedDates([]);
-      }
+      const data = await apiFetch(`/availability/room/${room.id || room._id}`);
+      setBookedDates(Array.isArray(data) ? data.map(a => a.date) : []);
     } catch {
       setBookedDates([]);
     }
@@ -317,13 +304,10 @@ export default function BookRoom() {
         numGuests
       };
 
-      const res = await fetch(`${API_URL}reservations/create`, {
+      await apiFetch(`/reservations/create`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
+        body: payload
       });
-
-      if (!res.ok) throw new Error("Failed to book room");
 
       setBookingSuccess(true);
 
