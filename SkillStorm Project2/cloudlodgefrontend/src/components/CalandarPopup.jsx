@@ -13,7 +13,6 @@ function getMonthDays(year, month) {
   for (let i = 0; i < offset; i++) days.push(null);
   for (let d = 1; d <= daysInMonth; d++) days.push(d);
 
-function CalendarPopup({ range, onSelect, bookedDates, disableDates }) {
   return days;
 }
 

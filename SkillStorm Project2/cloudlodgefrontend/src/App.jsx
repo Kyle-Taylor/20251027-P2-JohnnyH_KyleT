@@ -7,13 +7,14 @@ import RoomTypes from "./pages/RoomTypes/RoomTypes";
 import Register from "./pages/Register/Register";
 import CreateReservation from "./pages/CreateReservation/CreateReservation";
 import Dashboard from "./pages/Dashboard/Dashboard";
+import LandingPage from "./pages/LandingPage/LandingPage";
 
 function App() {
   return (
     <Router>
       <Routes>
-        {/* Default route redirects to login */}
-        <Route path="/" element={<Navigate to="/login" />} />
+        {/* Default route redirects to landing page */}
+        <Route path="/" element={<LandingPage />} />
 
         {/* Login route */}
         <Route path="/login" element={<Login />} />
