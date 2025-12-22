@@ -13,8 +13,11 @@ import com.skillstorm.cloudlodge.repositories.ReservationRepository;
 public class ReservationService {
 
     private final ReservationRepository reservationRepository;
-    public ReservationService(ReservationRepository reservationRepository) {
+    private final RoomAvailabilityService roomAvailabilityService;
+    
+    public ReservationService(ReservationRepository reservationRepository, RoomAvailabilityService roomAvailabilityService) {
         this.reservationRepository = reservationRepository;
+        this.roomAvailabilityService = roomAvailabilityService;
     }
 
     // Get all reservations
@@ -62,6 +65,8 @@ public class ReservationService {
 
     // Delete reservation
     public void delete(String id) {
+        // Delete all RoomAvailability entries for this reservation
+        roomAvailabilityService.deleteByReservationId(id);
         reservationRepository.deleteById(id);
     }
 }

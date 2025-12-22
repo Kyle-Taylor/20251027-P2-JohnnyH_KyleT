@@ -1,4 +1,5 @@
 import { Box, Typography } from "@mui/material";
+import { useMemo } from "react";
 import dayjs from "dayjs";
 
 const WEEKDAYS = ["S", "M", "T", "W", "T", "F", "S"];
@@ -12,12 +13,16 @@ function getMonthDays(year, month) {
   for (let i = 0; i < offset; i++) days.push(null);
   for (let d = 1; d <= daysInMonth; d++) days.push(d);
 
+function CalendarPopup({ range, onSelect, bookedDates, disableDates }) {
   return days;
 }
 
-function Month({ year, month, range, onSelect }) {
+function Month({ year, month, range, onSelect, bookedDates = [] }) {
   const days = getMonthDays(year, month);
   const { start, end } = range;
+
+  // Convert bookedDates to a Set of YYYY-MM-DD strings for fast lookup
+  const bookedSet = useMemo(() => new Set(bookedDates.map(d => dayjs(d).format("YYYY-MM-DD"))), [bookedDates]);
 
   return (
     <Box sx={{ width: 280 }}>
@@ -47,20 +52,21 @@ function Month({ year, month, range, onSelect }) {
           const isEnd = end && date.isSame(end, "day");
           const inRange =
             start && end && date.isAfter(start, "day") && date.isBefore(end, "day");
+          const isBooked = bookedSet.has(date.format("YYYY-MM-DD"));
 
           return (
             <Box
                 key={i}
-                onClick={() => onSelect(date)}
+                onClick={() => !isBooked && onSelect(date)}
                 sx={{
                     position: "relative",
                     height: 36,
-                    cursor: "pointer",
+                    cursor: isBooked ? "not-allowed" : "pointer",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
                     fontSize: 14,
-                    color: isStart || isEnd ? "#fff" : "text.primary",
+                    color: isBooked ? "#aaa" : (isStart || isEnd ? "#fff" : "text.primary"),
 
                     /* range bar */
                     "&::before": inRange || isStart || isEnd
@@ -76,7 +82,7 @@ function Month({ year, month, range, onSelect }) {
                     : {},
 
                     /* hover */
-                    "&:hover::before": !isStart && !isEnd
+                    "&:hover::before": !isStart && !isEnd && !isBooked
                     ? {
                         content: '""',
                         position: "absolute",
@@ -105,6 +111,17 @@ function Month({ year, month, range, onSelect }) {
                 <Box sx={{ position: "relative", zIndex: 1 }}>
                     {day}
                 </Box>
+                {/* Booked overlay */}
+                {isBooked && (
+                  <Box sx={{
+                    position: "absolute",
+                    width: 36,
+                    height: 36,
+                    borderRadius: "50%",
+                    backgroundColor: "rgba(128,128,128,0.25)",
+                    zIndex: 2,
+                  }} />
+                )}
             </Box>
           );
         })}
@@ -113,7 +130,13 @@ function Month({ year, month, range, onSelect }) {
   );
 }
 
-export default function CalendarPopup({ range, onSelect }) {
+export default function CalendarPopup({ range, onSelect, bookedDates = [] }) {
+  // Show current and next month
+  const today = dayjs();
+  const year1 = today.year();
+  const month1 = today.month();
+  const year2 = today.add(1, "month").year();
+  const month2 = today.add(1, "month").month();
   return (
     <Box
       sx={{
@@ -125,8 +148,8 @@ export default function CalendarPopup({ range, onSelect }) {
       onClick={e => e.stopPropagation()}
     >
       <Box sx={{ display: "flex", gap: 4 }}>
-        <Month year={2025} month={11} range={range} onSelect={onSelect} />
-        <Month year={2026} month={0} range={range} onSelect={onSelect} />
+        <Month year={year1} month={month1} range={range} onSelect={onSelect} bookedDates={bookedDates} />
+        <Month year={year2} month={month2} range={range} onSelect={onSelect} bookedDates={bookedDates} />
       </Box>
     </Box>
   );

@@ -47,4 +47,8 @@ public class RoomAvailabilityService {
     public void delete(String id) {
         roomAvailabilityRepository.deleteById(id);
     }
+
+    public void deleteByReservationId(String reservationId) {
+        roomAvailabilityRepository.deleteByReservationId(reservationId);
+    }
 }

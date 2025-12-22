@@ -29,10 +29,12 @@ import Header from "../../components/Header";
 import SideNav from "../../components/SideNav";
 import dayjs from "dayjs";
 import BannerPhoto from "../../assets/images/BannerPhoto.png";
+import CalendarPopup from "../../components/CalandarPopup";
 
 const API_URL = "http://localhost:8080/";
 
 export default function BookRoom() {
+  const [bookedDates, setBookedDates] = useState([]);
   const [rooms, setRooms] = useState([]);
   const [page, setPage] = useState(1);
   const itemsPerPage = 18;
@@ -57,6 +59,10 @@ export default function BookRoom() {
 
   const [roomTypes, setRoomTypes] = useState([]);
   const [selectedRoomType, setSelectedRoomType] = useState(null);
+
+  const [modalRange, setModalRange] = useState({ start: null, end: null });
+
+  const [lastSearch, setLastSearch] = useState(null);
 
   const selectedRoomTypeId = useMemo(() => {
     if (!selectedRoomType) return null;
@@ -132,11 +138,36 @@ export default function BookRoom() {
     setBookingError("");
     setBookingSuccess(false);
 
-    // keep defaults
-    setCheckInDate(dayjs().format("YYYY-MM-DD"));
-    setCheckOutDate(dayjs().add(1, "day").format("YYYY-MM-DD"));
+    // Set default search: today/tomorrow, 1 guest
+    const today = dayjs().format("YYYY-MM-DD");
+    const tomorrow = dayjs().add(1, "day").format("YYYY-MM-DD");
+    setCheckInDate(today);
+    setCheckOutDate(tomorrow);
     setNumGuests(1);
     setCurrentImageIndex(0);
+    setLastSearch({ startDate: today, endDate: tomorrow, guests: 1 });
+
+    // Simulate a HeroSearch autofill and search by calling the Header's setRooms/setLoading/setError props
+    if (typeof window !== 'undefined' && window.dispatchEvent) {
+      // Custom event for HeroSearch autofill (if you want to listen in HeroSearch for this event)
+      window.dispatchEvent(new CustomEvent('heroSearchAutofill', {
+        detail: { guests: 1, startDate: today, endDate: tomorrow }
+      }));
+    }
+    // Also trigger the search directly via Header's runSearch logic
+    if (typeof setRooms === 'function' && typeof setLoading === 'function' && typeof setError === 'function') {
+      setLoading(true);
+      setError("");
+      const params = new URLSearchParams({ startDate: today, endDate: tomorrow, guests: 1 });
+      fetch(`http://localhost:8080/rooms/search?${params.toString()}`)
+        .then(res => {
+          if (!res.ok) throw new Error("Search failed");
+          return res.json();
+        })
+        .then(data => setRooms(data.content || data))
+        .catch(err => setError(err.message || "Search failed"))
+        .finally(() => setLoading(false));
+    }
   }
 
   function handleBackToRoomTypes() {
@@ -150,14 +181,34 @@ export default function BookRoom() {
     setPage(1);
   }
 
-  function handleOpenModal(room) {
+  async function handleOpenModal(room, e) {
+    if (e) e.stopPropagation();
     setSelectedRoom(room);
     setModalOpen(true);
     setBookingError("");
     setBookingSuccess(false);
     setCurrentImageIndex(0);
-
-    // keep whatever user had picked in the list view; don't force reset
+    // Sync modal dates to last search
+    if (lastSearch) {
+      setCheckInDate(lastSearch.startDate);
+      setCheckOutDate(lastSearch.endDate);
+      setNumGuests(lastSearch.guests);
+      setModalRange({ start: dayjs(lastSearch.startDate), end: dayjs(lastSearch.endDate) });
+    } else {
+      setModalRange({ start: dayjs(checkInDate), end: dayjs(checkOutDate) });
+    }
+    // Fetch booked dates for this room
+    try {
+      const res = await fetch(`${API_URL}availability/room/${room.id || room._id}`);
+      if (res.ok) {
+        const data = await res.json();
+        setBookedDates(Array.isArray(data) ? data.map(a => a.date) : []);
+      } else {
+        setBookedDates([]);
+      }
+    } catch {
+      setBookedDates([]);
+    }
   }
 
   function handleCloseModal() {
@@ -168,11 +219,18 @@ export default function BookRoom() {
     setBookingSuccess(false);
   }
 
+  // Replace calculateNights and calculateTotalPrice with modal-aware versions:
   function calculateNights() {
-    const checkIn = dayjs(checkInDate);
-    const checkOut = dayjs(checkOutDate);
-    const nights = checkOut.diff(checkIn, "day");
-    return nights > 0 ? nights : 0;
+    if (modalOpen && modalRange.start && modalRange.end) {
+      const start = modalRange.start.startOf("day");
+      const end = modalRange.end.startOf("day");
+      const nights = Math.abs(end.diff(start, "day"));
+      return nights;
+    }
+    const checkIn = dayjs(checkInDate).startOf("day");
+    const checkOut = dayjs(checkOutDate).startOf("day");
+    const nights = Math.abs(checkOut.diff(checkIn, "day"));
+    return nights;
   }
 
   function calculateTotalPrice() {
@@ -189,13 +247,13 @@ export default function BookRoom() {
     if (checkOut.isBefore(checkIn) || checkOut.isSame(checkIn, "day")) {
       const fixed = checkIn.add(1, "day").format("YYYY-MM-DD");
       setCheckOutDate(fixed);
-      if (selectedRoomType) {
+      if (!modalOpen && selectedRoomType) {
         await fetchRoomsForSelectedType({ startDate: newCheckIn, endDate: fixed, guests: numGuests });
       }
       return;
     }
 
-    if (selectedRoomType) {
+    if (!modalOpen && selectedRoomType) {
       await fetchRoomsForSelectedType({ startDate: newCheckIn, endDate: checkOutDate, guests: numGuests });
     }
   }
@@ -205,7 +263,7 @@ export default function BookRoom() {
     const checkOut = dayjs(newCheckOut);
     if (checkOut.isAfter(checkIn)) {
       setCheckOutDate(newCheckOut);
-      if (selectedRoomType) {
+      if (!modalOpen && selectedRoomType) {
         await fetchRoomsForSelectedType({ startDate: checkInDate, endDate: newCheckOut, guests: numGuests });
       }
     }
@@ -215,7 +273,7 @@ export default function BookRoom() {
     const safe = Math.max(1, Math.min(selectedRoom?.maxGuests || 10, Number(nextGuests) || 1));
     setNumGuests(safe);
 
-    if (selectedRoomType) {
+    if (!modalOpen && selectedRoomType) {
       await fetchRoomsForSelectedType({ startDate: checkInDate, endDate: checkOutDate, guests: safe });
     }
   }
@@ -243,6 +301,10 @@ export default function BookRoom() {
       return;
     }
 
+    // Use modal dates for booking
+    const bookingCheckIn = modalRange.start ? modalRange.start.format("YYYY-MM-DD") : checkInDate;
+    const bookingCheckOut = modalRange.end ? modalRange.end.format("YYYY-MM-DD") : checkOutDate;
+
     setBooking(true);
     setBookingError("");
     setBookingSuccess(false);
@@ -250,8 +312,8 @@ export default function BookRoom() {
     try {
       const payload = {
         roomUnitId: selectedRoom.id || selectedRoom._id,
-        checkInDate,
-        checkOutDate,
+        checkInDate: bookingCheckIn,
+        checkOutDate: bookingCheckOut,
         numGuests
       };
 
@@ -265,13 +327,23 @@ export default function BookRoom() {
 
       setBookingSuccess(true);
 
-      // refresh list after booking (so it disappears for that range)
-      if (selectedRoomType) await fetchRoomsForSelectedType();
+      // After booking, refresh list using current search bar dates (not the booking dates)
+      if (selectedRoomType) {
+        await fetchRoomsForSelectedType({
+          startDate: checkInDate,
+          endDate: checkOutDate,
+          guests: numGuests
+        });
+        // Update lastSearch to keep search state in sync
+        setLastSearch({
+          startDate: checkInDate,
+          endDate: checkOutDate,
+          guests: numGuests
+        });
+      }
 
-      setTimeout(() => {
         setModalOpen(false);
         setBookingSuccess(false);
-      }, 1500);
     } catch (err) {
       setBookingError(err.message || "Failed to book room");
     } finally {
@@ -279,10 +351,11 @@ export default function BookRoom() {
     }
   }
 
+  // Only show active rooms for reservation (user-facing)
   const visibleRooms = useMemo(() => {
-    if (!selectedRoomTypeId) return rooms;
-    // safety: if backend returns only the category filter, this is redundant
-    return rooms.filter(r => (r.roomTypeId === selectedRoomTypeId) || !r.roomTypeId);
+    if (!selectedRoomTypeId) return rooms.filter(r => r.isActive !== false);
+    // Filter by type and isActive
+    return rooms.filter(r => ((r.roomTypeId === selectedRoomTypeId) || !r.roomTypeId) && r.isActive !== false);
   }, [rooms, selectedRoomTypeId]);
 
   return (
@@ -641,7 +714,7 @@ export default function BookRoom() {
                               transition: "0.2s",
                               "&:hover": { transform: "translateY(-4px)" }
                             }}
-                            onClick={() => handleOpenModal(room)}
+                            onClick={e => handleOpenModal(room, e)}
                           >
                             <Box
                               component="img"
@@ -695,10 +768,10 @@ export default function BookRoom() {
         }}
       >
         <DialogTitle sx={{ pb: 1 }}>
-          <Typography variant="h5" fontWeight={600}>
+          <Typography variant="h6" fontWeight={600} component="div">
             Book Your Stay
           </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }} component="div">
             Complete your reservation details
           </Typography>
         </DialogTitle>
@@ -873,46 +946,28 @@ export default function BookRoom() {
                           </Typography>
                         </Stack>
 
-                        <Grid container spacing={2}>
-                          <Grid item xs={6}>
-                            <TextField
-                              label="Check-in"
-                              type="date"
-                              value={checkInDate}
-                              onChange={e => handleCheckInChange(e.target.value)}
-                              InputLabelProps={{ shrink: true }}
-                              fullWidth
-                              inputProps={{
-                                min: dayjs().format("YYYY-MM-DD")
-                              }}
-                              sx={{
-                                "& .MuiOutlinedInput-root": {
-                                  bgcolor: "#323232"
+                        {/* Only show the calendar popup for date selection */}
+                        <Box sx={{ mt: 2 }}>
+                          <CalendarPopup
+                            range={modalRange}
+                            onSelect={date => {
+                              setModalRange(prev => {
+                                if (!prev.start || (prev.start && prev.end)) {
+                                  return { start: date, end: null };
                                 }
-                              }}
-                            />
-                          </Grid>
-                          <Grid item xs={6}>
-                            <TextField
-                              label="Check-out"
-                              type="date"
-                              value={checkOutDate}
-                              onChange={e => handleCheckOutChange(e.target.value)}
-                              InputLabelProps={{ shrink: true }}
-                              fullWidth
-                              inputProps={{
-                                min: dayjs(checkInDate)
-                                  .add(1, "day")
-                                  .format("YYYY-MM-DD")
-                              }}
-                              sx={{
-                                "& .MuiOutlinedInput-root": {
-                                  bgcolor: "#323232"
+                                // Normalize: always set start to earlier and end to later date
+                                if (date.isSame(prev.start, "day")) {
+                                  // Same day: treat as 0 nights
+                                  return { start: date, end: date };
                                 }
-                              }}
-                            />
-                          </Grid>
-                        </Grid>
+                                const earlier = date.isBefore(prev.start, "day") ? date : prev.start;
+                                const later = date.isAfter(prev.start, "day") ? date : prev.start;
+                                return { start: earlier, end: later };
+                              });
+                            }}
+                            bookedDates={bookedDates}
+                          />
+                        </Box>
                       </Box>
 
                       <Box

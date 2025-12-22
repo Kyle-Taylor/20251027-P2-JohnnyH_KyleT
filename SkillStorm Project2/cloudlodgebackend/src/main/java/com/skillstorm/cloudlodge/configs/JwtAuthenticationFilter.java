@@ -1,8 +1,8 @@
 package com.skillstorm.cloudlodge.configs;
 
-import com.skillstorm.cloudlodge.models.User;
-import com.skillstorm.cloudlodge.repositories.UserRepository;
-import com.skillstorm.cloudlodge.utils.JwtUtils;
+import java.io.IOException;
+import java.util.List;
+
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -11,13 +11,14 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import com.skillstorm.cloudlodge.models.User;
+import com.skillstorm.cloudlodge.repositories.UserRepository;
+import com.skillstorm.cloudlodge.utils.JwtUtils;
+
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
-import java.io.IOException;
-import java.util.List;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {

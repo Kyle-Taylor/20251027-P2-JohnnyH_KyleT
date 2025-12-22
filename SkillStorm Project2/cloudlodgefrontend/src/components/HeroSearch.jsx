@@ -6,13 +6,37 @@ import dayjs from "dayjs";
 import CalendarPopup from "./CalandarPopup";
 
 export default function HeroSearch({ onSearchChange }) {
+    // Listen for autofill event from parent (room type selection)
+    useEffect(() => {
+      function handleAutofill(e) {
+        const { guests, startDate, endDate } = e.detail || {};
+        if (guests) setGuests(guests);
+        if (startDate && endDate) {
+          setRange({ start: dayjs(startDate), end: dayjs(endDate) });
+          // Trigger search after state updates
+          setTimeout(() => {
+            if (onSearchChange) {
+              onSearchChange({
+                startDate,
+                endDate,
+                guests: guests || 1
+              });
+            }
+          }, 0);
+        }
+      }
+      window.addEventListener('heroSearchAutofill', handleAutofill);
+      return () => window.removeEventListener('heroSearchAutofill', handleAutofill);
+    }, [onSearchChange]);
   const [activeSection, setActiveSection] = useState(null);
   const [guests, setGuests] = useState(0);
   const [showDateError, setShowDateError] = useState(false);
   const [showGuestError, setShowGuestError] = useState(false);
 
-  // store dates here (not inside popup)
-  const [range, setRange] = useState({ start: null, end: null });
+    // Default calendar range: today and tomorrow
+    const today = dayjs().startOf("day");
+    const tomorrow = today.add(1, "day");
+    const [range, setRange] = useState({ start: today, end: tomorrow });
 
   const handleSearch = (e) => {
     // Prevent event bubbling

@@ -15,6 +15,8 @@ public interface RoomAvailabilityRepository extends MongoRepository<RoomAvailabi
     List<RoomAvailability> findByRoomUnitId(String roomUnitId);
     List<RoomAvailability> findByDate(LocalDate date);
     List<RoomAvailability> findByReservationId(String reservationId);
+
+    void deleteByReservationId(String reservationId);
     @Query("{ 'date': { $gte: ?0, $lt: ?1 } }")
     List<RoomAvailability> findBookedInRange(LocalDate start,LocalDate end);
 }

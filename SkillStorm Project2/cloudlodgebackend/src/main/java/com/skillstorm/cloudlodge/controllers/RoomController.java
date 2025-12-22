@@ -1,6 +1,6 @@
 package com.skillstorm.cloudlodge.controllers;
 
-import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
@@ -86,35 +86,57 @@ public class RoomController {
     }
 
     // UPDATE room by ID
-    @PutMapping(value = "/update/{id}", consumes = {"multipart/form-data"})
-    public ResponseEntity<Room> updateRoom(
-            @PathVariable String id,
-            @RequestPart("room") Room room,
-            @RequestPart(value = "images", required = false) List<MultipartFile> images
-    ) {
-        try {
-            room.setId(id);
+@PutMapping(value = "/update/{id}", consumes = "multipart/form-data")
+public ResponseEntity<Room> updateRoom(
+        @PathVariable String id,
+        @RequestPart("room") Room room,
+        @RequestPart(value = "images", required = false) List<MultipartFile> images,
+        @RequestPart(value = "deleteImages", required = false) String deleteImagesJson
+) {
+    try {
+        room.setId(id);
 
-            // Handle image upload/override
-            if (images != null && !images.isEmpty()) {
-                List<String> imageUrls = new java.util.ArrayList<>();
-                for (org.springframework.web.multipart.MultipartFile file : images) {
-                    String url = s3Service.uploadFile(file, "images");
-                    imageUrls.add(url);
-                }
-                room.setImagesOverride(imageUrls);
-                return new ResponseEntity<>(room, HttpStatus.OK);
-            }
-            // If images is null, do not change imagesOverride (keep existing or clear if needed)
+        // Load existing room to preserve current images
+        Room existing = roomService.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Room not found"));
 
-            Room updatedRoom = roomService.save(room);
-            return new ResponseEntity<>(updatedRoom, HttpStatus.OK);
-        } catch (IOException e) {
-            return ResponseEntity.internalServerError()
-                    .header("Error", "Sorry! We have an internal Error! Please check back later.")
-                    .build();
+        List<String> currentImages = new ArrayList<>(
+                existing.getImagesOverride() != null
+                        ? existing.getImagesOverride()
+                        : List.of()
+        );
+
+        // Remove deleted images
+        if (deleteImagesJson != null && !deleteImagesJson.isBlank()) {
+            List<String> deleteImages = new com.fasterxml.jackson.databind.ObjectMapper()
+                    .readValue(
+                            deleteImagesJson,
+                            new com.fasterxml.jackson.databind.ObjectMapper()
+                                    .getTypeFactory()
+                                    .constructCollectionType(List.class, String.class)
+                    );
+            currentImages.removeAll(deleteImages);
         }
+
+        // Upload and append new images
+        if (images != null && !images.isEmpty()) {
+            for (MultipartFile file : images) {
+                currentImages.add(s3Service.uploadFile(file, "images"));
+            }
+        }
+
+        room.setImagesOverride(currentImages.isEmpty() ? null : currentImages);
+
+        Room updatedRoom = roomService.save(room);
+        return new ResponseEntity<>(updatedRoom, HttpStatus.OK);
+
+    } catch (Exception e) {
+        return ResponseEntity.internalServerError()
+                .header("Error", "Sorry! We have an internal Error! Please check back later.")
+                .build();
     }
+}
+
 
     // Set room active/inactive
     @PutMapping("/set-active/{id}")

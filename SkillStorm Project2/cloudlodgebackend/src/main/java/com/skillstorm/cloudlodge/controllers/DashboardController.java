@@ -35,7 +35,8 @@ public class DashboardController {
     @GetMapping("/dashboard")
     public ResponseEntity<Map<String, Object>> dashboard(
         @RequestParam(value = "date", required = false) String dateStr,
-        @RequestParam(value = "period", required = false, defaultValue = "day") String period
+        @RequestParam(value = "period", required = false, defaultValue = "day") String period,
+        @RequestParam(value = "reservationMonth", required = false) String reservationMonth
     ) {
         Map<String, Object> data = new HashMap<>();
         LocalDate targetDate = dateStr != null ? LocalDate.parse(dateStr) : LocalDate.now();
@@ -109,22 +110,49 @@ public class DashboardController {
         long inactiveRooms = allRooms.stream().filter(r -> r.getIsActive() != null && !r.getIsActive()).count();
         data.put("inactiveRooms", inactiveRooms);
 
-        // 4. Upcoming Reservations (next 7 days)
-        LocalDate now = LocalDate.now();
-        LocalDate weekFromNow = now.plusDays(7);
+        // 4. Upcoming Reservations (by month if provided, else next 7 days)
         List<Reservation> allReservations = reservationService.findAll();
-        List<Map<String, Object>> upcomingReservations = allReservations.stream()
-            .filter(r -> r.getCheckInDate() != null && !r.getCheckInDate().isBefore(now) && !r.getCheckInDate().isAfter(weekFromNow))
-            .map(r -> {
-                Map<String, Object> m = new HashMap<>();
-                m.put("id", r.getId());
-                m.put("guestName", r.getUserId()); // Replace with actual guest name if available
-                m.put("roomNumber", r.getRoomUnitId()); // Replace with actual room number if available
-                m.put("checkInDate", r.getCheckInDate().toString());
-                m.put("checkOutDate", r.getCheckOutDate() != null ? r.getCheckOutDate().toString() : "");
-                return m;
-            })
-            .collect(Collectors.toList());
+        List<Map<String, Object>> upcomingReservations;
+        if (reservationMonth != null && reservationMonth.matches("\\d{4}-\\d{2}")) {
+            int year = Integer.parseInt(reservationMonth.substring(0, 4));
+            int month = Integer.parseInt(reservationMonth.substring(5, 7));
+            LocalDate monthStart = LocalDate.of(year, month, 1);
+            LocalDate monthEnd = monthStart.withDayOfMonth(monthStart.lengthOfMonth());
+            upcomingReservations = allReservations.stream()
+                .filter(r -> r.getCheckInDate() != null &&
+                    !r.getCheckInDate().isBefore(monthStart) && !r.getCheckInDate().isAfter(monthEnd)
+                    && (r.getStatus() == null || !r.getStatus().name().equals("CANCELLED")))
+                .map(r -> {
+                    Map<String, Object> m = new HashMap<>();
+                    m.put("id", r.getId());
+                    m.put("guestName", r.getUserId()); // Replace with actual guest name if available
+                    // Lookup real room number
+                    Room room = roomService.findById(r.getRoomUnitId()).orElse(null);
+                    m.put("roomNumber", room != null && room.getRoomNumber() != null ? room.getRoomNumber() : r.getRoomUnitId());
+                    m.put("checkInDate", r.getCheckInDate().toString());
+                    m.put("checkOutDate", r.getCheckOutDate() != null ? r.getCheckOutDate().toString() : "");
+                    return m;
+                })
+                .collect(Collectors.toList());
+        } else {
+            LocalDate now = LocalDate.now();
+            LocalDate weekFromNow = now.plusDays(7);
+            upcomingReservations = allReservations.stream()
+                .filter(r -> r.getCheckInDate() != null && !r.getCheckInDate().isBefore(now) && !r.getCheckInDate().isAfter(weekFromNow)
+                    && (r.getStatus() == null || !r.getStatus().name().equals("CANCELLED")))
+                .map(r -> {
+                    Map<String, Object> m = new HashMap<>();
+                    m.put("id", r.getId());
+                    m.put("guestName", r.getUserId()); // Replace with actual guest name if available
+                    // Lookup real room number
+                    Room room = roomService.findById(r.getRoomUnitId()).orElse(null);
+                    m.put("roomNumber", room != null && room.getRoomNumber() != null ? room.getRoomNumber() : r.getRoomUnitId());
+                    m.put("checkInDate", r.getCheckInDate().toString());
+                    m.put("checkOutDate", r.getCheckOutDate() != null ? r.getCheckOutDate().toString() : "");
+                    return m;
+                })
+                .collect(Collectors.toList());
+        }
         data.put("upcomingReservations", upcomingReservations);
 
         // 5. Recent Payments (last 7 days)

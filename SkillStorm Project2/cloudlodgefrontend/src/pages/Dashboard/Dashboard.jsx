@@ -13,10 +13,7 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Select,
-  MenuItem,
   FormControl,
-  InputLabel,
   CircularProgress,
 } from "@mui/material";
 import { BarChart, PieChart } from "@mui/x-charts";
@@ -27,13 +24,21 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { format } from 'date-fns';
 import UsersTable from '../../components/UsersTable';
+import CancelBookingButton from '../../components/CancelBookingButton';
+import UpcomingReservations from "../../components/UpcomingReservations";
 
 const API_URL = "http://localhost:8080/";
 
 export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState(null);
-  const [sortPeriod, setSortPeriod] = useState("day");
+  const [upcomingReservations, setUpcomingReservations] = useState([]);
+  const [loadingUpcoming, setLoadingUpcoming] = useState(true);
+  const [sortPeriod, setSortPeriod] = useState("day"); // for stats only
+  const [reservationMonth, setReservationMonth] = useState(() => {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), 1);
+  });
   const [selectedDate, setSelectedDate] = useState(() => {
     const today = new Date();
     return today;
@@ -43,6 +48,28 @@ export default function Dashboard() {
     fetchDashboard();
     // eslint-disable-next-line
   }, [sortPeriod, selectedDate]);
+
+  // Fetch only upcoming reservations when reservationMonth changes
+  useEffect(() => {
+    async function fetchUpcoming() {
+      setLoadingUpcoming(true);
+      try {
+        const params = new URLSearchParams();
+        if (reservationMonth) {
+          params.append("reservationMonth", `${reservationMonth.getFullYear()}-${String(reservationMonth.getMonth() + 1).padStart(2, '0')}`);
+        }
+        const res = await fetch(`${API_URL}dashboard?${params.toString()}`);
+        const data = await res.json();
+        setUpcomingReservations(data.upcomingReservations || []);
+      } catch (err) {
+        setUpcomingReservations([]);
+      } finally {
+        setLoadingUpcoming(false);
+      }
+    }
+    fetchUpcoming();
+    // eslint-disable-next-line
+  }, [reservationMonth]);
 
   async function fetchDashboard() {
     setLoading(true);
@@ -58,6 +85,10 @@ export default function Dashboard() {
         params.append("date", utcDate.toISOString().slice(0, 10));
       }
       if (sortPeriod) params.append("period", sortPeriod);
+      if (reservationMonth) {
+        // Send as yyyy-MM
+        params.append("reservationMonth", `${reservationMonth.getFullYear()}-${String(reservationMonth.getMonth() + 1).padStart(2, '0')}`);
+      }
       const res = await fetch(`${API_URL}dashboard?${params.toString()}`);
       const data = await res.json();
       setStats(data);
@@ -115,8 +146,9 @@ export default function Dashboard() {
                   series={[
                     {
                       data: [
-                        { id: 0, value: stats.occupiedRooms, label: "Occupied" },
-                        { id: 1, value: stats.totalRooms - stats.occupiedRooms, label: "Vacant" },
+                        { id: 0, value: stats.occupiedRooms, label: "Occupied", color: '#1976d2' },
+                        { id: 1, value: stats.totalRooms - stats.occupiedRooms - stats.inactiveRooms, label: "Vacant", color: '#90caf9' },
+                        { id: 2, value: stats.inactiveRooms, label: "Inactive", color: '#d32f2f' },
                       ],
                     },
                   ]}
@@ -148,63 +180,12 @@ export default function Dashboard() {
                 />
               </Paper>
             </Grid>
-            {/* Inactive Rooms */}
-            <Grid item xs={12} md={3}>
-              <Paper sx={{ p: 3, textAlign: "center" }}>
-                <Typography variant="h6" fontWeight={600}>
-                  Inactive Rooms
-                </Typography>
-                <Typography variant="h3" color="error.main" fontWeight={700}>
-                  {stats.inactiveRooms}
-                </Typography>
-                <Divider sx={{ my: 2 }} />
-                <Chip label="Under Maintenance" color="warning" />
-              </Paper>
-            </Grid>
+            
             {/* Upcoming Reservations */}
             <Grid item xs={12} md={3}>
-              <Paper sx={{ p: 3 }}>
-                <Stack direction="row" alignItems="center" justifyContent="space-between">
-                  <Typography variant="h6" fontWeight={600}>
-                    Upcoming Reservations
-                  </Typography>
-                  <FormControl size="small">
-                    <InputLabel>Sort</InputLabel>
-                    <Select
-                      value={sortPeriod}
-                      label="Sort"
-                      onChange={e => setSortPeriod(e.target.value)}
-                    >
-                      <MenuItem value="day">Day</MenuItem>
-                      <MenuItem value="month">Month</MenuItem>
-                    </Select>
-                  </FormControl>
-                </Stack>
-                <Divider sx={{ my: 1 }} />
-                <TableContainer>
-                  <Table size="small">
-                    <TableHead>
-                      <TableRow>
-                        <TableCell>Guest</TableCell>
-                        <TableCell>Room</TableCell>
-                        <TableCell>Check-In</TableCell>
-                        <TableCell>Check-Out</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {stats.upcomingReservations.map(r => (
-                        <TableRow key={r.id}>
-                          <TableCell>{r.guestName}</TableCell>
-                          <TableCell>{r.roomNumber}</TableCell>
-                          <TableCell>{r.checkInDate}</TableCell>
-                          <TableCell>{r.checkOutDate}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              </Paper>
+              <UpcomingReservations />
             </Grid>
+
             {/* Recent Payments */}
             <Grid item xs={12}>
               <Paper sx={{ p: 3 }}>
