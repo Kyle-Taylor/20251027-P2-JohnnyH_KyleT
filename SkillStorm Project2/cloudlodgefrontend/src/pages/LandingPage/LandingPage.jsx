@@ -22,6 +22,9 @@ import WifiIcon from "@mui/icons-material/Wifi";
 import PoolIcon from "@mui/icons-material/Pool";
 import StarIcon from "@mui/icons-material/Star";
 import LocalTaxiIcon from "@mui/icons-material/LocalTaxi";
+import EmailIcon from "@mui/icons-material/Email";
+import PhoneIcon from "@mui/icons-material/Phone";
+import LocationOnIcon from "@mui/icons-material/LocationOn";
 
 const HIGHLIGHTS = [
   {
@@ -554,6 +557,175 @@ export default function LandingPage() {
                 </Typography>
               </Box>
             ))}
+          </Box>
+        </Container>
+      </Box>
+
+      <Box sx={{ bgcolor: "#171b1f", py: { xs: 7, md: 9 } }}>
+        <Container
+          maxWidth={false}
+          disableGutters
+          sx={{ px: { xs: 3, md: 8, lg: 12 } }}
+        >
+          <Box
+            sx={{
+              borderRadius: 4,
+              border: "1px solid rgba(125,211,252,0.2)",
+              background:
+                "linear-gradient(120deg, rgba(18,22,26,0.92), rgba(24,30,36,0.96))",
+              p: { xs: 4, md: 6 },
+              position: "relative",
+              overflow: "hidden"
+            }}
+          >
+            <Box
+              sx={{
+                position: "absolute",
+                inset: 0,
+                backgroundImage:
+                  "radial-gradient(circle at 10% 20%, rgba(125,211,252,0.18), transparent 40%)"
+              }}
+            />
+            <Grid
+              container
+              spacing={4}
+              alignItems="stretch"
+              sx={{ position: "relative" }}
+            >
+              <Grid item xs={12} md={6}>
+                <Stack spacing={2}>
+                  <Typography
+                    variant="h4"
+                    sx={{
+                      fontFamily: "'Playfair Display', serif",
+                      fontWeight: 700
+                    }}
+                  >
+                    Contact us
+                  </Typography>
+                  <Typography sx={{ color: "var(--landing-muted)" }}>
+                    Need a custom stay, long-term booking, or event space? Our
+                    concierge team replies within one business day.
+                  </Typography>
+                  <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+                    <Button
+                      variant="contained"
+                      size="large"
+                      component="a"
+                      href="mailto:hello@cloudlodge.com"
+                    >
+                      Email concierge
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      size="large"
+                      component="a"
+                      href="tel:+14155550182"
+                      sx={{ color: "#fff", borderColor: "rgba(255,255,255,0.35)" }}
+                    >
+                      Call now
+                    </Button>
+                  </Stack>
+                  <Box
+                    sx={{
+                      mt: 2,
+                      p: 2,
+                      borderRadius: 2,
+                      bgcolor: "rgba(24,26,27,0.8)",
+                      border: "1px solid rgba(255,255,255,0.08)"
+                    }}
+                  >
+                    <Typography sx={{ color: "var(--landing-muted)" }}>
+                      Available Mon–Sat, 9am–7pm PT
+                    </Typography>
+                    <Typography sx={{ color: "var(--landing-muted)" }}>
+                      Prefer email? Expect a reply within 24 hours.
+                    </Typography>
+                  </Box>
+                </Stack>
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <Grid container spacing={2}>
+                  <Grid item xs={12} sm={6}>
+                    <Paper
+                      elevation={0}
+                      sx={{
+                        p: 2.5,
+                        height: "100%",
+                        bgcolor: "#23272a",
+                        border: "1px solid rgba(255,255,255,0.06)",
+                        borderRadius: 2
+                      }}
+                    >
+                      <Stack spacing={1.5}>
+                        <Stack direction="row" spacing={1.2} alignItems="center">
+                          <EmailIcon sx={{ color: "var(--landing-accent)" }} />
+                          <Typography fontWeight={600}>Email</Typography>
+                        </Stack>
+                        <Typography sx={{ color: "var(--landing-muted)" }}>
+                          hello@cloudlodge.com
+                        </Typography>
+                        <Typography sx={{ color: "var(--landing-muted)" }}>
+                          partnerships@cloudlodge.com
+                        </Typography>
+                      </Stack>
+                    </Paper>
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <Paper
+                      elevation={0}
+                      sx={{
+                        p: 2.5,
+                        height: "100%",
+                        bgcolor: "#23272a",
+                        border: "1px solid rgba(255,255,255,0.06)",
+                        borderRadius: 2
+                      }}
+                    >
+                      <Stack spacing={1.5}>
+                        <Stack direction="row" spacing={1.2} alignItems="center">
+                          <PhoneIcon sx={{ color: "var(--landing-accent)" }} />
+                          <Typography fontWeight={600}>Phone</Typography>
+                        </Stack>
+                        <Typography sx={{ color: "var(--landing-muted)" }}>
+                          +1 (415) 555-0182
+                        </Typography>
+                        <Typography sx={{ color: "var(--landing-muted)" }}>
+                          Mon–Sat, 9am–7pm PT
+                        </Typography>
+                      </Stack>
+                    </Paper>
+                  </Grid>
+                  <Grid item xs={12}>
+                    <Paper
+                      elevation={0}
+                      sx={{
+                        p: 2.5,
+                        height: "100%",
+                        bgcolor: "#23272a",
+                        border: "1px solid rgba(255,255,255,0.06)",
+                        borderRadius: 2
+                      }}
+                    >
+                      <Stack spacing={1.5}>
+                        <Stack direction="row" spacing={1.2} alignItems="center">
+                          <LocationOnIcon
+                            sx={{ color: "var(--landing-accent)" }}
+                          />
+                          <Typography fontWeight={600}>Visit</Typography>
+                        </Stack>
+                        <Typography sx={{ color: "var(--landing-muted)" }}>
+                          88 Market Street, Suite 1200
+                        </Typography>
+                        <Typography sx={{ color: "var(--landing-muted)" }}>
+                          San Francisco, CA 94105
+                        </Typography>
+                      </Stack>
+                    </Paper>
+                  </Grid>
+                </Grid>
+              </Grid>
+            </Grid>
           </Box>
         </Container>
       </Box>
