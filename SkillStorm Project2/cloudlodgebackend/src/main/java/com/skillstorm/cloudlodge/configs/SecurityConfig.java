@@ -25,13 +25,11 @@ public class SecurityConfig {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
     }
 
-    // Password encoder
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-    // Security filter chain
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
@@ -39,37 +37,41 @@ public class SecurityConfig {
             .cors(cors -> {})
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
+                // Public routes
                 .requestMatchers(
-                    "/", 
                     "/index.html",
-                    "/css/**", "/js/**", "/images/**",
+                    "/css/**",
+                    "/js/**",
+                    "/images/**",
                     "/auth/**",
                     "/users/register",
                     "/users/login",
                     "/oauth2/**",
                     "/dashboard",
-                    "/rooms/**",
-                    "/roomtypes/**",
                     "/reservations/**",
-                    "/availability/**",
-                    "/users/**"
+                    "/availability/**"
                 ).permitAll()
+
+                // Admin-only routes
+                .requestMatchers(
+                    "/dashboard/**",
+                    "/profile/**",
+                    "/rooms/**",
+                    "/roomtypes/**"
+                ).hasRole("ADMIN")
+
+                // Everything else requires authentication
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form.disable())
-            .httpBasic(basic -> basic.disable())
-            .oauth2Login(oauth2 -> oauth2
-                .defaultSuccessUrl("/dashboard")
-                .failureUrl("/login?error")
-            );
+            .httpBasic(basic -> basic.disable());
 
-        // Add JWT filter BEFORE default authentication filter
+        // Add JWT filter BEFORE UsernamePasswordAuthenticationFilter
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
-    // AuthenticationManager bean
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
         return authConfig.getAuthenticationManager();
@@ -90,5 +92,4 @@ public class SecurityConfig {
         source.registerCorsConfiguration("/**", config);
         return source;
     }
-
 }

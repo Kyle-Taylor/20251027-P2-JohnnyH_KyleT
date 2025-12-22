@@ -34,39 +34,38 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException {
+                                    FilterChain filterChain)
+            throws ServletException, IOException {
 
         final String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
-        String userId = null;
-        String jwtToken = null;
 
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            jwtToken = authHeader.substring(7); // Remove "Bearer " prefix
-            try {
-                if (jwtUtils.validateJwtToken(jwtToken)) {
-                    userId = jwtUtils.getUserIdFromJwt(jwtToken);
+            String jwtToken = authHeader.substring(7);
+
+            if (jwtUtils.validateJwtToken(jwtToken)) {
+                String userId = jwtUtils.getUserIdFromJwt(jwtToken);
+                String roleFromJwt = jwtUtils.getRoleFromJwt(jwtToken);
+
+                if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                    User user = userRepository.findById(userId).orElse(null);
+
+                    if (user != null) {
+                        String role = "ROLE_" + roleFromJwt.toUpperCase();
+                        List<SimpleGrantedAuthority> authorities = List.of(new SimpleGrantedAuthority(role));
+
+                        UsernamePasswordAuthenticationToken authToken =
+                                new UsernamePasswordAuthenticationToken(user, null, authorities);
+
+                        authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                        SecurityContextHolder.getContext().setAuthentication(authToken);
+                    }
                 }
-            } catch (Exception e) {
-                System.err.println("JWT validation failed: " + e.getMessage());
+            } else {
+                System.out.println("Invalid JWT token: " + jwtToken);
             }
         }
 
-        if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            try {
-                User user = userRepository.findById(userId)
-                        .orElseThrow(() -> new RuntimeException("User not found"));
-
-                List<SimpleGrantedAuthority> authorities =
-                        List.of(new SimpleGrantedAuthority(user.getRole().name()));
-
-                var authToken = new UsernamePasswordAuthenticationToken(user, null, authorities);
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authToken);
-            } catch (Exception e) {
-                System.err.println("User not found for JWT: " + e.getMessage());
-            }
-        }
-
+        // Always continue filter chain; Spring Security will handle access control
         filterChain.doFilter(request, response);
     }
 }

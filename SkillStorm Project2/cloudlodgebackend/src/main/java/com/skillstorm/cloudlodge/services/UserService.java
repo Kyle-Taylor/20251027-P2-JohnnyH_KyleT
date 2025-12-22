@@ -4,6 +4,7 @@ import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
+import com.skillstorm.cloudlodge.dtos.UserDTO;
 import com.skillstorm.cloudlodge.models.User;
 import com.skillstorm.cloudlodge.repositories.UserRepository;
 
@@ -39,4 +40,16 @@ public class UserService {
     public void delete(String id) {
         userRepository.deleteById(id);
     }
+
+    public UserDTO getUserForRole(User user, String role) {
+    // TODO implement role-based filtering here
+    return new UserDTO(
+        user.getFullName(),
+        user.getEmail(),
+        user.getPhone(),
+        user.getAuthProvider(),
+        role
+    );
+}
+
 }

@@ -115,6 +115,11 @@ public class RoomService {
         return resolved;
     }
 
+    public List<ResolvedRoom> findAllResolvedForRole(String role) {
+        // TODO implement filtering logic based on role
+        return findAllResolved();
+    }
+
     /* =========================
        SEARCH (DATE RANGE AWARE)
        ========================= */
