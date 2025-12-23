@@ -52,15 +52,18 @@ public class SecurityConfig {
                     "/availability/**"
                 ).permitAll()
                 .requestMatchers(HttpMethod.GET, "/roomtypes").permitAll()
+                .requestMatchers(HttpMethod.GET, "/rooms/search", "/rooms/*", "/roomtypes/*").authenticated()
 
                 // Admin-only routes
                 .requestMatchers(
                     "/dashboard/**",
-                    "/rooms/**",
                     "/roomtypes/**",
                     "/users/**",
                     "/reservations/**"
                 ).hasRole("ADMIN")
+                .requestMatchers(HttpMethod.POST, "/rooms/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/rooms/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/rooms/**").hasRole("ADMIN")
                 // Everything else requires authentication
                 .anyRequest().authenticated()
             )

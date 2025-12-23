@@ -18,7 +18,6 @@ import {
 } from "@mui/material";
 import { BarChart, PieChart } from "@mui/x-charts";
 import Header from "../../components/Header";
-import SideNav from "../../components/SideNav";
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
@@ -106,11 +105,10 @@ export default function Dashboard() {
   }
 
   return (
-    <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+    <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column", width: "100vw", maxWidth: "100%" }}>
       <Header showSearch={false} />
-      <Box sx={{ display: "flex", flex: 1 }}>
-        <SideNav />
-        <Box sx={{ flex: 1, p: { xs: 2, md: 4 } }}>
+      <Box sx={{ display: "flex", flex: 1, width: "100%", overflowX: "hidden" }}>
+        <Box sx={{ flex: 1, width: "100%", p: { xs: 2, md: 4 } }}>
           <Stack direction="row" spacing={2} alignItems="center" mb={3}>
             <Typography variant="h4" fontWeight={700}>
               CloudLodge Dashboard
@@ -172,7 +170,7 @@ export default function Dashboard() {
                 <BarChart
                   series={[{ data: stats.incomeHistory, label: "Income" }]}
                   xAxis={[{ data: stats.incomeLabels }]}
-                  width={180}
+                  width={"100%"}
                   height={140}
                 />
               </Paper>

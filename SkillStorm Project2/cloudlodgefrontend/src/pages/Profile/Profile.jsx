@@ -10,8 +10,10 @@ import {
 } from './profile.styles';
 import { Button, TextField } from '@mui/material';
 import { apiFetch } from '../../api/apiFetch';
+import { useNavigate } from 'react-router-dom';
 
 const Profile = () => {
+  const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -171,6 +173,13 @@ const Profile = () => {
                 style={{ marginTop: '16px' }}
               >
                 Edit Profile
+              </Button>
+              <Button
+                variant="contained"
+                onClick={() => navigate('/user-reservations')}
+                style={{ marginTop: '16px', marginLeft: '8px' }}
+              >
+                View My Reservations
               </Button>
             </>
           )}

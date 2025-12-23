@@ -9,13 +9,31 @@ import Dashboard from "./pages/Dashboard/Dashboard";
 import LandingPage from "./pages/LandingPage/LandingPage";
 import Profile from "./pages/Profile/Profile";
 import ProtectedRoute from "./components/ProtectedRoute";
+import ViewUserReservations from "./pages/ViewUserReservations/ViewUserReservations";
 
 function App() {
+  const token = localStorage.getItem("token");
+  let role = null;
+  if (token) {
+    try {
+      const payload = JSON.parse(atob(token.split(".")[1]));
+      role = (payload.role || "").toString().toUpperCase();
+    } catch {
+      role = null;
+    }
+  }
   return (
     <Router>
       <Routes>
         {/* Default route redirects to landing page */}
-        <Route path="/" element={<LandingPage />} />
+        <Route
+          path="/"
+          element={
+            token && role === "GUEST"
+              ? <Navigate to="/create-reservation" replace />
+              : <LandingPage />
+          }
+        />
 
         {/* Public routes */}
         <Route path="/login" element={<Login />} />
@@ -45,6 +63,23 @@ function App() {
               <Profile />
             </ProtectedRoute>
           } 
+        />
+        <Route 
+          path="/user-reservations" 
+          element={
+            <ProtectedRoute requiredRole={["GUEST", "ADMIN", "MANAGER"]}>
+              <ViewUserReservations />
+            </ProtectedRoute>
+          } 
+        />
+
+        <Route
+          path="/user-reservations"
+          element={
+            <ProtectedRoute requiredRole={["GUEST", "ADMIN", "MANAGER"]}>
+              <ViewUserReservations />
+            </ProtectedRoute>
+          }
         />
 
         {/* Protected dashboard */}

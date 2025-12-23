@@ -125,6 +125,7 @@ public class DashboardController {
                 .map(r -> {
                     Map<String, Object> m = new HashMap<>();
                     m.put("id", r.getId());
+                    m.put("userId", r.getUserId());
                     m.put("guestName", r.getUserId()); // Replace with actual guest name if available
                     // Lookup real room number
                     Room room = roomService.findById(r.getRoomUnitId()).orElse(null);
@@ -143,6 +144,7 @@ public class DashboardController {
                 .map(r -> {
                     Map<String, Object> m = new HashMap<>();
                     m.put("id", r.getId());
+                    m.put("userId", r.getUserId());
                     m.put("guestName", r.getUserId()); // Replace with actual guest name if available
                     // Lookup real room number
                     Room room = roomService.findById(r.getRoomUnitId()).orElse(null);

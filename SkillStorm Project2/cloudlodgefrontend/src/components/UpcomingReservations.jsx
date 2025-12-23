@@ -25,6 +25,7 @@ export default function UpcomingReservations() {
     return new Date(now.getFullYear(), now.getMonth(), 1);
   });
   const [upcomingReservations, setUpcomingReservations] = useState([]);
+  const [userMap, setUserMap] = useState({});
   const [loading, setLoading] = useState(true);
 
   async function fetchUpcoming() {
@@ -51,6 +52,40 @@ export default function UpcomingReservations() {
     fetchUpcoming();
     // eslint-disable-next-line
   }, [reservationMonth]);
+
+  useEffect(() => {
+    let active = true;
+    const fetchUsers = async () => {
+      const userIds = Array.from(
+        new Set(upcomingReservations.map(r => r.userId).filter(Boolean))
+      );
+      if (userIds.length === 0) {
+        if (active) setUserMap({});
+        return;
+      }
+
+      try {
+        const entries = await Promise.all(
+          userIds.map(async (userId) => {
+            try {
+              const data = await apiFetch(`/users/${userId}`);
+              return [userId, data];
+            } catch {
+              return [userId, null];
+            }
+          })
+        );
+        if (active) setUserMap(Object.fromEntries(entries));
+      } catch {
+        if (active) setUserMap({});
+      }
+    };
+
+    fetchUsers();
+    return () => {
+      active = false;
+    };
+  }, [upcomingReservations]);
 
   return (
     <Paper sx={{ p: 3 }}>
@@ -93,7 +128,7 @@ export default function UpcomingReservations() {
             <TableBody>
               {upcomingReservations.map(r => (
                 <TableRow key={r.id}>
-                  <TableCell>{r.guestName}</TableCell>
+                  <TableCell>{userMap[r.userId]?.fullName || r.userId || "Unknown"}</TableCell>
                   <TableCell>{r.roomNumber}</TableCell>
                   <TableCell>{r.checkInDate}</TableCell>
                   <TableCell>{r.checkOutDate}</TableCell>

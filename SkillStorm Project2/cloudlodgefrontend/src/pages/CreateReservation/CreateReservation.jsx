@@ -26,13 +26,23 @@ import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import Header from "../../components/Header";
-import SideNav from "../../components/SideNav";
 import dayjs from "dayjs";
 import BannerPhoto from "../../assets/images/BannerPhoto.png";
 import CalendarPopup from "../../components/CalandarPopup";
 import { apiFetch } from "../../api/apiFetch";
 
 const API_URL = "http://localhost:8080/";
+
+function getUserIdFromToken() {
+  const token = localStorage.getItem("token");
+  if (!token) return null;
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    return payload.sub || payload.userId || payload.id || null;
+  } catch {
+    return null;
+  }
+}
 
 export default function BookRoom() {
   const [bookedDates, setBookedDates] = useState([]);
@@ -297,7 +307,9 @@ export default function BookRoom() {
     setBookingSuccess(false);
 
     try {
+      const userId = getUserIdFromToken();
       const payload = {
+        ...(userId ? { userId } : {}),
         roomUnitId: selectedRoom.id || selectedRoom._id,
         checkInDate: bookingCheckIn,
         checkOutDate: bookingCheckOut,
@@ -359,7 +371,6 @@ export default function BookRoom() {
             overflowX: "hidden"
           }}
         >
-          <SideNav />
 
           <Box
             sx={{

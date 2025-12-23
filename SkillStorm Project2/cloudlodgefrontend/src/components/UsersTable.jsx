@@ -55,7 +55,7 @@ export default function UsersTable() {
   }
 
   return (
-    <Box sx={{ mt: 4 }}>
+    <Box sx={{ mt: 4, width: "85%" }}>
       <Typography variant="h5" fontWeight={700} gutterBottom>
         Users
       </Typography>

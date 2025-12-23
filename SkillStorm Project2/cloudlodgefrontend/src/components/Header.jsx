@@ -15,6 +15,7 @@ import CloudLodgeLogo from "../assets/images/CloudLodge.png";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import HeroSearch from "./HeroSearch";
+import NavBar from "./NavBar";
 import { apiFetch } from "../api/apiFetch";
 import { useNavigate } from "react-router-dom";
 
@@ -112,12 +113,14 @@ export default function Header({
       />
 
       <AppBar
-        position="static"
+        position="sticky"
         elevation={0}
         sx={{
           bgcolor: "#181a1b",
           borderBottom: "1px solid",
           borderColor: "#23272a",
+          top: 0,
+          zIndex: 1200,
         }}
       >
         <Toolbar sx={{ height: 72 }}>
@@ -141,9 +144,18 @@ export default function Header({
             </Typography>
           </Box>
 
+          <NavBar />
+
           {/* Search (optional) */}
           {showSearch && (
-            <Box sx={{ flex: 1, display: "flex", justifyContent: "center" }}>
+            <Box
+              sx={{
+                flex: 1,
+                display: "flex",
+                justifyContent: userInfo?.role === "ADMIN" ? "flex-end" : "center",
+                pr: userInfo?.role === "ADMIN" ? 6 : 0,
+              }}
+            >
               <HeroSearch onSearchChange={runSearch} />
             </Box>
           )}

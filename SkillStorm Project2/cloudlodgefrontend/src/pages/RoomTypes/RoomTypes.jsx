@@ -5,7 +5,6 @@ import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import Header from "../../components/Header";
-import SideNav from "../../components/SideNav";
 import CloseIcon from '@mui/icons-material/Close';
 import BedIcon from "@mui/icons-material/Bed";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
@@ -248,7 +247,6 @@ export default function RoomTypes() {
             overflowX: "hidden",
           }}
         >
-          <SideNav />
           <Box
             sx={{
               flexGrow: 1,

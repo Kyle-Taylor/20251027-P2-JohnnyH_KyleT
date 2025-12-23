@@ -77,7 +77,7 @@ public class RoomController {
 
 
     // GET room by ID
-    @GetMapping("/{id:[a-fA-F0-9]{24}}")
+    @GetMapping("/{id}")
     public ResponseEntity<Room> getRoomById(@PathVariable String id) {
         try {
             Room room = roomService.findById(id)

@@ -21,7 +21,6 @@ import DetailsModal from '../../components/DetailsModal';
 import DeleteConfirmationModal from '../../components/DeleteConfirmationModal';
 
 import Header from "../../components/Header";
-import SideNav from "../../components/SideNav";
 import { apiFetch } from "../../api/apiFetch";
 
 const INITIAL_FORM = {
@@ -269,7 +268,6 @@ export default function Rooms() {
           }}
         >
           {/* Left side nav bar */}
-          <SideNav />
 
           {/* Center stage for grid */}
           <Box
