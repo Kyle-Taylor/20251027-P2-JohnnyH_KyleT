@@ -8,6 +8,7 @@ import CreateReservation from "./pages/CreateReservation/CreateReservation";
 import Dashboard from "./pages/Dashboard/Dashboard";
 import LandingPage from "./pages/LandingPage/LandingPage";
 import Profile from "./pages/Profile/Profile";
+import OAuthCallback from "./pages/OAuthCallback/OAuthCallback";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
@@ -66,6 +67,9 @@ function App() {
             </ProtectedRoute>
           } 
         />
+
+        {/* OAuth callback */}
+        <Route path="/oauth/callback" element={<OAuthCallback />} />
 
         {/* Catch-all 404 */}
         <Route path="*" element={<div>Page not found</div>} />
