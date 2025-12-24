@@ -1,12 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Divider, TextField, Typography, Stack, Box, FormControlLabel, Switch, Paper, Grid, Chip } from '@mui/material';
 import { apiFetch } from '../../api/apiFetch';
-import { useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
+import Header from '../../components/Header';
 import { deletePaymentMethod } from '../../api/payments';
 import { useNavigate } from 'react-router-dom';
-import Header from '../../components/Header';
-import SideNav from '../../components/SideNav';
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -134,7 +132,6 @@ const Profile = () => {
     <>
       <Header showSearch={false} />
       <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: '#2c2b2b' }}>
-        <SideNav />
         <Box sx={{ flex: 1, p: { xs: 2, md: 4 }, color: '#e3e6ea' }}>
           <Typography variant="h4" sx={{ mb: 1, fontWeight: 700 }}>Profile</Typography>
           <Typography variant="body2" sx={{ mb: 3, color: '#b0b3b8' }}>

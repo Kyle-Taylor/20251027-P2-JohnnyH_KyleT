@@ -2,7 +2,6 @@
 import React, { useState } from "react";
 import { TextField, Button, Box } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import Header from "../../components/Header";
 
 import {
   LoginContainer,
@@ -66,7 +65,6 @@ const Login = () => {
 
   return (
     <>
-      <Header showSearch={false} />
       <LoginContainer>
         <LoginLeft>
           <LoginTitle>CloudLodge</LoginTitle>
