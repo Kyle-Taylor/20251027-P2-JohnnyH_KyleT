@@ -51,7 +51,7 @@ public class SecurityConfig {
                     "/reservations/**",
                     "/availability/**"
                 ).permitAll()
-                .requestMatchers(HttpMethod.GET, "/roomtypes").permitAll()
+                .requestMatchers(HttpMethod.GET, "/roomtypes/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/rooms/search", "/rooms/*", "/roomtypes/*").authenticated()
 
                 // Admin-only routes
@@ -59,11 +59,9 @@ public class SecurityConfig {
                     "/dashboard/**",
                     "/roomtypes/**",
                     "/users/**",
-                    "/reservations/**"
+                    "/reservations/**",
+                    "/rooms/**"
                 ).hasRole("ADMIN")
-                .requestMatchers(HttpMethod.POST, "/rooms/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.PUT, "/rooms/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.DELETE, "/rooms/**").hasRole("ADMIN")
                 // Everything else requires authentication
                 .anyRequest().authenticated()
             )

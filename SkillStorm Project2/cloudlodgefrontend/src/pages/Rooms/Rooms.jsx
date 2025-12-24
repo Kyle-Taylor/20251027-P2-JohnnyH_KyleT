@@ -198,15 +198,41 @@ export default function Rooms() {
         }
 
 
-        await apiFetch(`/rooms/update/${selectedRoom.id || selectedRoom._id}`, { method: "PUT", body: formData });
-
-        fetchRooms(updatedRooms => {
-          setRooms(updatedRooms);
-          const updatedRoom = updatedRooms.find(r => r.id === selectedRoom.id || r._id === selectedRoom._id);
-          setSelectedRoom(updatedRoom || null);
-          setEditMode(false);
-          setEditImages([]);
+        const updatedRoom = await apiFetch(
+          `/rooms/update/${selectedRoom.id || selectedRoom._id}`,
+          { method: "PUT", body: formData }
+        );
+        const updatedId = updatedRoom?.id || updatedRoom?._id || selectedRoom?.id || selectedRoom?._id;
+        const priceValue = Number.isFinite(payload.priceOverride) ? payload.priceOverride : selectedRoom.price;
+        const maxGuestsValue = Number.isFinite(payload.maxGuestsOverride) ? payload.maxGuestsOverride : selectedRoom.maxGuests;
+        const resolvedUpdate = {
+          ...selectedRoom,
+          ...updatedRoom,
+          price: priceValue,
+          maxGuests: maxGuestsValue,
+          amenities: amenitiesArr,
+          description: editDraft.description ?? selectedRoom.description,
+          images: Array.isArray(updatedRoom?.imagesOverride) && updatedRoom.imagesOverride.length > 0
+            ? updatedRoom.imagesOverride
+            : selectedRoom.images
+        };
+        setRooms(prev => prev.map(r => ((r.id || r._id) === updatedId ? resolvedUpdate : r)));
+        setSelectedRoom(resolvedUpdate);
+        setEditMode(false);
+        setEditForm({
+          price: priceValue,
+          maxGuests: maxGuestsValue,
+          amenities: amenitiesArr,
+          description: editDraft.description ?? ""
         });
+        setEditDraft(prev => ({
+          ...prev,
+          price: priceValue,
+          maxGuests: maxGuestsValue,
+          amenities: amenitiesArr,
+          description: editDraft.description ?? prev?.description ?? ""
+        }));
+        setEditImages([]);
       } catch (err) {
         setError(err.message);
       }
@@ -397,13 +423,13 @@ export default function Rooms() {
                                   onClick={async (e) => {
                                     e.stopPropagation();
                                     try {
-                                      const res = await fetch(`${API_URL}/set-active/${room.id || room._id}?isActive=true`, {
-                                        method: "PUT"
-                                      });
-                                      if (!res.ok) throw new Error("Failed to update room");
-                                      const updatedRoom = await res.json();
+                                      const updatedRoom = await apiFetch(
+                                        `/rooms/set-active/${room.id || room._id}?isActive=true`,
+                                        { method: "PUT" }
+                                      );
+                                      const updatedId = updatedRoom.id || updatedRoom._id;
                                       setRooms(prevRooms => prevRooms.map(r =>
-                                        (r.id === updatedRoom.id || r._id === updatedRoom.id) ? { ...r, ...updatedRoom } : r
+                                        (r.id || r._id) === updatedId ? { ...r, ...updatedRoom } : r
                                       ));
                                     } catch (err) {
                                       setError(err.message);
@@ -421,13 +447,13 @@ export default function Rooms() {
                                   onClick={async (e) => {
                                     e.stopPropagation();
                                     try {
-                                      const res = await fetch(`${API_URL}/set-active/${room.id || room._id}?isActive=false`, {
-                                        method: "PUT"
-                                      });
-                                      if (!res.ok) throw new Error("Failed to update room");
-                                      const updatedRoom = await res.json();
+                                      const updatedRoom = await apiFetch(
+                                        `/rooms/set-active/${room.id || room._id}?isActive=false`,
+                                        { method: "PUT" }
+                                      );
+                                      const updatedId = updatedRoom.id || updatedRoom._id;
                                       setRooms(prevRooms => prevRooms.map(r =>
-                                        (r.id === updatedRoom.id || r._id === updatedRoom.id) ? { ...r, ...updatedRoom } : r
+                                        (r.id || r._id) === updatedId ? { ...r, ...updatedRoom } : r
                                       ));
                                     } catch (err) {
                                       setError(err.message);

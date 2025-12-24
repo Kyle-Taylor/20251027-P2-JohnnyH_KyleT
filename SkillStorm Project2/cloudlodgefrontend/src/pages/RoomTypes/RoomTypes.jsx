@@ -12,6 +12,7 @@ import PhotoCamera from "@mui/icons-material/PhotoCamera";
 import EditModal from "../../components/EditModal";
 import DeleteConfirmationModal from '../../components/DeleteConfirmationModal';
 import DetailsModal from "../../components/DetailsModal";
+import { apiFetch } from "../../api/apiFetch";
 
 const INITIAL_FORM = {
   roomCategory: "",
@@ -21,8 +22,6 @@ const INITIAL_FORM = {
   description: "",
   images: [],
 };
-
-const API_URL = "http://localhost:8080/roomtypes";
 
 export default function RoomTypes() {
   const [roomTypes, setRoomTypes] = useState([]);
@@ -56,9 +55,7 @@ export default function RoomTypes() {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch(API_URL);
-      if (!res.ok) throw new Error("Failed to fetch room types");
-      const data = await res.json();
+      const data = await apiFetch("/roomtypes");
       setRoomTypes(data);
       if (callback) callback(data);
     } catch (err) {
@@ -109,7 +106,7 @@ export default function RoomTypes() {
 
   async function handleDeleteRoomType(id) {
     try {
-      const res = await fetch(`${API_URL}/delete/${id}`, { method: "DELETE" });
+      const res = await apiFetch(`/roomtypes/delete/${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Failed to delete room type");
       setModalOpen(false);
       if (selectedRoomType && (selectedRoomType.id === id || selectedRoomType._id === id)) {
@@ -181,27 +178,40 @@ export default function RoomTypes() {
       });
 
       try {
-        const res = await fetch(
-          `${API_URL}/update/${selectedRoomType.id || selectedRoomType._id}`,
+        const updatedRoomType = await apiFetch(
+          `/roomtypes/update/${selectedRoomType.id || selectedRoomType._id}`,
           {
             method: "PUT",
             body: formData,
           }
         );
-        
-        if (!res.ok) {
-          throw new Error("Failed to update room type");
-        }
-        
-        fetchRoomTypes((updatedRoomTypes) => {
-          setRoomTypes(updatedRoomTypes);
-          const id = selectedRoomType.id || selectedRoomType._id;
-          const updatedRoomType = updatedRoomTypes.find(r => r.id === id || r._id === id);
-          setSelectedRoomType(updatedRoomType || null);
-          setEditMode(false);
-          setEditImages([]);
-          setImagesToDelete([]);
+        const updatedId = updatedRoomType?.id || updatedRoomType?._id;
+        setRoomTypes(prev =>
+          prev.map(rt =>
+            (rt.id || rt._id) === updatedId ? { ...rt, ...updatedRoomType } : rt
+          )
+        );
+        setSelectedRoomType(updatedRoomType || null);
+        setEditMode(false);
+        setEditForm({
+          roomCategory: updatedRoomType?.roomCategory ?? editDraft.roomCategory,
+          pricePerNight: updatedRoomType?.pricePerNight ?? editDraft.pricePerNight,
+          maxGuests: updatedRoomType?.maxGuests ?? editDraft.maxGuests,
+          amenities: updatedRoomType?.amenities ?? editDraft.amenities,
+          description: updatedRoomType?.description ?? editDraft.description,
+          images: updatedRoomType?.images ?? editDraft.images,
         });
+        setEditDraft(prev => ({
+          ...prev,
+          roomCategory: updatedRoomType?.roomCategory ?? prev?.roomCategory,
+          pricePerNight: updatedRoomType?.pricePerNight ?? prev?.pricePerNight,
+          maxGuests: updatedRoomType?.maxGuests ?? prev?.maxGuests,
+          amenities: updatedRoomType?.amenities ?? prev?.amenities,
+          description: updatedRoomType?.description ?? prev?.description,
+          images: updatedRoomType?.images ?? prev?.images,
+        }));
+        setEditImages([]);
+        setImagesToDelete([]);
       } catch (err) {
         setError(err.message);
       }

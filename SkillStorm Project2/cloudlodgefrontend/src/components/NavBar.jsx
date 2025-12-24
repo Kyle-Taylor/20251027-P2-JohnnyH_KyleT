@@ -36,7 +36,7 @@ export default function NavBar() {
   const items = [
     ...(showAdmin
       ? [
-          { path: "/create-reservation", label: "Books Reservation", icon: <EventAvailableIcon /> },
+          { path: "/create-reservation", label: "Book Reservation", icon: <EventAvailableIcon /> },
           { path: "/user-reservations", label: "Reservations", icon: <EventNoteIcon /> },
         ]
       : []),
