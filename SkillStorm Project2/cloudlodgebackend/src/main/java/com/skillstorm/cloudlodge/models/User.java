@@ -21,6 +21,7 @@ public class User {
     private Role role;
     public enum Role {GUEST,ADMIN,MANAGER}; //only allow 3 types of user roles
     private String phone;
+    private String stripeCustomerId;
     private List<SavedPaymentMethod> savedPaymentMethods;
     private Address billingAddress;
     private Preferences preferences;
@@ -117,6 +118,9 @@ public class User {
 
     public String getPhone() {return phone;}
     public void setPhone(String phone) {this.phone = phone;}
+
+    public String getStripeCustomerId() { return stripeCustomerId; }
+    public void setStripeCustomerId(String stripeCustomerId) { this.stripeCustomerId = stripeCustomerId; }
 
     public List<SavedPaymentMethod> getSavedPaymentMethods() {return savedPaymentMethods;}
     public void setSavedPaymentMethods(List<SavedPaymentMethod> savedPaymentMethods) {this.savedPaymentMethods = savedPaymentMethods;}

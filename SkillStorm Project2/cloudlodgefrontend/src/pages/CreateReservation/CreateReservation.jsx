@@ -31,10 +31,12 @@ import dayjs from "dayjs";
 import BannerPhoto from "../../assets/images/BannerPhoto.png";
 import CalendarPopup from "../../components/CalandarPopup";
 import { apiFetch } from "../../api/apiFetch";
+import { useNavigate } from "react-router-dom";
 
 const API_URL = "http://localhost:8080/";
 
 export default function BookRoom() {
+  const navigate = useNavigate();
   const [bookedDates, setBookedDates] = useState([]);
   const [rooms, setRooms] = useState([]);
   const [page, setPage] = useState(1);
@@ -301,10 +303,11 @@ export default function BookRoom() {
         roomUnitId: selectedRoom.id || selectedRoom._id,
         checkInDate: bookingCheckIn,
         checkOutDate: bookingCheckOut,
-        numGuests
+        numGuests,
+        totalPrice: calculateTotalPrice()
       };
 
-      await apiFetch(`/reservations/create`, {
+      const saved = await apiFetch(`/reservations/create`, {
         method: "POST",
         body: payload
       });
@@ -326,8 +329,16 @@ export default function BookRoom() {
         });
       }
 
-        setModalOpen(false);
-        setBookingSuccess(false);
+      // Redirect to Stripe checkout for this reservation
+      const reservationId = saved?.id || saved?._id;
+      if (!reservationId) {
+        console.error("Reservation created but no ID returned", saved);
+        setBookingError("Reservation created but missing an ID. Please try again.");
+        return;
+      }
+      navigate(`/pay/${reservationId}`);
+      setModalOpen(false);
+      setBookingSuccess(false);
     } catch (err) {
       setBookingError(err.message || "Failed to book room");
     } finally {

@@ -89,18 +89,29 @@ public class ProfileController {
 
         // Update allowed fields from DTO
         user.setFullName(userDTO.getFullName());
-        user.setPhone(userDTO.getPhone() != null ? userDTO.getPhone() : null); // optional
+        String phone = userDTO.getPhone() != null ? userDTO.getPhone().replaceAll("\\D", "") : null;
+        if (phone != null && !phone.isBlank()) {
+            if (phone.length() != 10) {
+                return ResponseEntity.badRequest().body("Phone number must be 10 digits");
+            }
+            user.setPhone(phone);
+        } else {
+            user.setPhone(null);
+        }
+
+        if (userDTO.getBillingAddress() != null) {
+            user.setBillingAddress(userDTO.getBillingAddress());
+        }
+        if (userDTO.getPreferences() != null) {
+            user.setPreferences(userDTO.getPreferences());
+        }
 
         // Persist changes
         User updatedUser = userService.save(user);
 
-        return ResponseEntity.ok(new UserDTO(
-            updatedUser.getFullName(),
-            updatedUser.getEmail(),
-            updatedUser.getPhone(),
-            updatedUser.getAuthProvider(),
-            updatedUser.getRole().name()
-        ));
+        UserDTO responseDto = userService.getUserForRole(updatedUser, updatedUser.getRole() != null ? updatedUser.getRole().name() : "GUEST");
+
+        return ResponseEntity.ok(responseDto);
     }
 
 }

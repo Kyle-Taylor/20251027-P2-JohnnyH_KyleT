@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { TextField, Button, Box } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import Header from "../../components/Header";
 
 import {
   LoginContainer,
@@ -64,96 +65,93 @@ const Login = () => {
   };
 
   return (
-    <LoginContainer>
-      {/* LEFT PANEL */}
-      <LoginLeft>
-        <LoginTitle>CloudLodge</LoginTitle>
-        <LoginSubtitle>Welcome back. Sign in to continue.</LoginSubtitle>
-      </LoginLeft>
+    <>
+      <Header showSearch={false} />
+      <LoginContainer>
+        <LoginLeft>
+          <LoginTitle>CloudLodge</LoginTitle>
+          <LoginSubtitle>Welcome back. Sign in to continue.</LoginSubtitle>
+        </LoginLeft>
 
-      {/* RIGHT PANEL */}
-      <LoginRight>
-        <LoginCard elevation={6}>
-          <FormTitle>Sign In</FormTitle>
+        <LoginRight>
+          <LoginCard elevation={6}>
+            <FormTitle>Sign In</FormTitle>
 
-          <FormWrapper>
-            {/* FORM */}
-            <Box component="form" onSubmit={handleLogin}>
-              <TextField
-                label="Email"
-                variant="outlined"
-                fullWidth
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                sx={{ mb: 2 }}
-              />
-              <TextField
-                label="Password"
-                variant="outlined"
-                type="password"
-                fullWidth
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                sx={{ mb: 2 }}
-              />
+            <FormWrapper>
+              <Box component="form" onSubmit={handleLogin}>
+                <TextField
+                  label="Email"
+                  variant="outlined"
+                  fullWidth
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  sx={{ mb: 2 }}
+                />
+                <TextField
+                  label="Password"
+                  variant="outlined"
+                  type="password"
+                  fullWidth
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  sx={{ mb: 2 }}
+                />
 
-              {error && (
-                <Box sx={{ color: "error.main", textAlign: "center", mb: 2 }}>
-                  {error}
-                </Box>
-              )}
+                {error && (
+                  <Box sx={{ color: "error.main", textAlign: "center", mb: 2 }}>
+                    {error}
+                  </Box>
+                )}
+
+                <Button
+                  type="submit"
+                  variant="contained"
+                  fullWidth
+                  disabled={loading}
+                >
+                  {loading ? "Signing in..." : "Login"}
+                </Button>
+              </Box>
+
+              <Box textAlign="center" mt={3}>
+                <SmallLink href="#">Forgot password?</SmallLink>
+                <br /><br />
+                <SmallText>Don’t have an account?</SmallText>{" "}
+                <SmallLink
+                  component="button"
+                  onClick={() => navigate("/register")}
+                  sx={{ cursor: "pointer", border: "none", background: "none", padding: 0 }}
+                >
+                  Sign up
+                </SmallLink>
+              </Box>
 
               <Button
-                type="submit"
-                variant="contained"
+                variant="outlined"
                 fullWidth
-                disabled={loading}
+                sx={{ mt: 4 }}
+                onClick={() =>
+                  (window.location.href = "http://localhost:8080/auth/oauth2/google")
+                }
               >
-                {loading ? "Signing in..." : "Login"}
+                Continue with Google
               </Button>
-            </Box>
-
-            {/* Forgot password / signup */}
-            <Box textAlign="center" mt={3}>
-              <SmallLink href="#">Forgot password?</SmallLink>
-              <br /><br />
-              <SmallText>Don’t have an account?</SmallText>{" "}
-              {/* Updated sign up link */}
-              <SmallLink
-                component="button"
-                onClick={() => navigate("/register")}
-                sx={{ cursor: "pointer", border: "none", background: "none", padding: 0 }}
+              <Button
+                variant="outlined"
+                color="primary"
+                fullWidth
+                sx={{ mt: 2 }}
+                onClick={() => console.log("Okta login clicked")}
               >
-                Sign up
-              </SmallLink>
-            </Box>
-
-            {/* Google / Okta buttons */}
-            <Button
-              variant="outlined"
-              fullWidth
-              sx={{ mt: 4 }}
-              onClick={() =>
-                (window.location.href = "http://localhost:8080/auth/oauth2/google")
-              }
-            >
-              Continue with Google
-            </Button>
-            <Button
-              variant="outlined"
-              color="primary"
-              fullWidth
-              sx={{ mt: 2 }}
-              onClick={() => console.log("Okta login clicked")}
-            >
-              Continue with Okta
-            </Button>
-          </FormWrapper>
-        </LoginCard>
-      </LoginRight>
-    </LoginContainer>
+                Continue with Okta
+              </Button>
+            </FormWrapper>
+          </LoginCard>
+        </LoginRight>
+      </LoginContainer>
+    </>
   );
 };
 

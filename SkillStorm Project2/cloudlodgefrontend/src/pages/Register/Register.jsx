@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { TextField, Button, Box, MenuItem, Select, InputLabel, FormControl } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import Header from "../../components/Header";
 
 import {
   RegisterContainer,
@@ -32,6 +33,13 @@ const Register = () => {
     setLoading(true);
     setError("");
 
+    const phoneDigits = (phone || "").replace(/\D/g, "");
+    if (phoneDigits && phoneDigits.length !== 10) {
+      setError("Phone number must be 10 digits (or leave blank).");
+      setLoading(false);
+      return;
+    }
+
     if (password !== confirmPassword) {
       setError("Passwords do not match");
       setLoading(false);
@@ -45,7 +53,7 @@ const Register = () => {
         body: JSON.stringify({
           fullName,
           email,
-          phone,
+          phone: phoneDigits || null,
           role,
           password,
         }),
@@ -70,104 +78,109 @@ const Register = () => {
   };
 
   return (
-    <RegisterContainer>
-      {/* LEFT PANEL */}
-      <RegisterLeft>
-        <RegisterTitle>CloudLodge</RegisterTitle>
-        <RegisterSubtitle>Create your account to get started.</RegisterSubtitle>
-      </RegisterLeft>
+    <>
+      <Header showSearch={false} />
+      <RegisterContainer>
+        <RegisterLeft>
+          <RegisterTitle>CloudLodge</RegisterTitle>
+          <RegisterSubtitle>Create your account to get started.</RegisterSubtitle>
+        </RegisterLeft>
 
-      {/* RIGHT PANEL */}
-      <RegisterRight>
-        <RegisterCard elevation={6}>
-          <FormTitle>Register</FormTitle>
+        <RegisterRight>
+          <RegisterCard elevation={6}>
+            <FormTitle>Register</FormTitle>
 
-          <FormWrapper>
-            <Box component="form" onSubmit={handleRegister}>
-              <TextField
-                label="Full Name"
-                variant="outlined"
-                fullWidth
-                required
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                sx={{ mb: 2 }}
-              />
-              <TextField
-                label="Email"
-                variant="outlined"
-                fullWidth
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                sx={{ mb: 2 }}
-              />
-              <TextField
-                label="Phone (optional)"
-                variant="outlined"
-                fullWidth
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                sx={{ mb: 2 }}
-              />
-              <FormControl fullWidth sx={{ mb: 2 }}>
-                <InputLabel id="role-label">Role</InputLabel>
-                <Select
-                  labelId="role-label"
-                  value={role}
-                  label="Role"
-                  onChange={(e) => setRole(e.target.value)}
+            <FormWrapper>
+              <Box component="form" onSubmit={handleRegister}>
+                <TextField
+                  label="Full Name"
+                  variant="outlined"
+                  fullWidth
+                  required
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  sx={{ mb: 2 }}
+                />
+                <TextField
+                  label="Email"
+                  variant="outlined"
+                  fullWidth
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  sx={{ mb: 2 }}
+                />
+                <TextField
+                  label="Phone (optional)"
+                  variant="outlined"
+                  fullWidth
+                  value={phone}
+                  onChange={(e) => {
+                    const digits = (e.target.value || "").replace(/\D/g, "").slice(0, 10);
+                    setPhone(digits);
+                  }}
+                  helperText={phone ? `Digits: ${phone.length}/10` : "Optional"}
+                  sx={{ mb: 2 }}
+                />
+                <FormControl fullWidth sx={{ mb: 2 }}>
+                  <InputLabel id="role-label">Role</InputLabel>
+                  <Select
+                    labelId="role-label"
+                    value={role}
+                    label="Role"
+                    onChange={(e) => setRole(e.target.value)}
+                  >
+                    <MenuItem value="GUEST">GUEST</MenuItem>
+                    <MenuItem value="ADMIN">ADMIN</MenuItem>
+                    <MenuItem value="MANAGER">MANAGER</MenuItem>
+                  </Select>
+                </FormControl>
+                <TextField
+                  label="Password"
+                  variant="outlined"
+                  type="password"
+                  fullWidth
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  sx={{ mb: 2 }}
+                />
+                <TextField
+                  label="Confirm Password"
+                  variant="outlined"
+                  type="password"
+                  fullWidth
+                  required
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  sx={{ mb: 2 }}
+                />
+
+                {error && (
+                  <Box sx={{ color: "error.main", textAlign: "center", mb: 2 }}>
+                    {error}
+                  </Box>
+                )}
+
+                <Button
+                  type="submit"
+                  variant="contained"
+                  fullWidth
+                  disabled={loading}
                 >
-                  <MenuItem value="GUEST">GUEST</MenuItem>
-                  <MenuItem value="ADMIN">ADMIN</MenuItem>
-                  <MenuItem value="MANAGER">MANAGER</MenuItem>
-                </Select>
-              </FormControl>
-              <TextField
-                label="Password"
-                variant="outlined"
-                type="password"
-                fullWidth
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                sx={{ mb: 2 }}
-              />
-              <TextField
-                label="Confirm Password"
-                variant="outlined"
-                type="password"
-                fullWidth
-                required
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                sx={{ mb: 2 }}
-              />
+                  {loading ? "Creating account..." : "Register"}
+                </Button>
+              </Box>
 
-              {error && (
-                <Box sx={{ color: "error.main", textAlign: "center", mb: 2 }}>
-                  {error}
-                </Box>
-              )}
-
-              <Button
-                type="submit"
-                variant="contained"
-                fullWidth
-                disabled={loading}
-              >
-                {loading ? "Creating account..." : "Register"}
-              </Button>
-            </Box>
-
-            <Box textAlign="center" mt={3}>
-              <SmallText>Already have an account?</SmallText>{" "}
-              <SmallLink href="/login">Login</SmallLink>
-            </Box>
-          </FormWrapper>
-        </RegisterCard>
-      </RegisterRight>
-    </RegisterContainer>
+              <Box textAlign="center" mt={3}>
+                <SmallText>Already have an account?</SmallText>{" "}
+                <SmallLink href="/login">Login</SmallLink>
+              </Box>
+            </FormWrapper>
+          </RegisterCard>
+        </RegisterRight>
+      </RegisterContainer>
+    </>
   );
 };
 

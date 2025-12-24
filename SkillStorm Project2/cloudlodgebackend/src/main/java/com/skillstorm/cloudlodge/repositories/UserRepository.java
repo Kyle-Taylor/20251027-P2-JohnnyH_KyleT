@@ -10,4 +10,6 @@ import com.skillstorm.cloudlodge.models.User;
 @Repository
 public interface UserRepository extends MongoRepository<User, String> {
     Optional<User> findByEmail(String email);
+
+    Optional<User> findByStripeCustomerId(String stripeCustomerId);
 }

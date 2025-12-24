@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -112,8 +113,14 @@ public class ReservationController {
 
     // CREATE reservation
     @PostMapping("/create")
-    public ResponseEntity<Reservation> createReservation(@RequestBody Reservation reservation) {
+    public ResponseEntity<Reservation> createReservation(@RequestBody Reservation reservation, Authentication authentication) {
         try {
+            if (authentication != null && authentication.getPrincipal() instanceof com.skillstorm.cloudlodge.models.User userPrincipal) {
+                if (reservation.getUserId() == null || reservation.getUserId().isBlank()) {
+                    reservation.setUserId(userPrincipal.getId());
+                }
+            }
+
             Reservation saved = reservationService.save(reservation);
             // Create RoomAvailability entries for each day in the reservation
             LocalDate start = saved.getCheckInDate();

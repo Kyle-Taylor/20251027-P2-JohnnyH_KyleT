@@ -42,14 +42,20 @@ public class UserService {
     }
 
     public UserDTO getUserForRole(User user, String role) {
-    // TODO implement role-based filtering here
-    return new UserDTO(
-        user.getFullName(),
-        user.getEmail(),
-        user.getPhone(),
-        user.getAuthProvider(),
-        role
-    );
-}
+        UserDTO dto = new UserDTO(
+            user.getFullName(),
+            user.getEmail(),
+            user.getPhone(),
+            user.getAuthProvider(),
+            role
+        );
+        dto.setProviderId(user.getProviderId());
+        dto.setStripeCustomerId(user.getStripeCustomerId());
+        dto.setBillingAddress(user.getBillingAddress());
+        dto.setPreferences(user.getPreferences());
+        dto.setSavedPaymentMethods(user.getSavedPaymentMethods());
+        dto.setCreatedAt(user.getCreatedAt());
+        return dto;
+    }
 
 }

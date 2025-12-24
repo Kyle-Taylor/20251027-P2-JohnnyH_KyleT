@@ -9,6 +9,8 @@ import Dashboard from "./pages/Dashboard/Dashboard";
 import LandingPage from "./pages/LandingPage/LandingPage";
 import Profile from "./pages/Profile/Profile";
 import OAuthCallback from "./pages/OAuthCallback/OAuthCallback";
+import Checkout from "./pages/Checkout/Checkout";
+import AddCard from "./pages/AddCard/AddCard";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
@@ -66,6 +68,24 @@ function App() {
               <CreateReservation />
             </ProtectedRoute>
           } 
+        />
+
+        <Route 
+          path="/pay/:reservationId" 
+          element={
+            <ProtectedRoute>
+              <Checkout />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route 
+          path="/pay/add-card" 
+          element={
+            <ProtectedRoute>
+              <AddCard />
+            </ProtectedRoute>
+          }
         />
 
         {/* OAuth callback */}

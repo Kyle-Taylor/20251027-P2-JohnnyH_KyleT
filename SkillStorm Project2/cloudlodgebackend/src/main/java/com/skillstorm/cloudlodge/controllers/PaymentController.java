@@ -4,25 +4,111 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.skillstorm.cloudlodge.models.Payment;
+import com.skillstorm.cloudlodge.models.PaymentIntentRequest;
+import com.skillstorm.cloudlodge.models.User;
 import com.skillstorm.cloudlodge.services.PaymentService;
+import com.skillstorm.cloudlodge.services.StripePaymentService;
+import com.stripe.exception.StripeException;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping("/payments")
 public class PaymentController {
 
     private final PaymentService paymentService;
-    public PaymentController(PaymentService paymentService) {
+    private final StripePaymentService stripePaymentService;
+
+    public PaymentController(PaymentService paymentService, StripePaymentService stripePaymentService) {
         this.paymentService = paymentService;
+        this.stripePaymentService = stripePaymentService;
+    }
+
+    // Public config endpoint for publishable key
+    @GetMapping("/config")
+    public ResponseEntity<?> getConfig() {
+        return ResponseEntity.ok(stripePaymentService.getConfig());
+    }
+
+    // Create PaymentIntent for a reservation
+    @PostMapping("/intent")
+    public ResponseEntity<?> createPaymentIntent(@RequestBody PaymentIntentRequest request, Authentication authentication) {
+        try {
+            if (authentication == null || !(authentication.getPrincipal() instanceof User)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
+            }
+            User user = (User) authentication.getPrincipal();
+            return ResponseEntity.ok(stripePaymentService.createPaymentIntent(request, user));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (StripeException e) {
+            return ResponseEntity.internalServerError().body("Stripe error: " + e.getMessage());
+        }
+    }
+
+    // Stripe webhook (no auth, signature verified)
+    @PostMapping("/webhook")
+    @ResponseBody
+    public ResponseEntity<String> handleStripeWebhook(@RequestBody String payload,
+                                                      @RequestHeader("Stripe-Signature") String sigHeader,
+                                                      HttpServletRequest request) {
+        try {
+            stripePaymentService.handleWebhook(payload, sigHeader, request);
+            return ResponseEntity.ok("");
+        } catch (StripeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Webhook error");
+        }
+    }
+
+    // Manually sync Stripe payment methods to user profile (fallback)
+    @PostMapping("/methods/sync")
+    public ResponseEntity<?> syncPaymentMethods(Authentication authentication) {
+        if (authentication == null || !(authentication.getPrincipal() instanceof User user)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
+        }
+        try {
+            return ResponseEntity.ok(stripePaymentService.syncPaymentMethods(user));
+        } catch (StripeException e) {
+            return ResponseEntity.internalServerError().body("Stripe error: " + e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/methods/{paymentMethodId}")
+    public ResponseEntity<?> deletePaymentMethod(@PathVariable String paymentMethodId, Authentication authentication) {
+        if (authentication == null || !(authentication.getPrincipal() instanceof User user)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
+        }
+        try {
+            stripePaymentService.removePaymentMethod(user, paymentMethodId);
+            return ResponseEntity.noContent().build();
+        } catch (StripeException e) {
+            return ResponseEntity.internalServerError().body("Stripe error: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/setup-intent")
+    public ResponseEntity<?> createSetupIntent(Authentication authentication) {
+        if (authentication == null || !(authentication.getPrincipal() instanceof User user)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
+        }
+        try {
+            return ResponseEntity.ok(stripePaymentService.createSetupIntent(user));
+        } catch (StripeException e) {
+            return ResponseEntity.internalServerError().body("Stripe error: " + e.getMessage());
+        }
     }
 
     // GET all payments

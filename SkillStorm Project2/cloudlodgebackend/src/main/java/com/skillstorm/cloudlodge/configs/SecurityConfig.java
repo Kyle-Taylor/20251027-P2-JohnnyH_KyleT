@@ -58,6 +58,7 @@ public class SecurityConfig {
                     "/oauth2/**",
                     "/auth/oauth2/**",
                     "/login/oauth2/**",
+                    "/payments/webhook",
                     "/reservations/**",
                     "/availability/**"
                 ).permitAll()
