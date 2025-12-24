@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -13,13 +14,11 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.security.core.Authentication;
 
 import com.skillstorm.cloudlodge.models.Reservation;
 import com.skillstorm.cloudlodge.models.RoomAvailability;
 import com.skillstorm.cloudlodge.services.ReservationService;
 import com.skillstorm.cloudlodge.services.RoomAvailabilityService;
-import com.skillstorm.cloudlodge.models.User;
 
 @RestController
 @RequestMapping("/reservations")
@@ -116,12 +115,12 @@ public class ReservationController {
     @PostMapping("/create")
     public ResponseEntity<Reservation> createReservation(@RequestBody Reservation reservation, Authentication authentication) {
         try {
-            if ((reservation.getUserId() == null || reservation.getUserId().isBlank()) && authentication != null) {
-                Object principal = authentication.getPrincipal();
-                if (principal instanceof User user) {
-                    reservation.setUserId(user.getId());
+            if (authentication != null && authentication.getPrincipal() instanceof com.skillstorm.cloudlodge.models.User userPrincipal) {
+                if (reservation.getUserId() == null || reservation.getUserId().isBlank()) {
+                    reservation.setUserId(userPrincipal.getId());
                 }
             }
+
             Reservation saved = reservationService.save(reservation);
             // Create RoomAvailability entries for each day in the reservation
             LocalDate start = saved.getCheckInDate();

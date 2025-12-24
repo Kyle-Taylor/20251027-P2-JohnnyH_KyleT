@@ -21,9 +21,17 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final OAuth2AuthenticationSuccessHandler oauth2SuccessHandler;
+    private final OAuth2AuthenticationFailureHandler oauth2FailureHandler;
 
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
+    public SecurityConfig(
+        JwtAuthenticationFilter jwtAuthenticationFilter,
+        OAuth2AuthenticationSuccessHandler oauth2SuccessHandler,
+        OAuth2AuthenticationFailureHandler oauth2FailureHandler
+    ) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.oauth2SuccessHandler = oauth2SuccessHandler;
+        this.oauth2FailureHandler = oauth2FailureHandler;
     }
 
     @Bean
@@ -36,7 +44,7 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.disable())
             .cors(cors -> {})
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
             .authorizeHttpRequests(auth -> auth
                 // Public routes
                 .requestMatchers(
@@ -48,6 +56,9 @@ public class SecurityConfig {
                     "/users/register",
                     "/users/login",
                     "/oauth2/**",
+                    "/auth/oauth2/**",
+                    "/login/oauth2/**",
+                    "/payments/webhook",
                     "/reservations/**",
                     "/availability/**"
                 ).permitAll()
@@ -64,6 +75,12 @@ public class SecurityConfig {
                 ).hasRole("ADMIN")
                 // Everything else requires authentication
                 .anyRequest().authenticated()
+            )
+            .oauth2Login(oauth -> oauth
+                .authorizationEndpoint(endpoint -> endpoint.baseUri("/auth/oauth2"))
+                .redirectionEndpoint(endpoint -> endpoint.baseUri("/login/oauth2/code/*"))
+                .successHandler(oauth2SuccessHandler)
+                .failureHandler(oauth2FailureHandler)
             )
             .formLogin(form -> form.disable())
             .httpBasic(basic -> basic.disable());

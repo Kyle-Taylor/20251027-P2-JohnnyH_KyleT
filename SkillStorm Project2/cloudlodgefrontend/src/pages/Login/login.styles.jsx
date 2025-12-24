@@ -6,18 +6,18 @@ import { Box, Paper, Typography } from '@mui/material';
 export const LoginContainer = styled(Box)(({ theme }) => ({
   display: 'flex',
   flexDirection: 'row',
-  width: '100vw',
-  height: '100vh',
+  width: '100%',
+  minHeight: 'calc(100vh - 72px)',
   justifyContent: 'center',
   alignItems: 'center',
   gap: '2rem',
   padding: '2rem',
   boxSizing: 'border-box',
-  backgroundColor: '#1976d2',
+  backgroundColor: '#0f1113',
 
   [theme.breakpoints.down('md')]: {
-    flexDirection: 'column', // stack on small screens
-    height: 'auto',
+    flexDirection: 'column',
+    minHeight: 'auto',
     padding: '1rem',
   },
 }));
@@ -31,7 +31,7 @@ export const LoginLeft = styled(Box)(({ theme }) => ({
   alignItems: 'flex-start',
   padding: '2rem',
   minHeight: '400px',
-  color: '#fff',
+  color: '#e3e6ea',
 
   [theme.breakpoints.down('md')]: {
     alignItems: 'center',
@@ -43,12 +43,14 @@ export const LoginLeft = styled(Box)(({ theme }) => ({
 export const LoginTitle = styled(Typography)({
   fontSize: '3rem',
   fontWeight: 700,
-  marginBottom: '1rem',
+  marginBottom: '0.5rem',
+  color: '#e3e6ea',
 });
 
 export const LoginSubtitle = styled(Typography)({
   fontSize: '1.2rem',
   fontWeight: 400,
+  color: '#b0b3b8',
 });
 
 // RIGHT PANEL
@@ -74,6 +76,9 @@ export const LoginCard = styled(Paper)({
   display: 'flex',
   flexDirection: 'column',
   gap: '1rem',
+  backgroundColor: '#181a1b',
+  border: '1px solid #23272a',
+  color: '#e3e6ea',
 });
 
 export const FormTitle = styled(Typography)({

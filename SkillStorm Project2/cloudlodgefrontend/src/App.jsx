@@ -8,6 +8,9 @@ import CreateReservation from "./pages/CreateReservation/CreateReservation";
 import Dashboard from "./pages/Dashboard/Dashboard";
 import LandingPage from "./pages/LandingPage/LandingPage";
 import Profile from "./pages/Profile/Profile";
+import OAuthCallback from "./pages/OAuthCallback/OAuthCallback";
+import Checkout from "./pages/Checkout/Checkout";
+import AddCard from "./pages/AddCard/AddCard";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ViewUserReservations from "./pages/ViewUserReservations/ViewUserReservations";
 
@@ -101,6 +104,27 @@ function App() {
             </ProtectedRoute>
           } 
         />
+
+        <Route 
+          path="/pay/:reservationId" 
+          element={
+            <ProtectedRoute>
+              <Checkout />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route 
+          path="/pay/add-card" 
+          element={
+            <ProtectedRoute>
+              <AddCard />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* OAuth callback */}
+        <Route path="/oauth/callback" element={<OAuthCallback />} />
 
         {/* Catch-all 404 */}
         <Route path="*" element={<div>Page not found</div>} />

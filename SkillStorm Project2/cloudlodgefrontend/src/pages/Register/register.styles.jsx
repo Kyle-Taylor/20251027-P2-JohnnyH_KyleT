@@ -5,17 +5,18 @@ import { Box, Paper, Typography } from '@mui/material';
 export const RegisterContainer = styled(Box)(({ theme }) => ({
   display: 'flex',
   flexDirection: 'row',
-  width: '100vw',
-  height: '100vh',
+  width: '100%',
+  minHeight: 'calc(100vh - 72px)',
   justifyContent: 'center',
-  alignItems: 'stretch',
+  alignItems: 'center',
   gap: '2rem',
   boxSizing: 'border-box',
-  backgroundColor: '#1976d2',
+  padding: '2rem',
+  backgroundColor: '#0f1113',
 
   [theme.breakpoints.down('md')]: {
     flexDirection: 'column',
-    height: 'auto',
+    minHeight: 'auto',
     padding: '1rem',
   },
 }));
@@ -29,7 +30,7 @@ export const RegisterLeft = styled(Box)(({ theme }) => ({
   justifyContent: 'center',
   alignItems: 'flex-start',
   padding: '2rem',
-  color: '#fff',
+  color: '#e3e6ea',
 
   [theme.breakpoints.down('md')]: {
     alignItems: 'center',
@@ -41,22 +42,23 @@ export const RegisterLeft = styled(Box)(({ theme }) => ({
 export const RegisterTitle = styled(Typography)({
   fontSize: '3rem',
   fontWeight: 700,
-  marginBottom: '1rem',
+  marginBottom: '0.5rem',
+  color: '#e3e6ea',
 });
 
 export const RegisterSubtitle = styled(Typography)({
   fontSize: '1.2rem',
   fontWeight: 400,
+  color: '#b0b3b8',
 });
 
 // RIGHT PANEL
 export const RegisterRight = styled(Box)(({ theme }) => ({
   flex: 1,
-  height: '100%',
   display: 'flex',
   justifyContent: 'center',
   alignItems: 'center',
-  backgroundColor: '#1976d2',
+  backgroundColor: '#0f1113',
 
   [theme.breakpoints.down('md')]: {
     width: '100%',
@@ -73,6 +75,9 @@ export const RegisterCard = styled(Paper)({
   display: 'flex',
   flexDirection: 'column',
   gap: '1rem',
+  backgroundColor: '#181a1b',
+  border: '1px solid #23272a',
+  color: '#e3e6ea',
 });
 
 export const FormTitle = styled(Typography)({

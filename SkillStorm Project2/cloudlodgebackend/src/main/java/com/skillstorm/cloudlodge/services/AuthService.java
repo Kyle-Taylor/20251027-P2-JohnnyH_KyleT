@@ -69,6 +69,7 @@ public class AuthService {
         // Other default fields
         user.setAuthProvider("local");
         user.setProviderId(null);
+        user.setStripeCustomerId(null);
         user.setPreferences(new User.Preferences());
         user.setBillingAddress(new User.Address());
         user.setSavedPaymentMethods(new ArrayList<>());
