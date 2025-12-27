@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import Pagination from '@mui/material/Pagination';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
@@ -19,6 +19,7 @@ import EditModal from '../../components/EditModal';
 import PhotoCamera from "@mui/icons-material/PhotoCamera";
 import DetailsModal from '../../components/DetailsModal';
 import DeleteConfirmationModal from '../../components/DeleteConfirmationModal';
+import RoomsFilters from "../../components/RoomsFilters";
 
 import Header from "../../components/Header";
 import { apiFetch } from "../../api/apiFetch";
@@ -48,11 +49,24 @@ export default function Rooms() {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [roomToDelete, setRoomToDelete] = useState(null);
   const fileInputRef = useRef();
+  const handleRoomsUpdate = useCallback((data) => {
+    setRooms(data);
+    setPage(1);
+  }, []);
+  const [filterRoomTypeId, setFilterRoomTypeId] = useState("");
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [filterRoomNumber, setFilterRoomNumber] = useState("");
+  const [filterPriceMin, setFilterPriceMin] = useState("");
+  const [filterPriceMax, setFilterPriceMax] = useState("");
 
   useEffect(() => {
     fetchRoomTypes();
     fetchRooms();
   }, []);
+
+  useEffect(() => {
+    setPage(1);
+  }, [filterRoomTypeId, filterStatus, filterRoomNumber, filterPriceMin, filterPriceMax]);
 
   // Fetch all room types
   async function fetchRoomTypes() {
@@ -270,13 +284,51 @@ export default function Rooms() {
     });
   }
 
+  const filteredRooms = useMemo(() => {
+    const numberFilter = filterRoomNumber.trim();
+    const minPrice = filterPriceMin !== "" ? Number(filterPriceMin) : null;
+    const maxPrice = filterPriceMax !== "" ? Number(filterPriceMax) : null;
+    const statusFilter = filterStatus.toLowerCase();
+
+    return rooms.filter(room => {
+      if (filterRoomTypeId) {
+        if ((room.roomTypeId || "") !== filterRoomTypeId) return false;
+      }
+
+      if (numberFilter) {
+        const roomNumber = room.roomNumber != null ? String(room.roomNumber) : "";
+        if (!roomNumber.includes(numberFilter)) return false;
+      }
+
+      if (statusFilter !== "all") {
+        const isMaintenance = room.isActive === false;
+        const isBooked = Boolean(room.booked);
+        const isAvailable = room.isActive !== false && !isBooked;
+
+        if (statusFilter === "maintenance" && !isMaintenance) return false;
+        if (statusFilter === "booked" && !isBooked) return false;
+        if (statusFilter === "available" && !isAvailable) return false;
+      }
+
+      const price = Number(room.price);
+      if (Number.isFinite(minPrice) && Number.isFinite(price) && price < minPrice) return false;
+      if (Number.isFinite(maxPrice) && Number.isFinite(price) && price > maxPrice) return false;
+
+      return true;
+    });
+  }, [rooms, filterRoomTypeId, filterStatus, filterRoomNumber, filterPriceMin, filterPriceMax]);
+
   return (
   <Box>
       <Header 
-      setRooms={setRooms}
+      setRooms={handleRoomsUpdate}
       setLoading={setLoading}
       setError={setError}
-      showSearch={false}
+      showSearch
+      hideGuests
+      searchMaxWidth={200}
+      searchHeight={55}
+      searchParams={{ includeBooked: true }}
       />
 
       <Box sx={{ width: "100%"}}>
@@ -311,42 +363,81 @@ export default function Rooms() {
             }}
           >
             <Box
-            sx={{
-              width: "100%",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              mb: 3,
-            }}
-          >
-            <Box sx={{ maxWidth: 1380, width: "100%", display: "flex", justifyContent: "flex-start", gap: 3 }}>
-              <Box sx={{ width: "50%" }} /> {/* Spacer for first card */}
-              <Box sx={{ width: "50%" }} /> {/* Spacer for second card */}
-              <Box sx={{ width: "50%" }} /> {/* Spacer for third card */}
-              <Box sx={{ width: "20%", display: "flex", alignItems: "center" }}>
-                <Button
-                  variant="contained"
-                  startIcon={<AddIcon />}
-                  onClick={() => setAddModalOpen(true)}
-                >
-                  Add Room
-                </Button>
+              sx={{
+                width: "100%",
+                display: "flex",
+                justifyContent: "center",
+                mb: 3
+              }}
+            >
+              <Box
+                sx={{
+                  maxWidth: 1280,
+                  width: "100%",
+                  display: "flex",
+                  alignItems: "flex-start",
+                  justifyContent: "space-between",
+                  gap: 2,
+                  ml: { xs: 0, sm: 0, md: -12 }
+                }}
+              >
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                  <RoomsFilters
+                    roomTypes={roomTypes}
+                    roomsCount={rooms.length}
+                    filteredCount={filteredRooms.length}
+                    filterRoomTypeId={filterRoomTypeId}
+                    filterStatus={filterStatus}
+                    filterRoomNumber={filterRoomNumber}
+                    filterPriceMin={filterPriceMin}
+                    filterPriceMax={filterPriceMax}
+                    onRoomTypeChange={setFilterRoomTypeId}
+                    onStatusChange={setFilterStatus}
+                    onRoomNumberChange={setFilterRoomNumber}
+                    onPriceMinChange={setFilterPriceMin}
+                    onPriceMaxChange={setFilterPriceMax}
+                    onClearFilters={() => {
+                      setFilterRoomTypeId("");
+                      setFilterStatus("all");
+                      setFilterRoomNumber("");
+                      setFilterPriceMin("");
+                      setFilterPriceMax("");
+                    }}
+                  />
+                </Box>
+                <Box sx={{ flexShrink: 0, mt: 9 }}>
+                  <Button
+                    variant="contained"
+                    startIcon={<AddIcon />}
+                    onClick={() => setAddModalOpen(true)}
+                  >
+                    Add Room
+                  </Button>
+                </Box>
               </Box>
             </Box>
-          </Box>
-
 
             {loading ? (
               <Typography>Loading…</Typography>
             ) : (
               <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                 <Box sx={{ maxWidth: 1380, width: '100%' }}>
-                  <Grid container spacing={3} justifyContent="flex-start">
-                    {rooms
-                      .slice((page - 1) * itemsPerPage, page * itemsPerPage)
-                      .map((room) => (
-                        <Grid item key={room.id || room._id}>
-                          <Card
+                  {filteredRooms.length === 0 ? (
+                    <Box sx={{ textAlign: "center", py: 6 }}>
+                      <Typography variant="h6" color="text.secondary">
+                        No rooms match those filters
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                        Try adjusting type, status, number, or price.
+                      </Typography>
+                    </Box>
+                  ) : (
+                    <Grid container spacing={3} justifyContent="flex-start">
+                      {filteredRooms
+                        .slice((page - 1) * itemsPerPage, page * itemsPerPage)
+                        .map((room) => (
+                          <Grid item key={room.id || room._id}>
+                            <Card
                           sx={{
                             borderRadius: 3,
                             overflow: "hidden",
@@ -507,12 +598,13 @@ export default function Rooms() {
                       </Grid>
                     ))}
                   </Grid>
+                  )}
                 </Box>
                 {/* Pagination below grid */}
-                {rooms.length > itemsPerPage && (
+                {filteredRooms.length > itemsPerPage && (
                   <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4, width: '100%' }}>
                     <Pagination
-                      count={Math.ceil(rooms.length / itemsPerPage)}
+                      count={Math.ceil(filteredRooms.length / itemsPerPage)}
                       page={page}
                       onChange={(_, value) => setPage(value)}
                       sx={{

@@ -23,7 +23,11 @@ export default function Header({
   setRooms,
   setLoading,
   setError,
-  showSearch = true
+  showSearch = true,
+  hideGuests = false,
+  searchMaxWidth,
+  searchHeight,
+  searchParams
 }) {
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState(null);
@@ -91,11 +95,19 @@ export default function Header({
       setLoading(true);
       setError("");
 
-      const params = new URLSearchParams({
-        startDate,
-        endDate,
-        guests
-      });
+      const params = new URLSearchParams();
+      if (startDate) params.set("startDate", startDate);
+      if (endDate) params.set("endDate", endDate);
+      if (guests !== undefined && guests !== null && guests !== "") {
+        params.set("guests", String(guests));
+      }
+
+      if (searchParams && typeof searchParams === "object") {
+        Object.entries(searchParams).forEach(([key, value]) => {
+          if (value === undefined || value === null || value === "") return;
+          params.set(key, String(value));
+        });
+      }
 
       const data = await apiFetch(`/rooms/search?${params.toString()}`);
       setRooms(data.content || data);
@@ -156,7 +168,12 @@ export default function Header({
                 pr: userInfo?.role === "ADMIN" ? 6 : 0,
               }}
             >
-              <HeroSearch onSearchChange={runSearch} />
+              <HeroSearch
+                onSearchChange={runSearch}
+                hideGuests={hideGuests}
+                maxWidth={searchMaxWidth}
+                height={searchHeight}
+              />
             </Box>
           )}
 

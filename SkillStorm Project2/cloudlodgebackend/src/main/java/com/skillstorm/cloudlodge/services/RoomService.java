@@ -130,6 +130,7 @@ public class RoomService {
         String startDate,
         String endDate,
         Integer guests,
+        Boolean includeBooked,
         Pageable pageable
     ) {
         List<Room> rooms;
@@ -168,14 +169,14 @@ public class RoomService {
         for (Room room : rooms) {
 
             boolean isBookedInRange = bookedRoomIds.contains(room.getId());
-            if (isBookedInRange) continue;
+            if ((includeBooked == null || !includeBooked) && isBookedInRange) continue;
 
             RoomType roomType = room.getRoomTypeId() != null
                 ? roomTypeService.getRoomTypeById(room.getRoomTypeId()).orElse(null)
                 : null;
 
             ResolvedRoom rr = mergeRoomWithType(room, roomType);
-            rr.setBooked(false);
+            rr.setBooked(isBookedInRange);
 
             if (roomCategory != null &&
                 (rr.getRoomCategory() == null ||

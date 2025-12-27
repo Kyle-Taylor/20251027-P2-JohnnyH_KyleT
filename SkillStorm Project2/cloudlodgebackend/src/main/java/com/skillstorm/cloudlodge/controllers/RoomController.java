@@ -211,6 +211,7 @@ public ResponseEntity<Room> updateRoom(
         @RequestParam(required = false) String startDate,
         @RequestParam(required = false) String endDate,
         @RequestParam(required = false) Integer guests,
+        @RequestParam(required = false, defaultValue = "false") Boolean includeBooked,
         Pageable pageable
     ) {
         return roomService.searchResolvedRooms(
@@ -220,6 +221,7 @@ public ResponseEntity<Room> updateRoom(
             startDate,
             endDate,
             guests,
+            includeBooked,
             pageable
         );
     }

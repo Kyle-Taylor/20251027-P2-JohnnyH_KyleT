@@ -132,7 +132,7 @@ const Profile = () => {
     <>
       <Header showSearch={false} />
       <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: '#2c2b2b' }}>
-        <Box sx={{ flex: 1, p: { xs: 2, md: 4 }, color: '#e3e6ea' }}>
+        <Box sx={{ flex: 1, p: { xs: 2, md: 4 }, color: '#e3e6`ea' }}>
           <Typography variant="h4" sx={{ mb: 1, fontWeight: 700 }}>Profile</Typography>
           <Typography variant="body2" sx={{ mb: 3, color: '#b0b3b8' }}>
             Manage your account details and saved payment methods.

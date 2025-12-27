@@ -5,33 +5,37 @@ import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import dayjs from "dayjs";
 import CalendarPopup from "./CalandarPopup";
 
-export default function HeroSearch({ onSearchChange }) {
+export default function HeroSearch({ onSearchChange, hideGuests = false, maxWidth, height }) {
     // Listen for autofill event from parent (room type selection)
     useEffect(() => {
       function handleAutofill(e) {
         const { guests, startDate, endDate } = e.detail || {};
-        if (guests) setGuests(guests);
+        if (!hideGuests && guests) setGuests(guests);
         if (startDate && endDate) {
           setRange({ start: dayjs(startDate), end: dayjs(endDate) });
           // Trigger search after state updates
           setTimeout(() => {
             if (onSearchChange) {
-              onSearchChange({
+              const payload = {
                 startDate,
-                endDate,
-                guests: guests || 1
-              });
+                endDate
+              };
+              if (!hideGuests) payload.guests = guests || 1;
+              onSearchChange(payload);
             }
           }, 0);
         }
       }
       window.addEventListener('heroSearchAutofill', handleAutofill);
       return () => window.removeEventListener('heroSearchAutofill', handleAutofill);
-    }, [onSearchChange]);
+    }, [hideGuests, onSearchChange]);
   const [activeSection, setActiveSection] = useState(null);
-  const [guests, setGuests] = useState(0);
+  const [guests, setGuests] = useState(hideGuests ? 1 : 0);
   const [showDateError, setShowDateError] = useState(false);
   const [showGuestError, setShowGuestError] = useState(false);
+  const controlHeight = height ?? 56;
+  const dividerHeight = Math.max(28, controlHeight - 16);
+  const searchButtonSize = Math.max(28, controlHeight - 16);
 
     // Default calendar range: today and tomorrow
     const today = dayjs().startOf("day");
@@ -43,7 +47,7 @@ export default function HeroSearch({ onSearchChange }) {
     e.stopPropagation();
     
     const missingDates = !range.start || !range.end;
-    const missingGuests = guests === 0;
+    const missingGuests = !hideGuests && guests === 0;
     
     setShowDateError(missingDates);
     setShowGuestError(missingGuests);
@@ -65,7 +69,7 @@ export default function HeroSearch({ onSearchChange }) {
     onSearchChange({
       startDate: range.start.format("YYYY-MM-DD"),
       endDate: range.end.format("YYYY-MM-DD"),
-      guests
+      ...(hideGuests ? {} : { guests })
     });
   };
 
@@ -97,12 +101,12 @@ export default function HeroSearch({ onSearchChange }) {
 
   return (
     <ClickAwayListener onClickAway={() => setActiveSection(null)}>
-      <Box sx={{ position: "relative", width: "100%", maxWidth: 680 }}>
+      <Box sx={{ position: "relative", width: "100%", maxWidth: maxWidth ?? 680 }}>
         <Box
           sx={{
             display: "flex",
             alignItems: "center",
-            height: 56,
+            height: controlHeight,
             width: "100%",
             borderRadius: "999px",
             bgcolor: "background.paper",
@@ -145,8 +149,10 @@ export default function HeroSearch({ onSearchChange }) {
             </Typography>
           </Box>
 
-          {/* Divider */}
-          <Box sx={{ height: 40, width: 2, bgcolor: "divider", mx: 2 }} />
+          {!hideGuests && (
+            <>
+              {/* Divider */}
+              <Box sx={{ height: dividerHeight, width: 2, bgcolor: "divider", mx: 2 }} />
 
           {/* Guests */}
           <Box
@@ -228,6 +234,8 @@ export default function HeroSearch({ onSearchChange }) {
               </IconButton>
             </Box>
           </Box>
+            </>
+          )}
 
           {/* Search button */}
           <IconButton
@@ -236,8 +244,8 @@ export default function HeroSearch({ onSearchChange }) {
               borderRadius: "50%",
               bgcolor: "primary.main",
               color: "#fff",
-              width: 40,
-              height: 40,
+              width: searchButtonSize,
+              height: searchButtonSize,
               "&:hover": { bgcolor: "primary.dark" },
             }}
             onClick={handleSearch}
