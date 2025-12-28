@@ -453,6 +453,12 @@ export default function ViewUserReservations() {
   const renderReservationCard = (reservation) => {
     const editable = isEditableReservation(reservation);
     const remaining = daysUntil(reservation.checkInDate);
+    const isPast = typeof remaining === "number" && remaining < 0;
+    const daysLabel = typeof remaining === "number"
+      ? isPast
+        ? `${Math.abs(remaining)} days ago`
+        : `${remaining} days away`
+      : null;
     const roomNumber = roomMap[reservation.roomUnitId]?.roomNumber;
 
     return (
@@ -478,7 +484,7 @@ export default function ViewUserReservations() {
                   Reservation
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
-                  {reservation.id}
+                  {"#" + reservation.id}
                 </Typography>
               </Stack>
               <Stack direction="row" spacing={1} flexWrap="wrap" sx={{ mb: 1 }}>
@@ -487,9 +493,9 @@ export default function ViewUserReservations() {
                 )}
                 {typeof remaining === "number" && (
                   <Chip
-                    label={`${remaining} days away`}
+                    label={daysLabel}
                     size="small"
-                    color={remaining >= TWO_WEEKS_DAYS ? "success" : "warning"}
+                    color={isPast ? "warning" : (remaining >= TWO_WEEKS_DAYS ? "success" : "warning")}
                     variant="outlined"
                   />
                 )}
