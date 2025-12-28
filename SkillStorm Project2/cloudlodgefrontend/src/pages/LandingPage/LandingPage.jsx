@@ -25,7 +25,7 @@ import LocalTaxiIcon from "@mui/icons-material/LocalTaxi";
 import EmailIcon from "@mui/icons-material/Email";
 import PhoneIcon from "@mui/icons-material/Phone";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
-import { apiFetch } from "../../api/apiFetch";
+import { useGetRoomTypesQuery } from "../../store/apiSlice";
 
 const HIGHLIGHTS = [
   {
@@ -101,21 +101,23 @@ export default function LandingPage() {
   const navigate = useNavigate();
   const [roomTypes, setRoomTypes] = useState([]);
   const [roomTypeError, setRoomTypeError] = useState("");
+  const { data, error } = useGetRoomTypesQuery();
 
   useEffect(() => {
-    async function fetchRoomTypes() {
-      try {
-        const data = await apiFetch("/roomtypes");
-        setRoomTypes(Array.isArray(data) ? data : []);
-        setRoomTypeError("");
-      } catch (err) {
-        setRoomTypes([]);
-        setRoomTypeError(err.message || "Failed to fetch room types");
-      }
+    if (Array.isArray(data)) {
+      setRoomTypes(data);
+      setRoomTypeError("");
+    } else if (data) {
+      setRoomTypes([]);
     }
+  }, [data]);
 
-    fetchRoomTypes();
-  }, []);
+  useEffect(() => {
+    if (error) {
+      setRoomTypes([]);
+      setRoomTypeError(error?.message || "Failed to fetch room types");
+    }
+  }, [error]);
 
   const roomTypeCards = useMemo(() => {
     if (!roomTypes.length) return HIGHLIGHTS;

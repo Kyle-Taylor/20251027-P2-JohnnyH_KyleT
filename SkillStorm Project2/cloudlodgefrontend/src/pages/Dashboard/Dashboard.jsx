@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   Box,
   Grid,
@@ -25,13 +25,9 @@ import { format } from 'date-fns';
 import UsersTable from '../../components/UsersTable';
 import CancelBookingButton from '../../components/CancelBookingButton';
 import UpcomingReservations from "../../components/UpcomingReservations";
-import { apiFetch } from "../../api/apiFetch";
+import { useGetDashboardQuery } from "../../store/apiSlice";
 
 export default function Dashboard() {
-  const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState(null);
-  const [upcomingReservations, setUpcomingReservations] = useState([]);
-  const [loadingUpcoming, setLoadingUpcoming] = useState(true);
   const [sortPeriod, setSortPeriod] = useState("day"); // for stats only
   const [reservationMonth, setReservationMonth] = useState(() => {
     const now = new Date();
@@ -42,60 +38,26 @@ export default function Dashboard() {
     return today;
   });
 
-  useEffect(() => {
-    fetchDashboard();
-    // eslint-disable-next-line
-  }, [sortPeriod, selectedDate]);
-
-  // Fetch only upcoming reservations when reservationMonth changes
-  useEffect(() => {
-    async function fetchUpcoming() {
-      setLoadingUpcoming(true);
-      try {
-        const params = new URLSearchParams();
-        if (reservationMonth) {
-          params.append("reservationMonth", `${reservationMonth.getFullYear()}-${String(reservationMonth.getMonth() + 1).padStart(2, '0')}`);
-        }
-        const data = await apiFetch(`/dashboard?${params.toString()}`);
-        setUpcomingReservations(data.upcomingReservations || []);
-      } catch (err) {
-        setUpcomingReservations([]);
-      } finally {
-        setLoadingUpcoming(false);
-      }
+  const dashboardParams = useMemo(() => {
+    const params = {};
+    if (selectedDate) {
+      const utcDate = new Date(Date.UTC(
+        selectedDate.getFullYear(),
+        selectedDate.getMonth(),
+        selectedDate.getDate()
+      ));
+      params.date = utcDate.toISOString().slice(0, 10);
     }
-    fetchUpcoming();
-    // eslint-disable-next-line
-  }, [reservationMonth]);
-
-  async function fetchDashboard() {
-    setLoading(true);
-    try {
-      const params = new URLSearchParams();
-      if (selectedDate) {
-        // Always send the date as UTC YYYY-MM-DD
-        const utcDate = new Date(Date.UTC(
-          selectedDate.getFullYear(),
-          selectedDate.getMonth(),
-          selectedDate.getDate()
-        ));
-        params.append("date", utcDate.toISOString().slice(0, 10));
-      }
-      if (sortPeriod) params.append("period", sortPeriod);
-      if (reservationMonth) {
-        // Send as yyyy-MM
-        params.append("reservationMonth", `${reservationMonth.getFullYear()}-${String(reservationMonth.getMonth() + 1).padStart(2, '0')}`);
-      }
-      const data = await apiFetch(`/dashboard?${params.toString()}`);
-      setStats(data);
-    } catch (err) {
-      setStats(null);
-    } finally {
-      setLoading(false);
+    if (sortPeriod) params.period = sortPeriod;
+    if (reservationMonth) {
+      params.reservationMonth = `${reservationMonth.getFullYear()}-${String(reservationMonth.getMonth() + 1).padStart(2, "0")}`;
     }
-  }
+    return params;
+  }, [selectedDate, sortPeriod, reservationMonth]);
 
-  if (loading || !stats) {
+  const { data: stats, isLoading } = useGetDashboardQuery(dashboardParams);
+
+  if (isLoading || !stats) {
     return (
       <Box sx={{ p: 6, textAlign: "center" }}>
         <CircularProgress />

@@ -1,5 +1,6 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 import Login from "./pages/Login/Login";
 import Rooms from "./pages/Rooms/Rooms";
 import RoomTypes from "./pages/RoomTypes/RoomTypes";
@@ -15,7 +16,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import ViewUserReservations from "./pages/ViewUserReservations/ViewUserReservations";
 
 function App() {
-  const token = localStorage.getItem("token");
+  const token = useSelector((state) => state.auth.token);
   let role = null;
   if (token) {
     try {

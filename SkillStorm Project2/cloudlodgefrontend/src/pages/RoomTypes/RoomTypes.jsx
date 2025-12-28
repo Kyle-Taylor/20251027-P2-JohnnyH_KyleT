@@ -9,10 +9,14 @@ import CloseIcon from '@mui/icons-material/Close';
 import BedIcon from "@mui/icons-material/Bed";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import PhotoCamera from "@mui/icons-material/PhotoCamera";
-import EditModal from "../../components/EditModal";
 import DeleteConfirmationModal from '../../components/DeleteConfirmationModal';
 import DetailsModal from "../../components/DetailsModal";
-import { apiFetch } from "../../api/apiFetch";
+import {
+  useCreateRoomTypeMutation,
+  useDeleteRoomTypeMutation,
+  useGetRoomTypesQuery,
+  useUpdateRoomTypeMutation,
+} from "../../store/apiSlice";
 
 const INITIAL_FORM = {
   roomCategory: "",
@@ -42,28 +46,34 @@ export default function RoomTypes() {
   const [selectedImages, setSelectedImages] = useState([]);
   const [editImages, setEditImages] = useState([]);
   const [imagesToDelete, setImagesToDelete] = useState([]);
+  const { data, isLoading, error: roomTypesError, refetch } = useGetRoomTypesQuery();
+  const [createRoomType] = useCreateRoomTypeMutation();
+  const [updateRoomType] = useUpdateRoomTypeMutation();
+  const [deleteRoomType] = useDeleteRoomTypeMutation();
 
   function resetAddForm() {
     setForm(INITIAL_FORM);
   }
 
   useEffect(() => {
-    fetchRoomTypes();
-  }, []);
-
-  async function fetchRoomTypes(callback) {
-    setLoading(true);
-    setError("");
-    try {
-      const data = await apiFetch("/roomtypes");
+    if (Array.isArray(data)) {
       setRoomTypes(data);
-      if (callback) callback(data);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
+    } else if (data) {
+      setRoomTypes([]);
     }
-  }
+  }, [data]);
+
+  useEffect(() => {
+    if (roomTypesError) {
+      setError(roomTypesError?.message || "Failed to load room types.");
+    } else {
+      setError("");
+    }
+  }, [roomTypesError]);
+
+  useEffect(() => {
+    setLoading(isLoading);
+  }, [isLoading]);
 
   async function handleAddRoomType(e) {
     e.preventDefault();
@@ -90,32 +100,27 @@ export default function RoomTypes() {
     });
     
     try {
-      const res = await fetch(`${API_URL}/create`, {
-        method: "POST",
-        body: formData,
-      });
-      if (!res.ok) throw new Error("Failed to add room type");
+      await createRoomType(formData).unwrap();
       setAddModalOpen(false);
       resetAddForm();
       setSelectedImages([]);
-      fetchRoomTypes();
+      refetch();
     } catch (err) {
-      setError(err.message);
+      setError(err?.message || "Failed to add room type.");
     }
   }
 
   async function handleDeleteRoomType(id) {
     try {
-      const res = await apiFetch(`/roomtypes/delete/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Failed to delete room type");
+      await deleteRoomType(id).unwrap();
       setModalOpen(false);
       if (selectedRoomType && (selectedRoomType.id === id || selectedRoomType._id === id)) {
         setEditMode(false);
         setSelectedRoomType(null);
       }
-      fetchRoomTypes();
+      refetch();
     } catch (err) {
-      setError(err.message);
+      setError(err?.message || "Failed to delete room type.");
     }
     setDeleteModalOpen(false);
     setRoomTypeToDelete(null);
@@ -178,13 +183,10 @@ export default function RoomTypes() {
       });
 
       try {
-        const updatedRoomType = await apiFetch(
-          `/roomtypes/update/${selectedRoomType.id || selectedRoomType._id}`,
-          {
-            method: "PUT",
-            body: formData,
-          }
-        );
+        const updatedRoomType = await updateRoomType({
+          id: selectedRoomType.id || selectedRoomType._id,
+          body: formData,
+        }).unwrap();
         const updatedId = updatedRoomType?.id || updatedRoomType?._id;
         setRoomTypes(prev =>
           prev.map(rt =>
@@ -213,7 +215,7 @@ export default function RoomTypes() {
         setEditImages([]);
         setImagesToDelete([]);
       } catch (err) {
-        setError(err.message);
+        setError(err?.message || "Failed to update room type.");
       }
     }, 0);
   }

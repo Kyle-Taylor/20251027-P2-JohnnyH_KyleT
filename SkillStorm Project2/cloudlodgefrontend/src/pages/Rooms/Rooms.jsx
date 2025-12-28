@@ -1,7 +1,5 @@
-import React, { useCallback, useEffect, useMemo, useState, useRef } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import Pagination from '@mui/material/Pagination';
-import useMediaQuery from '@mui/material/useMediaQuery';
-import { useTheme } from '@mui/material/styles';
 import {
   Card, CardContent, CardActions, Typography, Button, Grid, Chip,
   Box, TextField, Dialog, DialogTitle, DialogContent, DialogActions,
@@ -15,14 +13,19 @@ import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
 import CloseIcon from '@mui/icons-material/Close';
-import EditModal from '../../components/EditModal';
-import PhotoCamera from "@mui/icons-material/PhotoCamera";
 import DetailsModal from '../../components/DetailsModal';
 import DeleteConfirmationModal from '../../components/DeleteConfirmationModal';
 import RoomsFilters from "../../components/RoomsFilters";
 
 import Header from "../../components/Header";
-import { apiFetch } from "../../api/apiFetch";
+import {
+  useCreateRoomMutation,
+  useDeleteRoomMutation,
+  useGetRoomTypesQuery,
+  useGetRoomsQuery,
+  useSetRoomActiveMutation,
+  useUpdateRoomMutation,
+} from "../../store/apiSlice";
 
 const INITIAL_FORM = {
   number: "", roomTypeId: "", price: "", maxGuests: "", amenities: "", description: ""
@@ -33,7 +36,7 @@ export default function Rooms() {
   const [page, setPage] = useState(1);
   const itemsPerPage = 16;
   const [roomTypes, setRoomTypes] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [searchLoading, setSearchLoading] = useState(false);
   const [error, setError] = useState("");
 
   const [addModalOpen, setAddModalOpen] = useState(false);
@@ -48,7 +51,6 @@ export default function Rooms() {
   const [editImages, setEditImages] = useState([]);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [roomToDelete, setRoomToDelete] = useState(null);
-  const fileInputRef = useRef();
   const handleRoomsUpdate = useCallback((data) => {
     setRooms(data);
     setPage(1);
@@ -58,40 +60,56 @@ export default function Rooms() {
   const [filterRoomNumber, setFilterRoomNumber] = useState("");
   const [filterPriceMin, setFilterPriceMin] = useState("");
   const [filterPriceMax, setFilterPriceMax] = useState("");
+  const {
+    data: roomTypesData,
+    isLoading: roomTypesLoading,
+    isFetching: roomTypesFetching,
+    error: roomTypesError,
+  } = useGetRoomTypesQuery();
+  const {
+    data: roomsData,
+    isLoading: roomsLoading,
+    isFetching: roomsFetching,
+    error: roomsError,
+    refetch: refetchRooms,
+  } = useGetRoomsQuery();
+  const [createRoom] = useCreateRoomMutation();
+  const [updateRoom] = useUpdateRoomMutation();
+  const [deleteRoom] = useDeleteRoomMutation();
+  const [setRoomActive] = useSetRoomActiveMutation();
+  const loading = roomsLoading || roomTypesLoading || roomsFetching || roomTypesFetching || searchLoading;
 
   useEffect(() => {
-    fetchRoomTypes();
-    fetchRooms();
-  }, []);
+    if (Array.isArray(roomTypesData)) {
+      setRoomTypes(roomTypesData);
+    } else if (roomTypesData) {
+      setRoomTypes([]);
+    }
+  }, [roomTypesData]);
+
+  useEffect(() => {
+    if (Array.isArray(roomsData)) {
+      setRooms(roomsData);
+    } else if (roomsData) {
+      setRooms([]);
+    }
+  }, [roomsData]);
+
+  useEffect(() => {
+    if (roomTypesError) {
+      setError(roomTypesError?.message || "Failed to load room types.");
+      return;
+    }
+    if (roomsError) {
+      setError(roomsError?.message || "Failed to load rooms.");
+      return;
+    }
+    setError("");
+  }, [roomTypesError, roomsError]);
 
   useEffect(() => {
     setPage(1);
   }, [filterRoomTypeId, filterStatus, filterRoomNumber, filterPriceMin, filterPriceMax]);
-
-  // Fetch all room types
-  async function fetchRoomTypes() {
-    try {
-      const data = await apiFetch("/roomtypes");
-      setRoomTypes(data);
-    } catch (err) {
-      setError(err.message);
-    }
-  }
-
-  // Fetch all rooms
-  async function fetchRooms(callback) {
-    setLoading(true);
-    setError("");
-    try {
-      const data = await apiFetch("/rooms");
-      setRooms(data);
-      if (callback) callback(data);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  }
 
   function resetAddForm() {
     setForm(INITIAL_FORM);
@@ -118,12 +136,12 @@ export default function Rooms() {
     if (form.description && form.description !== rt?.description) payload.descriptionOverride = form.description;
 
     try {
-      await apiFetch("/rooms/create", { method: "POST", body: payload });
+      await createRoom(payload).unwrap();
       setAddModalOpen(false);
       resetAddForm();
-      fetchRooms();
+      refetchRooms();
     } catch (err) {
-      setError(err.message);
+      setError(err?.message || "Failed to add room.");
     }
   }
 
@@ -131,15 +149,15 @@ export default function Rooms() {
   async function handleDeleteRoom(id) {
     setError("");
     try {
-      await apiFetch(`/rooms/delete/${id}`, { method: "DELETE" });
+      await deleteRoom(id).unwrap();
       setModalOpen(false);
       if (selectedRoom && (selectedRoom.id === id || selectedRoom._id === id)) {
         setEditMode(false);
         setSelectedRoom(null);
       }
-      fetchRooms();
+      refetchRooms();
     } catch (err) {
-      setError(err.message);
+      setError(err?.message || "Failed to delete room.");
     } finally {
       setDeleteModalOpen(false);
       setRoomToDelete(null);
@@ -212,10 +230,10 @@ export default function Rooms() {
         }
 
 
-        const updatedRoom = await apiFetch(
-          `/rooms/update/${selectedRoom.id || selectedRoom._id}`,
-          { method: "PUT", body: formData }
-        );
+        const updatedRoom = await updateRoom({
+          id: selectedRoom.id || selectedRoom._id,
+          body: formData,
+        }).unwrap();
         const updatedId = updatedRoom?.id || updatedRoom?._id || selectedRoom?.id || selectedRoom?._id;
         const priceValue = Number.isFinite(payload.priceOverride) ? payload.priceOverride : selectedRoom.price;
         const maxGuestsValue = Number.isFinite(payload.maxGuestsOverride) ? payload.maxGuestsOverride : selectedRoom.maxGuests;
@@ -248,7 +266,7 @@ export default function Rooms() {
         }));
         setEditImages([]);
       } catch (err) {
-        setError(err.message);
+        setError(err?.message || "Failed to update room.");
       }
     }, 0);
   }
@@ -322,7 +340,7 @@ export default function Rooms() {
   <Box>
       <Header 
       setRooms={handleRoomsUpdate}
-      setLoading={setLoading}
+      setLoading={setSearchLoading}
       setError={setError}
       showSearch
       hideGuests
@@ -514,16 +532,16 @@ export default function Rooms() {
                                   onClick={async (e) => {
                                     e.stopPropagation();
                                     try {
-                                      const updatedRoom = await apiFetch(
-                                        `/rooms/set-active/${room.id || room._id}?isActive=true`,
-                                        { method: "PUT" }
-                                      );
+                                      const updatedRoom = await setRoomActive({
+                                        id: room.id || room._id,
+                                        isActive: true,
+                                      }).unwrap();
                                       const updatedId = updatedRoom.id || updatedRoom._id;
                                       setRooms(prevRooms => prevRooms.map(r =>
                                         (r.id || r._id) === updatedId ? { ...r, ...updatedRoom } : r
                                       ));
                                     } catch (err) {
-                                      setError(err.message);
+                                      setError(err?.message || "Failed to update room status.");
                                     }
                                   }}
                                 >
@@ -538,16 +556,16 @@ export default function Rooms() {
                                   onClick={async (e) => {
                                     e.stopPropagation();
                                     try {
-                                      const updatedRoom = await apiFetch(
-                                        `/rooms/set-active/${room.id || room._id}?isActive=false`,
-                                        { method: "PUT" }
-                                      );
+                                      const updatedRoom = await setRoomActive({
+                                        id: room.id || room._id,
+                                        isActive: false,
+                                      }).unwrap();
                                       const updatedId = updatedRoom.id || updatedRoom._id;
                                       setRooms(prevRooms => prevRooms.map(r =>
                                         (r.id || r._id) === updatedId ? { ...r, ...updatedRoom } : r
                                       ));
                                     } catch (err) {
-                                      setError(err.message);
+                                      setError(err?.message || "Failed to update room status.");
                                     }
                                   }}
                                 >

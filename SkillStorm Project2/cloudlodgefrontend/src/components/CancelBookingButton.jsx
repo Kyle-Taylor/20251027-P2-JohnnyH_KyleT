@@ -1,23 +1,22 @@
 import React, { useState } from "react";
 import { Button, CircularProgress, Dialog, DialogTitle, DialogActions } from "@mui/material";
-import { apiFetch } from "../api/apiFetch";
+import { useDeleteReservationMutation } from "../store/apiSlice";
 
 export default function CancelBookingButton({ reservationId, onCancel }) {
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const [error, setError] = useState("");
+  const [deleteReservation] = useDeleteReservationMutation();
 
   const handleCancel = async () => {
     setLoading(true);
     setError("");
     try {
-      await apiFetch(`/reservations/delete/${reservationId}`, {
-        method: "DELETE"
-      });
+      await deleteReservation(reservationId).unwrap();
       setOpen(false);
       if (onCancel) onCancel();
     } catch (err) {
-      setError(err.message || "Failed to cancel booking");
+      setError(err?.message || "Failed to cancel booking");
     } finally {
       setLoading(false);
     }

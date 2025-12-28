@@ -10,7 +10,7 @@ import {
   Paper,
   Typography,
 } from "@mui/material";
-import { createPaymentIntent, fetchStripeConfig } from "../../api/payments";
+import { useCreatePaymentIntentMutation, useGetStripeConfigQuery } from "../../store/apiSlice";
 
 function CheckoutForm({ clientSecret }) {
   const stripe = useStripe();
@@ -67,21 +67,26 @@ export default function Checkout() {
   const [error, setError] = useState("");
   const [savePaymentMethod, setSavePaymentMethod] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
+  const { data: configData, error: configError } = useGetStripeConfigQuery();
+  const [createPaymentIntent] = useCreatePaymentIntentMutation();
 
   useEffect(() => {
+    if (!configData && !configError) return;
     let mounted = true;
     async function init(flag) {
       try {
-        const config = await fetchStripeConfig();
+        if (configError) {
+          throw configError;
+        }
         if (!mounted) return;
-        setPublishableKey(config.publishableKey);
+        setPublishableKey(configData?.publishableKey || "");
 
-        const intent = await createPaymentIntent(reservationId, flag);
+        const intent = await createPaymentIntent({ reservationId, savePaymentMethod: flag }).unwrap();
         if (!mounted) return;
         setClientSecret(intent.clientSecret);
       } catch (err) {
         if (!mounted) return;
-        setError(err.message || "Unable to start payment");
+        setError(err?.message || "Unable to start payment");
       } finally {
         if (mounted) setLoading(false);
       }
@@ -90,7 +95,7 @@ export default function Checkout() {
     return () => {
       mounted = false;
     };
-  }, [reservationId, savePaymentMethod]);
+  }, [reservationId, savePaymentMethod, createPaymentIntent, configData, configError]);
 
   const stripePromise = useMemo(() => {
     if (!publishableKey) return null;

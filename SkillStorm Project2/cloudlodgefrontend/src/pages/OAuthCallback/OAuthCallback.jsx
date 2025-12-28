@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { Box, CircularProgress, Paper, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { setToken } from "../../store/authSlice";
 
 export default function OAuthCallback() {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [message, setMessage] = useState("Signing you in with Google...");
 
   useEffect(() => {
@@ -14,7 +17,7 @@ export default function OAuthCallback() {
     let timeoutId;
 
     if (token) {
-      localStorage.setItem("token", token);
+      dispatch(setToken(token));
       setMessage("Success! Finishing sign-in...");
       timeoutId = setTimeout(() => navigate("/create-reservation", { replace: true }), 800);
     } else if (error) {

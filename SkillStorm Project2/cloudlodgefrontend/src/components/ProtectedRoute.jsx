@@ -1,9 +1,10 @@
 // ProtectedRoute.jsx
 import React from "react";
 import { Navigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 
 export default function ProtectedRoute({ children, requiredRole }) {
-  const token = localStorage.getItem("token");
+  const token = useSelector((state) => state.auth.token);
 
   if (!token) {
     // Not logged in → redirect to login

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { TextField, Button, Box, MenuItem, Select, InputLabel, FormControl } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import Header from "../../components/Header";
-import { apiFetch } from "../../api/apiFetch";
+import { useRegisterMutation } from "../../store/apiSlice";
 
 import {
   RegisterContainer,
@@ -28,6 +28,7 @@ const Register = () => {
   const [error, setError] = useState("");
 
   const navigate = useNavigate();
+  const [registerUser] = useRegisterMutation();
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -48,23 +49,17 @@ const Register = () => {
     }
 
     try {
-      const data = await apiFetch("/auth/register", {
-        method: "POST",
-        body: {
-          fullName,
-          email,
-          phone: phoneDigits || null,
-          role,
-          password,
-        },
-      });
-
-      console.log("Registration successful:", data);
+      await registerUser({
+        fullName,
+        email,
+        phone: phoneDigits || null,
+        role,
+        password,
+      }).unwrap();
       navigate("/login");
 
     } catch (err) {
-      console.error(err);
-      setError(err.message || "Error connecting to backend.");
+      setError(err?.message || "Error connecting to backend.");
     } finally {
       setLoading(false);
     }

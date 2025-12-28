@@ -29,8 +29,13 @@ import Header from "../../components/Header";
 import dayjs from "dayjs";
 import BannerPhoto from "../../assets/images/BannerPhoto.png";
 import CalendarPopup from "../../components/CalandarPopup";
-import { apiFetch } from "../../api/apiFetch";
 import { useNavigate } from "react-router-dom";
+import {
+  useCreateReservationMutation,
+  useGetRoomTypesQuery,
+  useLazyGetAvailabilityForRoomQuery,
+  useLazySearchRoomsQuery,
+} from "../../store/apiSlice";
 
 function getUserIdFromToken() {
   const token = localStorage.getItem("token");
@@ -74,6 +79,14 @@ export default function BookRoom() {
   const [modalRange, setModalRange] = useState({ start: null, end: null });
 
   const [lastSearch, setLastSearch] = useState(null);
+  const {
+    data: roomTypesData,
+    isLoading: roomTypesLoading,
+    error: roomTypesError,
+  } = useGetRoomTypesQuery();
+  const [triggerSearchRooms] = useLazySearchRoomsQuery();
+  const [triggerAvailabilityByRoom] = useLazyGetAvailabilityForRoomQuery();
+  const [createReservation] = useCreateReservationMutation();
 
   const selectedRoomTypeId = useMemo(() => {
     if (!selectedRoomType) return null;
@@ -86,21 +99,26 @@ export default function BookRoom() {
   }, [selectedRoomType]);
 
   useEffect(() => {
-    fetchRoomTypes();
-  }, []);
+    if (Array.isArray(roomTypesData)) {
+      setRoomTypes(roomTypesData);
+    } else if (roomTypesData) {
+      setRoomTypes([]);
+    }
+  }, [roomTypesData]);
 
-  async function fetchRoomTypes() {
-    setLoading(true);
-    setError("");
-    try {
-      const data = await apiFetch("/roomtypes");
-      setRoomTypes(Array.isArray(data) ? data : []);
-    } catch (err) {
-      setError(err.message || "Failed to fetch room types");
-    } finally {
+  useEffect(() => {
+    if (roomTypesError) {
+      setError(roomTypesError?.message || "Failed to fetch room types");
+    }
+  }, [roomTypesError]);
+
+  useEffect(() => {
+    if (roomTypesLoading) {
+      setLoading(true);
+    } else {
       setLoading(false);
     }
-  }
+  }, [roomTypesLoading]);
 
   useEffect(() => {
     if (!selectedRoomType) return;
@@ -125,7 +143,7 @@ export default function BookRoom() {
       qs.set("endDate", endDate);
       qs.set("guests", String(guests));
 
-      const data = await apiFetch(`/rooms/search?${qs.toString()}`);
+      const data = await triggerSearchRooms(Object.fromEntries(qs.entries())).unwrap();
       const list = Array.isArray(data) ? data : (data?.content ?? []);
       setRooms(Array.isArray(list) ? list : []);
     } catch (err) {
@@ -161,15 +179,14 @@ export default function BookRoom() {
       }));
     }
     // Also trigger the search directly via Header's runSearch logic
-    if (typeof setRooms === 'function' && typeof setLoading === 'function' && typeof setError === 'function') {
-      setLoading(true);
-      setError("");
-      const params = new URLSearchParams({ startDate: today, endDate: tomorrow, guests: 1 });
-      apiFetch(`/rooms/search?${params.toString()}`)
-        .then(data => setRooms(data.content || data))
-        .catch(err => setError(err.message || "Search failed"))
-        .finally(() => setLoading(false));
-    }
+    setLoading(true);
+    setError("");
+    const params = new URLSearchParams({ startDate: today, endDate: tomorrow, guests: 1 });
+    triggerSearchRooms(Object.fromEntries(params.entries()))
+      .unwrap()
+      .then((data) => setRooms(data?.content || data))
+      .catch((err) => setError(err?.message || "Search failed"))
+      .finally(() => setLoading(false));
   }
 
   function handleBackToRoomTypes() {
@@ -201,7 +218,7 @@ export default function BookRoom() {
     }
     // Fetch booked dates for this room
     try {
-      const data = await apiFetch(`/availability/room/${room.id || room._id}`);
+      const data = await triggerAvailabilityByRoom(room.id || room._id).unwrap();
       setBookedDates(Array.isArray(data) ? data.map(a => a.date) : []);
     } catch {
       setBookedDates([]);
@@ -317,10 +334,7 @@ export default function BookRoom() {
         totalPrice: calculateTotalPrice()
       };
 
-      const saved = await apiFetch(`/reservations/create`, {
-        method: "POST",
-        body: payload
-      });
+      const saved = await createReservation(payload).unwrap();
 
       setBookingSuccess(true);
 
@@ -350,7 +364,7 @@ export default function BookRoom() {
       setModalOpen(false);
       setBookingSuccess(false);
     } catch (err) {
-      setBookingError(err.message || "Failed to book room");
+      setBookingError(err?.message || "Failed to book room");
     } finally {
       setBooking(false);
     }

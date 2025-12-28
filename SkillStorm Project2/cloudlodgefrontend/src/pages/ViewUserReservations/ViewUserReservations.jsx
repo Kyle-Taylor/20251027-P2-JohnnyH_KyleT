@@ -19,7 +19,18 @@ import dayjs from "dayjs";
 import Header from "../../components/Header";
 import CancelBookingButton from "../../components/CancelBookingButton";
 import CalendarPopup from "../../components/CalandarPopup";
-import { apiFetch } from "../../api/apiFetch";
+import { useSelector } from "react-redux";
+import {
+  useCreateAvailabilityMutation,
+  useDeleteAvailabilityMutation,
+  useGetAuthMeQuery,
+  useGetReservationsByUserQuery,
+  useLazyGetAvailabilityForReservationQuery,
+  useLazyGetAvailabilityForRoomQuery,
+  useLazyGetRoomQuery,
+  useLazyGetRoomTypeQuery,
+  useUpdateReservationMutation,
+} from "../../store/apiSlice";
 
 const TWO_WEEKS_DAYS = 14;
 
@@ -72,11 +83,30 @@ function isEditableReservation(reservation) {
 
 export default function ViewUserReservations() {
   const [reservations, setReservations] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [roomMap, setRoomMap] = useState({});
   const [roomTypeMap, setRoomTypeMap] = useState({});
   const [bookedDates, setBookedDates] = useState([]);
+  const token = useSelector((state) => state.auth.token);
+  const [userId, setUserId] = useState(() => getUserIdFromToken());
+  const {
+    data: meData,
+    isLoading: meLoading,
+    error: meError,
+  } = useGetAuthMeQuery(undefined, { skip: !token || Boolean(userId) });
+  const {
+    data: reservationsData,
+    isLoading: reservationsLoading,
+    error: reservationsError,
+    refetch: refetchReservations,
+  } = useGetReservationsByUserQuery(userId, { skip: !userId });
+  const [triggerRoom] = useLazyGetRoomQuery();
+  const [triggerRoomType] = useLazyGetRoomTypeQuery();
+  const [triggerAvailabilityByRoom] = useLazyGetAvailabilityForRoomQuery();
+  const [triggerAvailabilityByReservation] = useLazyGetAvailabilityForReservationQuery();
+  const [updateReservation] = useUpdateReservationMutation();
+  const [createAvailability] = useCreateAvailabilityMutation();
+  const [deleteAvailability] = useDeleteAvailabilityMutation();
 
   const [editOpen, setEditOpen] = useState(false);
   const [editReservation, setEditReservation] = useState(null);
@@ -88,37 +118,38 @@ export default function ViewUserReservations() {
   const [saving, setSaving] = useState(false);
   const closeButtonRef = useRef(null);
 
-  const loadReservations = async () => {
-    setLoading(true);
-    setError("");
-
-    let userId = getUserIdFromToken();
-
-    try {
-      if (!userId) {
-        const me = await apiFetch("/auth/me");
-        userId = me?.id || me?._id || null;
-      }
-
-      if (!userId) {
-        setError("Please log in to view your reservations.");
-        setReservations([]);
-        return;
-      }
-
-      const data = await apiFetch(`/reservations/user/${userId}`);
-      setReservations(Array.isArray(data) ? data : []);
-    } catch (err) {
-      setError(err.message || "Failed to load reservations");
-      setReservations([]);
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    if (!userId && meData) {
+      setUserId(meData?.id || meData?._id || null);
     }
-  };
+  }, [meData, userId]);
 
   useEffect(() => {
-    loadReservations();
-  }, []);
+    if (Array.isArray(reservationsData)) {
+      setReservations(reservationsData);
+    } else if (reservationsData) {
+      setReservations([]);
+    }
+  }, [reservationsData]);
+
+  useEffect(() => {
+    if (!token) {
+      setError("Please log in to view your reservations.");
+      setReservations([]);
+      return;
+    }
+    if (reservationsError) {
+      setError(reservationsError?.message || "Failed to load reservations");
+      return;
+    }
+    if (meError) {
+      setError(meError?.message || "Failed to load reservations");
+      return;
+    }
+    setError("");
+  }, [token, reservationsError, meError]);
+
+  const loading = reservationsLoading || (token && !userId && meLoading);
 
   useEffect(() => {
     let active = true;
@@ -135,7 +166,7 @@ export default function ViewUserReservations() {
         const entries = await Promise.all(
           uniqueRoomIds.map(async (roomId) => {
             try {
-              const data = await apiFetch(`/rooms/${roomId}`);
+              const data = await triggerRoom(roomId).unwrap();
               return [roomId, data];
             } catch {
               return [roomId, null];
@@ -175,7 +206,7 @@ export default function ViewUserReservations() {
         const entries = await Promise.all(
           uniqueTypeIds.map(async (typeId) => {
             try {
-              const data = await apiFetch(`/roomtypes/${typeId}`);
+              const data = await triggerRoomType(typeId).unwrap();
               return [typeId, data];
             } catch {
               return [typeId, null];
@@ -299,7 +330,7 @@ export default function ViewUserReservations() {
 
     if (reservation.roomUnitId) {
       try {
-        const availability = await apiFetch(`/availability/room/${reservation.roomUnitId}`);
+        const availability = await triggerAvailabilityByRoom(reservation.roomUnitId).unwrap();
         const dates = (Array.isArray(availability) ? availability : [])
           .filter((entry) => entry.reservationId !== reservation.id)
           .map((entry) => dayjs(entry.date).format("YYYY-MM-DD"));
@@ -367,7 +398,7 @@ export default function ViewUserReservations() {
     let existingEntries = [];
 
     try {
-      const availability = await apiFetch(`/availability/room/${editReservation.roomUnitId}`);
+      const availability = await triggerAvailabilityByRoom(editReservation.roomUnitId).unwrap();
       const blockedDates = new Set(
         (Array.isArray(availability) ? availability : [])
           .filter((entry) => entry.reservationId !== editReservation.id)
@@ -382,36 +413,33 @@ export default function ViewUserReservations() {
         return;
       }
 
-      const existingAvailability = await apiFetch(`/availability/reservation/${editReservation.id}`);
+      const existingAvailability = await triggerAvailabilityByReservation(editReservation.id).unwrap();
       existingEntries = Array.isArray(existingAvailability) ? existingAvailability : [];
 
       await Promise.all(
         existingEntries.map((entry) =>
-          apiFetch(`/availability/delete/${entry.id}`, { method: "DELETE" })
+          deleteAvailability(entry.id).unwrap()
         )
       );
 
-      const updated = await apiFetch(`/reservations/update/${editReservation.id}`, {
-        method: "PUT",
+      const updated = await updateReservation({
+        id: editReservation.id,
         body: {
           ...editReservation,
           checkInDate: newCheckIn,
           checkOutDate: newCheckOut,
           numGuests: guests,
-          status: "MODIFIED"
-        }
-      });
+          status: "MODIFIED",
+        },
+      }).unwrap();
 
       await Promise.all(
         requestedDates.map((date) =>
-          apiFetch("/availability/create", {
-            method: "POST",
-            body: {
-              roomUnitId: editReservation.roomUnitId,
-              reservationId: editReservation.id,
-              date
-            }
-          })
+          createAvailability({
+            roomUnitId: editReservation.roomUnitId,
+            reservationId: editReservation.id,
+            date,
+          }).unwrap()
         )
       );
 
@@ -433,18 +461,15 @@ export default function ViewUserReservations() {
       if (existingEntries.length > 0) {
         await Promise.all(
           existingEntries.map((entry) =>
-            apiFetch("/availability/create", {
-              method: "POST",
-              body: {
-                roomUnitId: entry.roomUnitId,
-                reservationId: entry.reservationId,
-                date: dayjs(entry.date).format("YYYY-MM-DD")
-              }
-            })
+            createAvailability({
+              roomUnitId: entry.roomUnitId,
+              reservationId: entry.reservationId,
+              date: dayjs(entry.date).format("YYYY-MM-DD"),
+            }).unwrap()
           )
         );
       }
-      setEditError(err.message || "Failed to update reservation.");
+      setEditError(err?.message || "Failed to update reservation.");
     } finally {
       setSaving(false);
     }
@@ -524,7 +549,7 @@ export default function ViewUserReservations() {
               {editable ? (
                 <CancelBookingButton
                   reservationId={reservation.id}
-                  onCancel={loadReservations}
+                  onCancel={refetchReservations}
                 />
               ) : (
                 <Button variant="outlined" color="error" disabled>

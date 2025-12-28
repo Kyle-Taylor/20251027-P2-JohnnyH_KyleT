@@ -17,7 +17,7 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import CancelBookingButton from "./CancelBookingButton";
-import { apiFetch } from "../api/apiFetch";
+import { useGetDashboardQuery, useLazyGetUserQuery } from "../store/apiSlice";
 
 export default function UpcomingReservations() {
   const [reservationMonth, setReservationMonth] = useState(() => {
@@ -26,32 +26,21 @@ export default function UpcomingReservations() {
   });
   const [upcomingReservations, setUpcomingReservations] = useState([]);
   const [userMap, setUserMap] = useState({});
-  const [loading, setLoading] = useState(true);
+  const [triggerUser] = useLazyGetUserQuery();
 
-  async function fetchUpcoming() {
-    setLoading(true);
-    try {
-      const params = new URLSearchParams();
-      params.append(
-        "reservationMonth",
-        `${reservationMonth.getFullYear()}-${String(
+  const dashboardParams = reservationMonth
+    ? {
+        reservationMonth: `${reservationMonth.getFullYear()}-${String(
           reservationMonth.getMonth() + 1
-        ).padStart(2, "0")}`
-      );
+        ).padStart(2, "0")}`,
+      }
+    : {};
 
-      const data = await apiFetch(`/dashboard?${params.toString()}`);
-      setUpcomingReservations(data.upcomingReservations || []);
-    } catch {
-      setUpcomingReservations([]);
-    } finally {
-      setLoading(false);
-    }
-  }
+  const { data, isLoading, refetch } = useGetDashboardQuery(dashboardParams);
 
   useEffect(() => {
-    fetchUpcoming();
-    // eslint-disable-next-line
-  }, [reservationMonth]);
+    setUpcomingReservations(data?.upcomingReservations || []);
+  }, [data]);
 
   useEffect(() => {
     let active = true;
@@ -68,7 +57,7 @@ export default function UpcomingReservations() {
         const entries = await Promise.all(
           userIds.map(async (userId) => {
             try {
-              const data = await apiFetch(`/users/${userId}`);
+              const data = await triggerUser(userId).unwrap();
               return [userId, data];
             } catch {
               return [userId, null];
@@ -109,7 +98,7 @@ export default function UpcomingReservations() {
 
       <Divider sx={{ my: 1 }} />
 
-      {loading ? (
+      {isLoading ? (
         <Box sx={{ textAlign: "center", py: 2 }}>
           <CircularProgress size={24} />
         </Box>
@@ -135,7 +124,7 @@ export default function UpcomingReservations() {
                   <TableCell>
                     <CancelBookingButton
                       reservationId={r.id}
-                      onCancel={fetchUpcoming}
+                      onCancel={refetch}
                     />
                   </TableCell>
                 </TableRow>

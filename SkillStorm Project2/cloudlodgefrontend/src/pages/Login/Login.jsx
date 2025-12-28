@@ -2,7 +2,10 @@
 import React, { useState } from "react";
 import { TextField, Button, Box } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import { apiFetch, API_BASE_URL } from "../../api/apiFetch";
+import { API_BASE_URL } from "../../api/apiFetch";
+import { useDispatch } from "react-redux";
+import { setToken } from "../../store/authSlice";
+import { useLoginMutation } from "../../store/apiSlice";
 
 import {
   LoginContainer,
@@ -24,6 +27,8 @@ const Login = () => {
   const [error, setError] = useState("");
 
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const [login] = useLoginMutation();
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -31,15 +36,11 @@ const Login = () => {
     setError("");
 
     try {
-      const data = await apiFetch("/auth/login", {
-        method: "POST",
-        body: { email, password },
-      });
+      const data = await login({ email, password }).unwrap();
 
       // Store the token locally
       if (data.token) {
-        localStorage.setItem("token", data.token);
-        console.log("Token stored in localStorage");
+        dispatch(setToken(data.token));
       } else {
         setError("No token returned from backend.");
         return;
@@ -49,8 +50,7 @@ const Login = () => {
       navigate("/create-reservation");
 
     } catch (err) {
-      console.error(err);
-      setError(err.message || "Error connecting to backend.");
+      setError(err?.message || "Error connecting to backend.");
     } finally {
       setLoading(false);
     }

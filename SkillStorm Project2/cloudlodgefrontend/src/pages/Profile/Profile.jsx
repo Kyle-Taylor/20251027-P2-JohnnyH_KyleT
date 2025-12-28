@@ -1,10 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Divider, TextField, Typography, Stack, Box, FormControlLabel, Switch, Paper, Grid, Chip } from '@mui/material';
-import { apiFetch } from '../../api/apiFetch';
 import dayjs from 'dayjs';
 import Header from '../../components/Header';
-import { deletePaymentMethod } from '../../api/payments';
 import { useNavigate } from 'react-router-dom';
+import {
+  useDeletePaymentMethodMutation,
+  useGetProfileQuery,
+  useSyncPaymentMethodsMutation,
+  useUpdateProfileMutation,
+} from '../../store/apiSlice';
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -14,25 +18,31 @@ const Profile = () => {
   const [globalError, setGlobalError] = useState('');
   const [fieldErrors, setFieldErrors] = useState({});
   const [pmLoadingId, setPmLoadingId] = useState(null);
+  const { data, isLoading, error, refetch } = useGetProfileQuery();
+  const [updateProfile] = useUpdateProfileMutation();
+  const [deletePaymentMethod] = useDeletePaymentMethodMutation();
+  const [syncPaymentMethods] = useSyncPaymentMethodsMutation();
 
   // Load profile on mount
   useEffect(() => {
-    const loadProfile = async () => {
-      try {
-        // Sync saved payment methods from Stripe to backend
-        await apiFetch("/payments/methods/sync", { method: "POST" }).catch(() => {});
+    if (data) {
+      setUser(data);
+    }
+  }, [data]);
 
-        const data = await apiFetch("/profile");
-        setUser(data);
-      } catch (err) {
-        console.error(err);
-        setGlobalError('Failed to load profile.');
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadProfile();
-  }, []);
+  useEffect(() => {
+    syncPaymentMethods().unwrap().catch(() => {});
+  }, [syncPaymentMethods]);
+
+  useEffect(() => {
+    if (error) {
+      setGlobalError('Failed to load profile.');
+    }
+  }, [error]);
+
+  useEffect(() => {
+    setLoading(isLoading);
+  }, [isLoading]);
 
   // Handle field changes
   const handleChange = (field) => (e) => {
@@ -75,12 +85,10 @@ const Profile = () => {
   const handleDeletePaymentMethod = async (pmId) => {
     setPmLoadingId(pmId);
     try {
-      await deletePaymentMethod(pmId);
-      const refreshed = await apiFetch("/profile");
-      setUser(refreshed);
+      await deletePaymentMethod(pmId).unwrap();
+      await refetch();
     } catch (err) {
-      console.error(err);
-      setGlobalError("Failed to remove payment method: " + err.message);
+      setGlobalError("Failed to remove payment method: " + (err?.message || ""));
     } finally {
       setPmLoadingId(null);
     }
@@ -98,17 +106,15 @@ const Profile = () => {
       setIsEditing(false);
 
       // Send update to backend
-      await apiFetch("/profile", {
-        method: "PUT",
-        body: user,
-      });
+      await updateProfile(user).unwrap();
+      await refetch();
 
       alert("Profile updated successfully!");
     } catch (err) {
       // Rollback on failure
       setUser(previousUser);
       setIsEditing(true);
-      setGlobalError("Error updating profile: " + err.message);
+      setGlobalError("Error updating profile: " + (err?.message || ""));
     }
   };
 

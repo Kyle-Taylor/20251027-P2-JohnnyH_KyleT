@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import { Box, Button, CircularProgress, Container, Paper, Typography } from "@mui/material";
-import { createSetupIntent, fetchStripeConfig } from "../../api/payments";
+import { useCreateSetupIntentMutation, useGetStripeConfigQuery } from "../../store/apiSlice";
 
 function AddCardForm({ clientSecret }) {
   const stripe = useStripe();
@@ -55,20 +55,25 @@ export default function AddCard() {
   const [clientSecret, setClientSecret] = useState("");
   const [publishableKey, setPublishableKey] = useState("");
   const [error, setError] = useState("");
+  const { data: configData, error: configError } = useGetStripeConfigQuery();
+  const [createSetupIntent] = useCreateSetupIntentMutation();
 
   useEffect(() => {
+    if (!configData && !configError) return;
     let mounted = true;
     async function init() {
       try {
-        const config = await fetchStripeConfig();
+        if (configError) {
+          throw configError;
+        }
         if (!mounted) return;
-        setPublishableKey(config.publishableKey);
-        const setup = await createSetupIntent();
+        setPublishableKey(configData?.publishableKey || "");
+        const setup = await createSetupIntent().unwrap();
         if (!mounted) return;
         setClientSecret(setup.clientSecret);
       } catch (err) {
         if (!mounted) return;
-        setError(err.message || "Unable to start add card flow");
+        setError(err?.message || "Unable to start add card flow");
       } finally {
         if (mounted) setLoading(false);
       }
@@ -77,7 +82,7 @@ export default function AddCard() {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [configData, configError, createSetupIntent]);
 
   const stripePromise = useMemo(() => {
     if (!publishableKey) return null;

@@ -16,8 +16,10 @@ import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import HeroSearch from "./HeroSearch";
 import NavBar from "./NavBar";
-import { apiFetch } from "../api/apiFetch";
 import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { clearToken } from "../store/authSlice";
+import { useGetProfileQuery, useLazySearchRoomsQuery } from "../store/apiSlice";
 
 export default function Header({
   setRooms,
@@ -30,48 +32,40 @@ export default function Header({
   searchParams
 }) {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [anchorEl, setAnchorEl] = useState(null);
   const menuOpen = Boolean(anchorEl);
   const [userInfo, setUserInfo] = useState(null);
+  const token = useSelector((state) => state.auth.token);
+  const { data: profile } = useGetProfileQuery(undefined, { skip: !token });
+  const [triggerSearch] = useLazySearchRoomsQuery();
 
   useEffect(() => {
-    let isMounted = true;
-    const token = localStorage.getItem("token");
     if (!token) {
       setUserInfo(null);
       return undefined;
     }
-
-    async function loadProfile() {
-      try {
-        const data = await apiFetch("/profile");
-        if (!isMounted) return;
-        const fullName = data?.fullName || data?.full_name || "";
-        const role = data?.role || "";
-        setUserInfo({
-          name: fullName || "Guest",
-          role: role ? role.toString().toUpperCase() : "GUEST"
-        });
-      } catch {
-        if (!isMounted) return;
-        try {
-          const payload = JSON.parse(atob(token.split(".")[1]));
-          const role = payload.role || "";
-          setUserInfo({
-            name: "Guest",
-            role: role ? role.toString().toUpperCase() : "GUEST"
-          });
-        } catch {
-          setUserInfo(null);
-        }
-      }
+    if (profile) {
+      const fullName = profile?.fullName || profile?.full_name || "";
+      const role = profile?.role || "";
+      setUserInfo({
+        name: fullName || "Guest",
+        role: role ? role.toString().toUpperCase() : "GUEST",
+      });
+      return undefined;
     }
-
-    loadProfile();
-    return () => {
-      isMounted = false;
-    };
-  }, []);
+    try {
+      const payload = JSON.parse(atob(token.split(".")[1]));
+      const role = payload.role || "";
+      setUserInfo({
+        name: "Guest",
+        role: role ? role.toString().toUpperCase() : "GUEST",
+      });
+    } catch {
+      setUserInfo(null);
+    }
+    return undefined;
+  }, [token, profile]);
 
   const handleMenuOpen = (e) => setAnchorEl(e.currentTarget);
   const handleMenuClose = () => setAnchorEl(null);
@@ -84,7 +78,7 @@ export default function Header({
 
   const handleSignOut = () => {
     handleMenuClose();
-    localStorage.removeItem("token");
+    dispatch(clearToken());
     navigate("/login");
   };
 
@@ -109,8 +103,8 @@ export default function Header({
         });
       }
 
-      const data = await apiFetch(`/rooms/search?${params.toString()}`);
-      setRooms(data.content || data);
+      const data = await triggerSearch(Object.fromEntries(params.entries())).unwrap();
+      setRooms(data?.content || data);
     } catch (err) {
       setError(err.message || "Search failed");
     } finally {

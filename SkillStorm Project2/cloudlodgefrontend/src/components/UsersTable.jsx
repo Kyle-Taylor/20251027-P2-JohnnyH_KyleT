@@ -27,13 +27,19 @@ import {
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import DeleteConfirmationModal from "./DeleteConfirmationModal";
-import { apiFetch } from "../api/apiFetch";
+import {
+  useDeleteUserMutation,
+  useGetUsersQuery,
+  useUpdateUserMutation,
+} from "../store/apiSlice";
 
 
 export default function UsersTable() {
 
   const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { data, isLoading, error, refetch } = useGetUsersQuery();
+  const [updateUser] = useUpdateUserMutation();
+  const [deleteUser] = useDeleteUserMutation();
   const [tableError, setTableError] = useState("");
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
@@ -49,10 +55,10 @@ export default function UsersTable() {
   const [saving, setSaving] = useState(false);
   async function handleDeleteUser(id) {
     try {
-      const data = await apiFetch(`/delete/${id}`, { method: "DELETE" });
-      setUsers(users.filter(u => (u.id || u._id) !== id));
+      await deleteUser(id).unwrap();
+      refetch();
     } catch (err) {
-      setTableError(err.message);
+      setTableError(err?.message || "Failed to delete user.");
     }
     setDeleteModalOpen(false);
     setUserToDelete(null);
@@ -89,42 +95,38 @@ export default function UsersTable() {
         phone: editForm.phone.trim(),
         role: editForm.role,
       };
-      const updated = await apiFetch(`/users/update/${id}`, {
-        method: "PUT",
-        body: payload,
-      });
-      setUsers(users.map(u => ((u.id || u._id) === id ? updated : u)));
+      await updateUser({ id, ...payload }).unwrap();
+      refetch();
       handleCloseEdit();
     } catch (err) {
-      setEditError(err.message);
+      setEditError(err?.message || "Failed to update user.");
     } finally {
       setSaving(false);
     }
   }
 
   useEffect(() => {
-    fetchUsers();
-  }, []);
-
-  async function fetchUsers() {
-    setLoading(true);
-    setTableError("");
-    try {
-      const data = await apiFetch("/users");
+    if (Array.isArray(data)) {
       setUsers(data);
-    } catch (err) {
-      setTableError(err.message);
-    } finally {
-      setLoading(false);
+    } else {
+      setUsers([]);
     }
-  }
+  }, [data]);
+
+  useEffect(() => {
+    if (error) {
+      setTableError(error?.message || "Failed to load users.");
+    } else {
+      setTableError("");
+    }
+  }, [error]);
 
   return (
     <Box sx={{ mt: 4, width: "85%" }}>
       <Typography variant="h5" fontWeight={700} gutterBottom>
         Users
       </Typography>
-      {loading ? (
+      {isLoading ? (
         <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
           <CircularProgress />
         </Box>
