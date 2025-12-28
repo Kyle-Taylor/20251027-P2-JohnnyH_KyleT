@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { TextField, Button, Box } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import { apiFetch, API_BASE_URL } from "../../api/apiFetch";
 
 import {
   LoginContainer,
@@ -30,18 +31,10 @@ const Login = () => {
     setError("");
 
     try {
-      const response = await fetch("http://localhost:8080/auth/login", {
+      const data = await apiFetch("/auth/login", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: { email, password },
       });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        setError(data.message || "Login failed");
-        return;
-      }
 
       // Store the token locally
       if (data.token) {
@@ -57,7 +50,7 @@ const Login = () => {
 
     } catch (err) {
       console.error(err);
-      setError("Error connecting to backend.");
+      setError(err.message || "Error connecting to backend.");
     } finally {
       setLoading(false);
     }
@@ -131,7 +124,7 @@ const Login = () => {
                 fullWidth
                 sx={{ mt: 4 }}
                 onClick={() =>
-                  (window.location.href = "http://localhost:8080/auth/oauth2/google")
+                  (window.location.href = `${API_BASE_URL}/auth/oauth2/google`)
                 }
               >
                 Continue with Google

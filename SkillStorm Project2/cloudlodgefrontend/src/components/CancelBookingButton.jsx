@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Button, CircularProgress, Dialog, DialogTitle, DialogActions } from "@mui/material";
+import { apiFetch } from "../api/apiFetch";
 
 export default function CancelBookingButton({ reservationId, onCancel }) {
   const [loading, setLoading] = useState(false);
@@ -10,10 +11,9 @@ export default function CancelBookingButton({ reservationId, onCancel }) {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch(`http://localhost:8080/reservations/delete/${reservationId}`, {
+      await apiFetch(`/reservations/delete/${reservationId}`, {
         method: "DELETE"
       });
-      if (!res.ok) throw new Error("Failed to cancel booking");
       setOpen(false);
       if (onCancel) onCancel();
     } catch (err) {

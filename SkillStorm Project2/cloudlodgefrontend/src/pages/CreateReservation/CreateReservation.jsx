@@ -32,8 +32,6 @@ import CalendarPopup from "../../components/CalandarPopup";
 import { apiFetch } from "../../api/apiFetch";
 import { useNavigate } from "react-router-dom";
 
-const API_URL = "http://localhost:8080/";
-
 function getUserIdFromToken() {
   const token = localStorage.getItem("token");
   if (!token) return null;

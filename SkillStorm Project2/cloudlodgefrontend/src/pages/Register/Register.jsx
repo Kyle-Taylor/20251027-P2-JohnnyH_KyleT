@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { TextField, Button, Box, MenuItem, Select, InputLabel, FormControl } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import Header from "../../components/Header";
+import { apiFetch } from "../../api/apiFetch";
 
 import {
   RegisterContainer,
@@ -47,31 +48,23 @@ const Register = () => {
     }
 
     try {
-      const response = await fetch("http://localhost:8080/auth/register", {
+      const data = await apiFetch("/auth/register", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+        body: {
           fullName,
           email,
           phone: phoneDigits || null,
           role,
           password,
-        }),
+        },
       });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        setError(data.message || "Registration failed");
-        return;
-      }
 
       console.log("Registration successful:", data);
       navigate("/login");
 
     } catch (err) {
       console.error(err);
-      setError("Error connecting to backend.");
+      setError(err.message || "Error connecting to backend.");
     } finally {
       setLoading(false);
     }
