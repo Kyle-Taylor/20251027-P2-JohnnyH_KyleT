@@ -122,16 +122,20 @@ export default function Header({
         position="sticky"
         elevation={0}
         sx={{
-          bgcolor: "#181a1b",
+          bgcolor: "rgba(17, 20, 24, 0.96)",
           borderBottom: "1px solid",
-          borderColor: "#23272a",
+          borderColor: "rgba(125, 211, 252, 0.12)",
           top: 0,
           zIndex: 1200,
+          backdropFilter: "blur(10px)",
         }}
       >
         <Toolbar sx={{ height: 72 }}>
           {/* Logo */}
-          <Box sx={{ display: "flex", alignItems: "center", mr: 2 }}>
+          <Box
+            sx={{ display: "flex", alignItems: "center", mr: 2, cursor: "pointer" }}
+            onClick={() => navigate("/")}
+          >
             <Box
               component="img"
               src={CloudLodgeLogo}
@@ -191,7 +195,7 @@ export default function Header({
                 sx={{
                   width: 36,
                   height: 36,
-                  bgcolor: "#23272a",
+                  bgcolor: "rgba(24, 26, 27, 0.9)",
                   color: "#e3e6ea"
                 }}
               >
@@ -214,7 +218,7 @@ export default function Header({
               transformOrigin={{ vertical: "top", horizontal: "right" }}
               PaperProps={{
                 sx: {
-                  bgcolor: "#23272a",
+                  bgcolor: "rgba(24, 26, 27, 0.96)",
                   color: "#e3e6ea",
                   boxShadow: 3,
                 },

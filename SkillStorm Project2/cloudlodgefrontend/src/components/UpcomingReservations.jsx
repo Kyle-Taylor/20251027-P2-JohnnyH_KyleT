@@ -77,7 +77,7 @@ export default function UpcomingReservations() {
   }, [upcomingReservations]);
 
   return (
-    <Paper sx={{ p: 3 }}>
+    <Paper sx={{ p: 3, bgcolor: "rgba(24, 26, 27, 0.9)" }}>
       <Stack direction="row" alignItems="center" justifyContent="space-between">
         <Typography variant="h6" fontWeight={600}>
           Upcoming Reservations
@@ -96,7 +96,7 @@ export default function UpcomingReservations() {
         </LocalizationProvider>
       </Stack>
 
-      <Divider sx={{ my: 1 }} />
+      <Divider sx={{ my: 1, borderColor: "rgba(125, 211, 252, 0.12)" }} />
 
       {isLoading ? (
         <Box sx={{ textAlign: "center", py: 2 }}>

@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
-import { Box, Button, CircularProgress, Container, Paper, Typography } from "@mui/material";
+import { Box, Button, CircularProgress, Paper, Typography } from "@mui/material";
 import { useCreateSetupIntentMutation, useGetStripeConfigQuery } from "../../store/apiSlice";
 
 function AddCardForm({ clientSecret }) {
@@ -91,31 +91,67 @@ export default function AddCard() {
 
   if (loading) {
     return (
-      <Container sx={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
+      <Box
+        sx={{
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background:
+            "radial-gradient(circle at 20% 20%, rgba(125,211,252,0.16), transparent 45%), radial-gradient(circle at 80% 30%, rgba(96,165,250,0.16), transparent 50%), #0f1113",
+        }}
+      >
         <CircularProgress />
-      </Container>
+      </Box>
     );
   }
 
   if (error) {
     return (
-      <Container sx={{ minHeight: "60vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <Box
+        sx={{
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background:
+            "radial-gradient(circle at 20% 20%, rgba(125,211,252,0.16), transparent 45%), radial-gradient(circle at 80% 30%, rgba(96,165,250,0.16), transparent 50%), #0f1113",
+        }}
+      >
         <Typography color="error">{error}</Typography>
-      </Container>
+      </Box>
     );
   }
 
   if (!stripePromise || !clientSecret) {
     return (
-      <Container sx={{ minHeight: "60vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <Box
+        sx={{
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background:
+            "radial-gradient(circle at 20% 20%, rgba(125,211,252,0.16), transparent 45%), radial-gradient(circle at 80% 30%, rgba(96,165,250,0.16), transparent 50%), #0f1113",
+        }}
+      >
         <Typography>Unable to initialize payment element.</Typography>
-      </Container>
+      </Box>
     );
   }
 
   return (
-    <Container sx={{ py: 6, display: "flex", justifyContent: "center" }}>
-      <Paper sx={{ maxWidth: 520, width: "100%", p: 4 }}>
+    <Box
+      sx={{
+        minHeight: "100vh",
+        py: 8,
+        display: "flex",
+        justifyContent: "center",
+        background:
+          "radial-gradient(circle at 20% 20%, rgba(125,211,252,0.16), transparent 45%), radial-gradient(circle at 80% 30%, rgba(96,165,250,0.16), transparent 50%), #0f1113",
+      }}
+    >
+      <Paper sx={{ maxWidth: 520, width: "100%", p: 4, bgcolor: "rgba(24, 26, 27, 0.9)" }}>
         <Typography variant="h5" sx={{ mb: 2 }}>
           Add Payment Method
         </Typography>
@@ -123,6 +159,6 @@ export default function AddCard() {
           <AddCardForm clientSecret={clientSecret} />
         </Elements>
       </Paper>
-    </Container>
+    </Box>
   );
 }

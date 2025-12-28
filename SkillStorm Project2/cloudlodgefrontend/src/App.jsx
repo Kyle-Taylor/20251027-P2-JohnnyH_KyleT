@@ -1,5 +1,6 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { GlobalStyles } from "@mui/material";
 import { useSelector } from "react-redux";
 import Login from "./pages/Login/Login";
 import Rooms from "./pages/Rooms/Rooms";
@@ -28,6 +29,9 @@ function App() {
   }
   return (
     <Router>
+      <GlobalStyles
+        styles={`@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Manrope:wght@400;500;600;700&display=swap');`}
+      />
       <Routes>
         {/* Default route redirects to landing page */}
         <Route

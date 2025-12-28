@@ -378,7 +378,12 @@ export default function BookRoom() {
   }, [rooms, selectedRoomTypeId]);
 
   return (
-    <Box>
+    <Box
+      sx={{
+        background:
+          "radial-gradient(circle at 0% 10%, rgba(125,211,252,0.12), transparent 40%), radial-gradient(circle at 90% 0%, rgba(96,165,250,0.12), transparent 45%), #0f1113",
+      }}
+    >
       {/* Hide HeroSearch until room type selected */}
       <Header setRooms={setRooms} setLoading={setLoading} setError={setError} showSearch={Boolean(selectedRoomType)} />
 
@@ -395,21 +400,19 @@ export default function BookRoom() {
           }}
         >
 
-          <Box
-            sx={{
-              flexGrow: 1,
-              minWidth: 0,
-              bgcolor: "#2c2b2bff",
-              borderLeft: "2px solid #232323",
-              borderRight: "2px solid #232323",
-              px: { xs: 1, sm: 2, md: 4 },
-              py: 2,
-              minHeight: "100vh",
-              display: "flex",
-              flexDirection: "column",
-              maxWidth: "100%"
-            }}
-          >
+        <Box
+          sx={{
+            flexGrow: 1,
+            minWidth: 0,
+            bgcolor: "transparent",
+            px: { xs: 1, sm: 2, md: 4 },
+            py: 2,
+            minHeight: "100vh",
+            display: "flex",
+            flexDirection: "column",
+            maxWidth: "100%"
+          }}
+        >
             {/* ====== ROOM TYPE GRID (2 per row) ====== */}
             {!selectedRoomType && (
               <>
@@ -442,7 +445,7 @@ export default function BookRoom() {
                     sx={{
                       position: "absolute",
                       inset: 0,
-                      bgcolor: "rgba(0,0,0,0.55)",
+                      bgcolor: "rgba(9, 12, 15, 0.55)",
                     }}
                   />
 
@@ -521,7 +524,7 @@ export default function BookRoom() {
                           key={key}
                           sx={{
                             borderRadius: 3,
-                            bgcolor: "#383838",
+                            bgcolor: "rgba(24, 26, 27, 0.92)",
                             cursor: "pointer",
                             transition: "all 0.3s ease",
                             "&:hover": { 
@@ -708,7 +711,7 @@ export default function BookRoom() {
                 </Stack>
 
                 {loading ? (
-                  <Typography>Loading…</Typography>
+                  <Typography>Loading???</Typography>
                 ) : visibleRooms.length === 0 ? (
                   <Box sx={{ textAlign: "center", py: 8 }}>
                     <Typography variant="h6" color="text.secondary">
@@ -727,7 +730,7 @@ export default function BookRoom() {
                           <Card
                             sx={{
                               borderRadius: 3,
-                              bgcolor: "#383838",
+                              bgcolor: "rgba(24, 26, 27, 0.92)",
                               cursor: "pointer",
                               transition: "0.2s",
                               "&:hover": { transform: "translateY(-4px)" }
@@ -781,7 +784,7 @@ export default function BookRoom() {
         PaperProps={{
           sx: {
             borderRadius: 3,
-            bgcolor: "#2a2a2a"
+            bgcolor: "rgba(24, 26, 27, 0.88)"
           }
         }}
       >
@@ -794,7 +797,7 @@ export default function BookRoom() {
           </Typography>
         </DialogTitle>
 
-        <DialogContent dividers sx={{ bgcolor: "#323232" }}>
+        <DialogContent dividers sx={{ bgcolor: "rgba(24, 26, 27, 0.88)" }}>
           {selectedRoom && (
             <Grid container spacing={3}>
               {/* Room Image and Info */}
@@ -948,7 +951,7 @@ export default function BookRoom() {
                   {/* Date Selection */}
                   <Paper
                     elevation={0}
-                    sx={{ p: 2.5, bgcolor: "#2a2a2a", borderRadius: 2 }}
+                    sx={{ p: 2.5, bgcolor: "rgba(24, 26, 27, 0.88)", borderRadius: 2 }}
                   >
                     <Stack spacing={2.5}>
                       <Box>
@@ -994,7 +997,7 @@ export default function BookRoom() {
                           alignItems: "center",
                           gap: 1,
                           p: 1.5,
-                          bgcolor: "#383838",
+                          bgcolor: "rgba(24, 26, 27, 0.92)",
                           borderRadius: 1
                         }}
                       >
@@ -1013,7 +1016,7 @@ export default function BookRoom() {
                   {/* Guest Selection */}
                   <Paper
                     elevation={0}
-                    sx={{ p: 2.5, bgcolor: "#2a2a2a", borderRadius: 2 }}
+                    sx={{ p: 2.5, bgcolor: "rgba(24, 26, 27, 0.88)", borderRadius: 2 }}
                   >
                     <Stack
                       direction="row"
@@ -1039,7 +1042,7 @@ export default function BookRoom() {
                       fullWidth
                       sx={{
                         "& .MuiOutlinedInput-root": {
-                          bgcolor: "#323232"
+                          bgcolor: "rgba(24, 26, 27, 0.9)"
                         }
                       }}
                     />
@@ -1050,7 +1053,7 @@ export default function BookRoom() {
                     elevation={0}
                     sx={{
                       p: 2.5,
-                      bgcolor: "#2a2a2a",
+                      bgcolor: "rgba(24, 26, 27, 0.9)",
                       borderRadius: 2,
                       border: "2px solid",
                       borderColor: "primary.main"
@@ -1071,7 +1074,7 @@ export default function BookRoom() {
                         </Typography>
                       </Stack>
 
-                      <Divider sx={{ borderColor: "#383838" }} />
+                      <Divider sx={{ borderColor: "rgba(125, 211, 252, 0.12)" }} />
 
                       <Stack
                         direction="row"

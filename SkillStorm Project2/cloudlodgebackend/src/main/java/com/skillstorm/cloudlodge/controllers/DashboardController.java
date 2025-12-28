@@ -16,10 +16,12 @@ import com.skillstorm.cloudlodge.models.Payment;
 import com.skillstorm.cloudlodge.models.Reservation;
 import com.skillstorm.cloudlodge.models.Room;
 import com.skillstorm.cloudlodge.models.RoomAvailability;
+import com.skillstorm.cloudlodge.models.User;
 import com.skillstorm.cloudlodge.services.PaymentService;
 import com.skillstorm.cloudlodge.services.ReservationService;
 import com.skillstorm.cloudlodge.services.RoomAvailabilityService;
 import com.skillstorm.cloudlodge.services.RoomService;
+import com.skillstorm.cloudlodge.services.UserService;
 
 @RestController
 public class DashboardController {
@@ -31,6 +33,8 @@ public class DashboardController {
     private PaymentService paymentService;
     @Autowired
     private RoomAvailabilityService roomAvailabilityService;
+    @Autowired
+    private UserService userService;
 
     @GetMapping("/dashboard")
     public ResponseEntity<Map<String, Object>> dashboard(
@@ -112,6 +116,12 @@ public class DashboardController {
 
         // 4. Upcoming Reservations (by month if provided, else next 7 days)
         List<Reservation> allReservations = reservationService.findAll();
+        Map<String, Reservation> reservationById = allReservations.stream()
+                .filter(r -> r.getId() != null)
+                .collect(Collectors.toMap(Reservation::getId, r -> r, (a, b) -> a));
+        Map<String, Reservation> reservationByPaymentId = allReservations.stream()
+                .filter(r -> r.getPaymentId() != null)
+                .collect(Collectors.toMap(Reservation::getPaymentId, r -> r, (a, b) -> a));
         List<Map<String, Object>> upcomingReservations;
         if (reservationMonth != null && reservationMonth.matches("\\d{4}-\\d{2}")) {
             int year = Integer.parseInt(reservationMonth.substring(0, 4));
@@ -162,8 +172,35 @@ public class DashboardController {
             .filter(p -> p.getCreatedAt() != null && p.getCreatedAt().isAfter(java.time.Instant.now().minusSeconds(7 * 24 * 60 * 60)))
             .map(p -> {
                 Map<String, Object> m = new HashMap<>();
+                String reservationId = p.getReservationId();
+                String userId = null;
+                String guestName = "";
+                Reservation reservation = null;
+                if (reservationId != null) {
+                    reservation = reservationById.get(reservationId);
+                }
+                if (reservation == null) {
+                    reservation = reservationByPaymentId.get(p.getId());
+                }
+                if (reservation == null && p.getTransactionId() != null) {
+                    reservation = reservationByPaymentId.get(p.getTransactionId());
+                }
+                if (reservation != null && reservationId == null) {
+                    reservationId = reservation.getId();
+                }
+                if (reservation != null) {
+                    userId = reservation.getUserId();
+                }
+                if (userId != null) {
+                    User user = userService.findById(userId).orElse(null);
+                    if (user != null && user.getFullName() != null) {
+                        guestName = user.getFullName();
+                    }
+                }
                 m.put("id", p.getId());
-                m.put("guestName", ""); // Replace with actual guest name if available
+                m.put("reservationId", reservationId);
+                m.put("userId", userId);
+                m.put("guestName", guestName);
                 m.put("amount", p.getAmount());
                 m.put("status", p.getStatus().toString());
                 m.put("date", p.getCreatedAt().toString());

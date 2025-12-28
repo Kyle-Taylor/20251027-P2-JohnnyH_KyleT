@@ -169,11 +169,21 @@ export const apiSlice = createApi({
         method: "PUT",
         params: { isActive },
       }),
-      invalidatesTags: ["Rooms"],
     }),
     getReservationsByUser: builder.query({
       query: (userId) => `/reservations/user/${userId}`,
       providesTags: ["Reservations"],
+    }),
+    getReservations: builder.query({
+      query: () => "/reservations",
+      providesTags: ["Reservations"],
+    }),
+    getPayments: builder.query({
+      query: () => "/payments",
+      providesTags: ["Payments"],
+    }),
+    getReservation: builder.query({
+      query: (id) => `/reservations/${id}`,
     }),
     createReservation: builder.mutation({
       query: (body) => ({
@@ -284,6 +294,10 @@ export const {
   useDeleteRoomMutation,
   useSetRoomActiveMutation,
   useGetReservationsByUserQuery,
+  useGetReservationsQuery,
+  useGetReservationQuery,
+  useLazyGetReservationQuery,
+  useGetPaymentsQuery,
   useCreateReservationMutation,
   useUpdateReservationMutation,
   useDeleteReservationMutation,

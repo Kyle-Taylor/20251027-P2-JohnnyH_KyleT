@@ -122,7 +122,7 @@ export default function UsersTable() {
   }, [error]);
 
   return (
-    <Box sx={{ mt: 4, width: "85%" }}>
+    <Box sx={{ mt: 4, width: "100%" }}>
       <Typography variant="h5" fontWeight={700} gutterBottom>
         Users
       </Typography>
@@ -133,7 +133,14 @@ export default function UsersTable() {
       ) : tableError ? (
         <Typography color="error">{tableError}</Typography>
       ) : (
-        <TableContainer component={Paper} sx={{ bgcolor: "background.paper" }}>
+        <TableContainer
+          component={Paper}
+          sx={{
+            bgcolor: "rgba(24,26,27,0.9)",
+            border: "1px solid rgba(125, 211, 252, 0.12)",
+            overflow: "hidden",
+          }}
+        >
           <Table>
             <TableHead>
               <TableRow>

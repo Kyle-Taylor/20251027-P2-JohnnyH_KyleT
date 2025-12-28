@@ -15,7 +15,7 @@ export default function DeleteConfirmationModal({ open, onClose, onConfirm, text
       onClose={onClose}
       BackdropProps={{
         sx: {
-          backgroundColor: 'transparent',
+          backgroundColor: 'rgba(6, 12, 18, 0.6)',
         },
       }}
       PaperProps={{
@@ -27,7 +27,7 @@ export default function DeleteConfirmationModal({ open, onClose, onConfirm, text
           maxWidth: 400,
           mx: 2,
           p: 2,
-          bgcolor: '#383838',
+          bgcolor: 'rgba(24, 26, 27, 0.95)',
           color: 'text.primary',
           boxShadow: 8,
           display: 'flex',

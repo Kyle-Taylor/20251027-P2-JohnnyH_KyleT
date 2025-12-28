@@ -39,8 +39,9 @@ export default function OAuthCallback() {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        bgcolor: "#0f1113",
-        color: "#e3e6ea",
+        background:
+          "radial-gradient(circle at 20% 20%, rgba(125,211,252,0.16), transparent 45%), radial-gradient(circle at 80% 30%, rgba(96,165,250,0.16), transparent 50%), #0f1113",
+        color: "#e6edf6",
         p: 2,
       }}
     >
@@ -51,9 +52,10 @@ export default function OAuthCallback() {
           maxWidth: 420,
           width: "100%",
           textAlign: "center",
-          bgcolor: "#181a1b",
-          color: "#e3e6ea",
-          border: "1px solid #23272a",
+          bgcolor: "rgba(24, 26, 27, 0.9)",
+          color: "#e6edf6",
+          border: "1px solid rgba(125, 211, 252, 0.18)",
+          backdropFilter: "blur(10px)",
         }}
       >
         <CircularProgress size={48} sx={{ color: "#3f6df6", mb: 3 }} />

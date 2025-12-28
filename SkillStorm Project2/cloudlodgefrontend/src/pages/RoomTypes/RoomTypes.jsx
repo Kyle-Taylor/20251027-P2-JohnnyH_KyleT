@@ -46,6 +46,7 @@ export default function RoomTypes() {
   const [selectedImages, setSelectedImages] = useState([]);
   const [editImages, setEditImages] = useState([]);
   const [imagesToDelete, setImagesToDelete] = useState([]);
+
   const { data, isLoading, error: roomTypesError, refetch } = useGetRoomTypesQuery();
   const [createRoomType] = useCreateRoomTypeMutation();
   const [updateRoomType] = useUpdateRoomTypeMutation();
@@ -240,7 +241,12 @@ export default function RoomTypes() {
   }
 
   return (
-    <Box>
+    <Box
+      sx={{
+        background:
+          "radial-gradient(circle at 0% 0%, rgba(125,211,252,0.12), transparent 40%), radial-gradient(circle at 90% 10%, rgba(96,165,250,0.12), transparent 45%), #0f1113",
+      }}
+    >
       <Header 
         setRooms={() => {}} 
         setLoading={setLoading}
@@ -263,9 +269,7 @@ export default function RoomTypes() {
             sx={{
               flexGrow: 1,
               minWidth: 0,
-              bgcolor: "#2c2b2bff",
-              borderLeft: "2px solid #232323",
-              borderRight: "2px solid #232323",
+              bgcolor: "transparent",
               px: { xs: 1, sm: 2, md: 4 },
               py: 2,
               minHeight: "100vh",
@@ -290,7 +294,7 @@ export default function RoomTypes() {
                 sx={{
                   '& .MuiPaginationItem-root': {
                     color: '#fff',
-                    backgroundColor: '#232323',
+                    backgroundColor: 'rgba(24, 26, 27, 0.9)',
                     border: '1px solid #444',
                     transition: 'background 0.2s',
                   },
@@ -300,7 +304,7 @@ export default function RoomTypes() {
                     border: '2px solid #1976d2',
                   },
                   '& .MuiPaginationItem-root:hover': {
-                    backgroundColor: '#333',
+                    backgroundColor: 'rgba(24, 26, 27, 0.95)',
                   },
                 }}
               />
@@ -341,7 +345,7 @@ export default function RoomTypes() {
                                 overflow: "hidden",
                                 cursor: "pointer",
                                 transition: "0.2s",
-                                bgcolor: "#383838",
+                                bgcolor: "rgba(24, 26, 27, 0.92)",
                                 "&:hover": { transform: "translateY(-4px)" },
                               }}
                               onClick={() => handleOpenModal(roomType)}
@@ -350,7 +354,7 @@ export default function RoomTypes() {
                                 sx={{
                                   width: '100%',
                                   height: 200,
-                                  bgcolor: '#2a2a2a',
+                                  bgcolor: 'rgba(24, 26, 27, 0.9)',
                                   display: 'flex',
                                   alignItems: 'center',
                                   justifyContent: 'center',
@@ -434,7 +438,7 @@ export default function RoomTypes() {
                       sx={{
                         '& .MuiPaginationItem-root': {
                           color: '#fff',
-                          backgroundColor: '#232323',
+                          backgroundColor: 'rgba(24, 26, 27, 0.9)',
                           border: '1px solid #444',
                           transition: 'background 0.2s',
                         },
@@ -444,7 +448,7 @@ export default function RoomTypes() {
                           border: '2px solid #1976d2',
                         },
                         '& .MuiPaginationItem-root:hover': {
-                          backgroundColor: '#333',
+                          backgroundColor: 'rgba(24, 26, 27, 0.95)',
                         },
                       }}
                       color="standard"

@@ -490,14 +490,14 @@ export default function ViewUserReservations() {
       <Card
         key={reservation.id}
         sx={{
-          bgcolor: "#383838",
+          bgcolor: "rgba(24, 26, 27, 0.9)",
           borderRadius: 3,
-          border: "1px solid #2a2a2a",
-          boxShadow: "0 8px 18px rgba(0,0,0,0.2)",
+          border: "1px solid rgba(125, 211, 252, 0.12)",
+          boxShadow: "0 18px 40px rgba(6, 15, 24, 0.35)",
           transition: "transform 0.2s ease, box-shadow 0.2s ease",
           "&:hover": {
             transform: "translateY(-2px)",
-            boxShadow: "0 12px 24px rgba(0,0,0,0.28)"
+            boxShadow: "0 22px 48px rgba(6, 15, 24, 0.5)"
           }
         }}
       >
@@ -569,13 +569,19 @@ export default function ViewUserReservations() {
   };
 
   return (
-    <Box sx={{ width: "100vw", maxWidth: "100%" }}>
+    <Box
+      sx={{
+        width: "100vw",
+        maxWidth: "100%",
+        background:
+          "radial-gradient(circle at 0% 0%, rgba(125,211,252,0.12), transparent 40%), radial-gradient(circle at 90% 10%, rgba(96,165,250,0.12), transparent 45%), #0f1113",
+      }}
+    >
       <Header showSearch={false} />
       <Box sx={{ display: "flex", width: "100vw", maxWidth: "100%", overflowX: "hidden" }}>
         <Box
           sx={{
             flexGrow: 1,
-            bgcolor: "#2c2b2bff",
             minHeight: "100vh",
             minWidth: 0,
             px: { xs: 2, sm: 3, md: 4 },
@@ -587,18 +593,31 @@ export default function ViewUserReservations() {
               mb: 3,
               p: { xs: 2, md: 3 },
               borderRadius: 3,
-              bgcolor: "#333333",
-              border: "1px solid #2a2a2a",
-              boxShadow: "0 10px 24px rgba(0,0,0,0.25)"
+              bgcolor: "rgba(24, 26, 27, 0.9)",
+              border: "1px solid rgba(125, 211, 252, 0.18)",
+              boxShadow: "0 24px 60px rgba(6, 15, 24, 0.45)",
+              position: "relative",
+              overflow: "hidden"
             }}
           >
-            <Typography variant="h4" fontWeight={700}>
+            <Box
+              sx={{
+                position: "absolute",
+                inset: 0,
+                backgroundImage:
+                  "linear-gradient(135deg, rgba(125,211,252,0.14), rgba(15,17,19,0.9)), url(https://picsum.photos/1200/360?blur=1)",
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+                opacity: 0.35,
+              }}
+            />
+            <Typography variant="h4" fontWeight={700} sx={{ position: "relative", zIndex: 1 }}>
               My Reservations
             </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, position: "relative", zIndex: 1 }}>
               Review, modify, or cancel upcoming stays (changes allowed 14+ days before check-in).
             </Typography>
-            <Stack direction="row" spacing={1.5} sx={{ mt: 2, flexWrap: "wrap" }}>
+            <Stack direction="row" spacing={1.5} sx={{ mt: 2, flexWrap: "wrap", position: "relative", zIndex: 1 }}>
               <Chip label={`Upcoming: ${upcomingCount}`} color="success" variant="outlined" />
               <Chip label={`Past: ${pastCount}`} color="default" variant="outlined" />
             </Stack>
@@ -630,7 +649,7 @@ export default function ViewUserReservations() {
                 </Stack>
               </Box>
 
-              <Divider sx={{ borderColor: "#424242" }} />
+              <Divider sx={{ borderColor: "rgba(125, 211, 252, 0.12)" }} />
 
               <Box>
                 <Typography variant="h6" fontWeight={700} sx={{ mb: 1 }}>

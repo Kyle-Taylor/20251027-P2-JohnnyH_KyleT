@@ -173,9 +173,12 @@ public class StripePaymentService {
         if (intent.getMetadata() != null) {
             String reservationId = intent.getMetadata().get("reservationId");
             payment.setReservationId(reservationId);
+            Payment savedPayment = paymentService.save(payment);
             reservationService.findById(reservationId).ifPresent(reservation -> {
                 reservation.setStatus(Reservation.Status.CONFIRMED);
-                reservation.setPaymentId(payment.getId());
+                if (savedPayment.getId() != null) {
+                    reservation.setPaymentId(savedPayment.getId());
+                }
                 reservationService.save(reservation);
             });
 
@@ -201,7 +204,9 @@ public class StripePaymentService {
             }
         }
 
-        paymentService.save(payment);
+        if (payment.getId() == null) {
+            paymentService.save(payment);
+        }
     }
 
     private void handlePaymentIntentFailed(PaymentIntent intent) {

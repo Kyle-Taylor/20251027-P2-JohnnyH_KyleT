@@ -60,6 +60,7 @@ export default function Rooms() {
   const [filterRoomNumber, setFilterRoomNumber] = useState("");
   const [filterPriceMin, setFilterPriceMin] = useState("");
   const [filterPriceMax, setFilterPriceMax] = useState("");
+  const [sortOrder, setSortOrder] = useState("roomNumberAsc");
   const {
     data: roomTypesData,
     isLoading: roomTypesLoading,
@@ -109,7 +110,7 @@ export default function Rooms() {
 
   useEffect(() => {
     setPage(1);
-  }, [filterRoomTypeId, filterStatus, filterRoomNumber, filterPriceMin, filterPriceMax]);
+  }, [filterRoomTypeId, filterStatus, filterRoomNumber, filterPriceMin, filterPriceMax, sortOrder]);
 
   function resetAddForm() {
     setForm(INITIAL_FORM);
@@ -308,7 +309,7 @@ export default function Rooms() {
     const maxPrice = filterPriceMax !== "" ? Number(filterPriceMax) : null;
     const statusFilter = filterStatus.toLowerCase();
 
-    return rooms.filter(room => {
+    const filtered = rooms.filter(room => {
       if (filterRoomTypeId) {
         if ((room.roomTypeId || "") !== filterRoomTypeId) return false;
       }
@@ -334,10 +335,34 @@ export default function Rooms() {
 
       return true;
     });
-  }, [rooms, filterRoomTypeId, filterStatus, filterRoomNumber, filterPriceMin, filterPriceMax]);
+
+    const toNumber = (value) => {
+      const parsed = Number(value);
+      return Number.isFinite(parsed) ? parsed : null;
+    };
+
+    return [...filtered].sort((a, b) => {
+      if (sortOrder === "roomNumberDesc") {
+        return (toNumber(b.roomNumber) ?? 0) - (toNumber(a.roomNumber) ?? 0);
+      }
+      if (sortOrder === "priceAsc") {
+        return (toNumber(a.price) ?? 0) - (toNumber(b.price) ?? 0);
+      }
+      if (sortOrder === "priceDesc") {
+        return (toNumber(b.price) ?? 0) - (toNumber(a.price) ?? 0);
+      }
+      return (toNumber(a.roomNumber) ?? 0) - (toNumber(b.roomNumber) ?? 0);
+    });
+  }, [rooms, filterRoomTypeId, filterStatus, filterRoomNumber, filterPriceMin, filterPriceMax, sortOrder]);
+
 
   return (
-  <Box>
+  <Box
+    sx={{
+      background:
+        "radial-gradient(circle at 0% 0%, rgba(125,211,252,0.12), transparent 40%), radial-gradient(circle at 90% 10%, rgba(96,165,250,0.12), transparent 45%), #0f1113",
+    }}
+  >
       <Header 
       setRooms={handleRoomsUpdate}
       setLoading={setSearchLoading}
@@ -370,9 +395,7 @@ export default function Rooms() {
             sx={{
             flexGrow: 1,
             minWidth: 0,
-            bgcolor: "#2c2b2bff",
-            borderLeft: "2px solid #232323",
-            borderRight: "2px solid #232323",
+            bgcolor: "transparent",
             px: { xs: 1, sm: 2, md: 4 },
             py: 2,
             minHeight: "100vh",
@@ -409,17 +432,20 @@ export default function Rooms() {
                     filterRoomNumber={filterRoomNumber}
                     filterPriceMin={filterPriceMin}
                     filterPriceMax={filterPriceMax}
+                    sortOrder={sortOrder}
                     onRoomTypeChange={setFilterRoomTypeId}
                     onStatusChange={setFilterStatus}
                     onRoomNumberChange={setFilterRoomNumber}
                     onPriceMinChange={setFilterPriceMin}
                     onPriceMaxChange={setFilterPriceMax}
+                    onSortChange={setSortOrder}
                     onClearFilters={() => {
                       setFilterRoomTypeId("");
                       setFilterStatus("all");
                       setFilterRoomNumber("");
                       setFilterPriceMin("");
                       setFilterPriceMax("");
+                      setSortOrder("roomNumberAsc");
                     }}
                   />
                 </Box>
@@ -434,6 +460,8 @@ export default function Rooms() {
                 </Box>
               </Box>
             </Box>
+
+
 
             {loading ? (
               <Typography>Loading…</Typography>
@@ -461,7 +489,7 @@ export default function Rooms() {
                             overflow: "hidden",
                             cursor: "pointer",
                             transition: "0.2s",
-                            bgcolor: "#383838",
+                            bgcolor: "rgba(24, 26, 27, 0.92)",
                             width: 320,
                             minWidth: 320,
                             maxWidth: 320,
@@ -628,7 +656,7 @@ export default function Rooms() {
                       sx={{
                         '& .MuiPaginationItem-root': {
                           color: '#fff',
-                          backgroundColor: '#232323',
+                          backgroundColor: 'rgba(24, 26, 27, 0.9)',
                           border: '1px solid #444',
                           transition: 'background 0.2s',
                         },
@@ -638,7 +666,7 @@ export default function Rooms() {
                           border: '2px solid #1976d2',
                         },
                         '& .MuiPaginationItem-root:hover': {
-                          backgroundColor: '#333',
+                          backgroundColor: 'rgba(24, 26, 27, 0.95)',
                         },
                       }}
                     />

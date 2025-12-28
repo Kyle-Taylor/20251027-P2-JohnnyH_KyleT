@@ -13,7 +13,7 @@ export const LoginContainer = styled(Box)(({ theme }) => ({
   gap: '2rem',
   padding: '3rem 1.5rem',
   boxSizing: 'border-box',
-  backgroundColor: '#0f1113',
+  background: 'radial-gradient(circle at top left, rgba(125,211,252,0.18), transparent 45%), radial-gradient(circle at 20% 80%, rgba(96,165,250,0.18), transparent 50%), #0f1113',
   overflowX: 'hidden',
 
   [theme.breakpoints.down('md')]: {
@@ -31,7 +31,7 @@ export const LoginLeft = styled(Box)(({ theme }) => ({
   textAlign: 'center',
   padding: '0 1rem',
   minHeight: 'auto',
-  color: '#e3e6ea',
+  color: '#e6edf6',
   width: '100%',
   maxWidth: '900px',
 
@@ -41,16 +41,18 @@ export const LoginLeft = styled(Box)(({ theme }) => ({
 }));
 
 export const LoginTitle = styled(Typography)({
-  fontSize: '3rem',
+  fontSize: '3.2rem',
   fontWeight: 700,
   marginBottom: '0.5rem',
-  color: '#e3e6ea',
+  color: '#e6edf6',
+  fontFamily: "'Playfair Display', serif",
 });
 
 export const LoginSubtitle = styled(Typography)({
-  fontSize: '1.2rem',
+  fontSize: '1.1rem',
   fontWeight: 400,
-  color: '#b0b3b8',
+  color: '#9aa4b2',
+  maxWidth: 520,
 });
 
 // RIGHT PANEL
@@ -76,16 +78,19 @@ export const LoginCard = styled(Paper)({
   display: 'flex',
   flexDirection: 'column',
   gap: '1rem',
-  backgroundColor: '#181a1b',
-  border: '1px solid #23272a',
-  color: '#e3e6ea',
+  backgroundColor: 'rgba(24, 26, 27, 0.88)',
+  border: '1px solid rgba(125, 211, 252, 0.16)',
+  color: '#e6edf6',
+  backdropFilter: 'blur(10px)',
+  boxShadow: '0 24px 60px rgba(6, 15, 24, 0.45)',
 });
 
 export const FormTitle = styled(Typography)({
-  fontSize: '1.8rem',
+  fontSize: '1.9rem',
   fontWeight: 600,
   marginBottom: '1rem',
   textAlign: 'center',
+  fontFamily: "'Playfair Display', serif",
 });
 
 export const FormWrapper = styled(Box)({
@@ -96,7 +101,7 @@ export const FormWrapper = styled(Box)({
 });
 
 export const SmallLink = styled('a')({
-  color: '#646cff',
+  color: '#7dd3fc',
   textDecoration: 'none',
   fontWeight: 500,
   '&:hover': {
@@ -106,5 +111,5 @@ export const SmallLink = styled('a')({
 
 export const SmallText = styled(Typography)({
   fontSize: '0.9rem',
-  color: '#ccc',
+  color: '#9aa4b2',
 });

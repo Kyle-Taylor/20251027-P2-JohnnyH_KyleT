@@ -277,7 +277,7 @@ const DetailsModal = ({
                     setEditDraft((d) => ({ ...d, roomCategory: e.target.value }))
                   }
                   sx={{
-                    '& .MuiInputBase-root': { bgcolor: '#383838', color: '#fff' },
+                    '& .MuiInputBase-root': { bgcolor: 'rgba(24, 26, 27, 0.9)', color: '#fff' },
                     '& .MuiInputLabel-root': { color: 'rgba(255,255,255,0.7)' },
                     '& .MuiOutlinedInput-notchedOutline': { borderColor: '#4a4a4a' },
                   }}
@@ -299,7 +299,7 @@ const DetailsModal = ({
                       }))
                     }
                     sx={{
-                      '& .MuiInputBase-root': { bgcolor: '#383838', color: '#fff' },
+                      '& .MuiInputBase-root': { bgcolor: 'rgba(24, 26, 27, 0.9)', color: '#fff' },
                       '& .MuiInputLabel-root': { color: 'rgba(255,255,255,0.7)' },
                       '& .MuiOutlinedInput-notchedOutline': { borderColor: '#4a4a4a' },
                     }}
@@ -316,7 +316,7 @@ const DetailsModal = ({
                       setEditDraft((d) => ({ ...d, maxGuests: e.target.value }))
                     }
                     sx={{
-                      '& .MuiInputBase-root': { bgcolor: '#383838', color: '#fff' },
+                      '& .MuiInputBase-root': { bgcolor: 'rgba(24, 26, 27, 0.9)', color: '#fff' },
                       '& .MuiInputLabel-root': { color: 'rgba(255,255,255,0.7)' },
                       '& .MuiOutlinedInput-notchedOutline': { borderColor: '#4a4a4a' },
                     }}
@@ -342,7 +342,7 @@ const DetailsModal = ({
                             setEditDraft((d) => ({ ...d, amenities: newAmenities }));
                           }}
                           sx={{
-                            '& .MuiInputBase-root': { bgcolor: '#383838', color: '#fff' },
+                            '& .MuiInputBase-root': { bgcolor: 'rgba(24, 26, 27, 0.9)', color: '#fff' },
                             '& .MuiOutlinedInput-notchedOutline': { borderColor: '#4a4a4a' },
                           }}
                         />
@@ -389,7 +389,7 @@ const DetailsModal = ({
                   setEditDraft((d) => ({ ...d, description: e.target.value }))
                 }
                 sx={{
-                  '& .MuiInputBase-root': { bgcolor: '#383838', color: '#fff' },
+                  '& .MuiInputBase-root': { bgcolor: 'rgba(24, 26, 27, 0.9)', color: '#fff' },
                   '& .MuiInputLabel-root': { color: 'rgba(255,255,255,0.7)' },
                   '& .MuiOutlinedInput-notchedOutline': { borderColor: '#4a4a4a' },
                 }}
@@ -537,7 +537,7 @@ const DetailsModal = ({
                         label={amenity}
                         size="small"
                         sx={{
-                          bgcolor: '#383838',
+                          bgcolor: 'rgba(24, 26, 27, 0.9)',
                           color: '#fff',
                           border: '1px solid #4a4a4a',
                         }}

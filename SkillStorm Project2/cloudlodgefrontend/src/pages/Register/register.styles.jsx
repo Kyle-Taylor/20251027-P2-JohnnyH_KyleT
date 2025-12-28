@@ -12,7 +12,7 @@ export const RegisterContainer = styled(Box)(({ theme }) => ({
   gap: '2rem',
   boxSizing: 'border-box',
   padding: '2rem',
-  backgroundColor: '#0f1113',
+  background: 'radial-gradient(circle at 10% 10%, rgba(125,211,252,0.16), transparent 40%), radial-gradient(circle at 90% 30%, rgba(96,165,250,0.16), transparent 45%), #0f1113',
 
   [theme.breakpoints.down('md')]: {
     flexDirection: 'column',
@@ -30,7 +30,7 @@ export const RegisterLeft = styled(Box)(({ theme }) => ({
   justifyContent: 'center',
   alignItems: 'flex-start',
   padding: '2rem',
-  color: '#e3e6ea',
+  color: '#e6edf6',
 
   [theme.breakpoints.down('md')]: {
     alignItems: 'center',
@@ -40,16 +40,18 @@ export const RegisterLeft = styled(Box)(({ theme }) => ({
 }));
 
 export const RegisterTitle = styled(Typography)({
-  fontSize: '3rem',
+  fontSize: '3.2rem',
   fontWeight: 700,
   marginBottom: '0.5rem',
-  color: '#e3e6ea',
+  color: '#e6edf6',
+  fontFamily: "'Playfair Display', serif",
 });
 
 export const RegisterSubtitle = styled(Typography)({
-  fontSize: '1.2rem',
+  fontSize: '1.1rem',
   fontWeight: 400,
-  color: '#b0b3b8',
+  color: '#9aa4b2',
+  maxWidth: 480,
 });
 
 // RIGHT PANEL
@@ -75,16 +77,19 @@ export const RegisterCard = styled(Paper)({
   display: 'flex',
   flexDirection: 'column',
   gap: '1rem',
-  backgroundColor: '#181a1b',
-  border: '1px solid #23272a',
-  color: '#e3e6ea',
+  backgroundColor: 'rgba(24, 26, 27, 0.9)',
+  border: '1px solid rgba(125, 211, 252, 0.16)',
+  color: '#e6edf6',
+  backdropFilter: 'blur(10px)',
+  boxShadow: '0 24px 60px rgba(6, 15, 24, 0.45)',
 });
 
 export const FormTitle = styled(Typography)({
-  fontSize: '1.8rem',
+  fontSize: '1.9rem',
   fontWeight: 600,
   marginBottom: '1rem',
   textAlign: 'center',
+  fontFamily: "'Playfair Display', serif",
 });
 
 export const FormWrapper = styled(Box)({
@@ -95,7 +100,7 @@ export const FormWrapper = styled(Box)({
 });
 
 export const SmallLink = styled('a')({
-  color: '#646cff',
+  color: '#7dd3fc',
   textDecoration: 'none',
   fontWeight: 500,
   '&:hover': {
@@ -105,5 +110,5 @@ export const SmallLink = styled('a')({
 
 export const SmallText = styled(Typography)({
   fontSize: '0.9rem',
-  color: '#ccc',
+  color: '#9aa4b2',
 });
