@@ -1,6 +1,6 @@
 // login.jsx
 import React, { useState } from "react";
-import { TextField, Button, Box } from "@mui/material";
+import { TextField, Button, Box, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { apiFetch, API_BASE_URL } from "../../api/apiFetch";
 
@@ -90,53 +90,56 @@ const Login = () => {
                   sx={{ mb: 2 }}
                 />
 
-                {error && (
-                  <Box sx={{ color: "error.main", textAlign: "center", mb: 2 }}>
-                    {error}
-                  </Box>
-                )}
+              {error && (
+                <Box sx={{ color: "error.main", textAlign: "center", mb: 2 }}>
+                  {error}
+                </Box>
+              )}
 
-                <Button
-                  type="submit"
-                  variant="contained"
-                  fullWidth
-                  disabled={loading}
-                >
-                  {loading ? "Signing in..." : "Login"}
-                </Button>
-              </Box>
+              <Button
+                type="submit"
+                variant="contained"
+                fullWidth
+                disabled={loading}
+              >
+                {loading ? "Signing in..." : "Login"}
+              </Button>
+            </Box>
 
-              <Box textAlign="center" mt={3}>
-                <SmallLink href="#">Forgot password?</SmallLink>
-                <br /><br />
-                <SmallText>Don’t have an account?</SmallText>{" "}
-                <SmallLink
-                  component="button"
-                  onClick={() => navigate("/register")}
+            <Box textAlign="center" mt={3}>
+              <SmallText>Don’t have an account?</SmallText>{" "}
+              <SmallLink
+                component="button"
+                onClick={() => navigate("/register")}
                   sx={{ cursor: "pointer", border: "none", background: "none", padding: 0 }}
                 >
                   Sign up
                 </SmallLink>
               </Box>
 
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1.5,
+                  my: 2,
+                  color: "text.secondary",
+                }}
+              >
+                <Box sx={{ flex: 1, height: "1px", bgcolor: "divider" }} />
+                <Typography variant="body2">or</Typography>
+                <Box sx={{ flex: 1, height: "1px", bgcolor: "divider" }} />
+              </Box>
+
               <Button
                 variant="outlined"
                 fullWidth
-                sx={{ mt: 4 }}
+                sx={{ mt: 2 }}
                 onClick={() =>
                   (window.location.href = `${API_BASE_URL}/auth/oauth2/google`)
                 }
               >
                 Continue with Google
-              </Button>
-              <Button
-                variant="outlined"
-                color="primary"
-                fullWidth
-                sx={{ mt: 2 }}
-                onClick={() => console.log("Okta login clicked")}
-              >
-                Continue with Okta
               </Button>
             </FormWrapper>
           </LoginCard>

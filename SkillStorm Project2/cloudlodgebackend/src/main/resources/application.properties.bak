@@ -1,0 +1,42 @@
+spring.application.name=cloudlodge
+
+# AWS S3 Configuration
+cloud.aws.credentials.access-key=${AWS_ACCESS_KEY_ID}
+cloud.aws.credentials.secret-key=${AWS_SECRET_ACCESS_KEY}
+cloud.aws.region.static=${AWS_REGION}
+cloud.aws.s3.bucket=${AWS_S3_BUCKET_NAME}
+
+# $env:MONGODB_URI = 'mongodb://user:pass@localhost:27017/cloudlodge'
+spring.mongodb.uri=${MONGODB_URI:mongodb://localhost:27017/cloudlodge}
+logging.level.org.springframework.data.mongodb.core=INFO
+
+# default values (optional)
+jwt.secret=${JWT_SECRET}
+jwt.expirationMs=${JWT_EXPIRATION_MS}
+
+#Colors in terminal
+spring.output.ansi.enabled=always
+
+# Google OAuth2 Configuration
+spring.security.oauth2.client.registration.google.client-id=${GOOGLE_CLIENT_ID}
+spring.security.oauth2.client.registration.google.client-secret=${GOOGLE_CLIENT_SECRET}
+
+# Redirect URI must match the one set in Google Cloud Console
+spring.security.oauth2.client.registration.google.redirect-uri=http://localhost:8080/login/oauth2/code/google
+spring.security.oauth2.client.registration.google.scope=openid, profile, email
+
+# Spring Security Settings
+spring.security.oauth2.client.registration.google.client-name=Google
+spring.security.oauth2.client.provider.google.authorization-uri=https://accounts.google.com/o/oauth2/v2/auth
+spring.security.oauth2.client.provider.google.token-uri=https://oauth2.googleapis.com/token
+
+# Frontend callback to receive JWT after OAuth login
+app.oauth2.redirectUri=http://localhost:5173/oauth/callback
+
+# Stripe configuration
+stripe.secret.key=${STRIPE_SECRET_KEY}
+stripe.publishable.key=${STRIPE_PUBLISHABLE_KEY}
+stripe.webhook.secret=${STRIPE_WEBHOOK_SECRET}
+
+# Server port
+server.port=8080
