@@ -153,10 +153,10 @@ export default function PaymentModal({
       }}
     >
       <DialogTitle>
-        <Typography variant="h6" fontWeight={700}>
+        <Typography component="span" variant="h6" fontWeight={700}>
           {title}
         </Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography component="span" variant="body2" color="text.secondary">
           Choose a saved card or add a new one securely with Stripe.
         </Typography>
       </DialogTitle>
