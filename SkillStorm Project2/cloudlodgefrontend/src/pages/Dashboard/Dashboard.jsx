@@ -161,7 +161,7 @@ export default function Dashboard() {
         width: "100vw",
         maxWidth: "100%",
         background:
-          "radial-gradient(circle at 10% 0%, rgba(125,211,252,0.12), transparent 40%), radial-gradient(circle at 90% 20%, rgba(96,165,250,0.12), transparent 45%), #0f1113",
+          "radial-gradient(circle at 10% 0%, rgba(125,211,252,0.16), transparent 45%), radial-gradient(circle at 90% 20%, rgba(96,165,250,0.16), transparent 45%), #0f1113",
       }}
     >
       <Header showSearch={false} />
@@ -174,9 +174,9 @@ export default function Dashboard() {
               position: "relative",
               overflow: "hidden",
               borderRadius: 3,
-              bgcolor: "rgba(24, 26, 27, 0.9)",
-              border: "1px solid rgba(125, 211, 252, 0.18)",
-              boxShadow: "0 24px 60px rgba(6, 15, 24, 0.45)",
+              bgcolor: "rgba(21, 26, 31, 0.92)",
+              border: "1px solid rgba(125, 211, 252, 0.2)",
+              boxShadow: "0 28px 60px rgba(6, 15, 24, 0.5)",
             }}
           >
             <Box
@@ -184,146 +184,196 @@ export default function Dashboard() {
                 position: "absolute",
                 inset: 0,
                 backgroundImage:
-                  "linear-gradient(135deg, rgba(125,211,252,0.15), rgba(15,17,19,0.9)), url(https://picsum.photos/1200/400?blur=2)",
+                  "linear-gradient(135deg, rgba(125,211,252,0.2), rgba(15,17,19,0.92)), url(https://picsum.photos/1200/400?blur=2)",
                 backgroundSize: "cover",
                 backgroundPosition: "center",
                 opacity: 0.4,
               }}
             />
-            <Stack
-              direction={{ xs: "column", md: "row" }}
-              spacing={2}
-              alignItems={{ xs: "flex-start", md: "center" }}
-              justifyContent="space-between"
-              sx={{ position: "relative" }}
-            >
-              <Box>
-                <Typography variant="h4" fontWeight={700}>
-                  CloudLodge Dashboard
-                </Typography>
-                <Typography variant="body2" sx={{ color: "text.secondary", mt: 0.5 }}>
-                  Live performance snapshot and reservation activity.
-                </Typography>
-              </Box>
-              <LocalizationProvider dateAdapter={AdapterDateFns}>
-                <DatePicker
-                  value={selectedDate}
-                  onChange={date => date && setSelectedDate(date)}
-                  closeOnSelect={false}
-                  slotProps={{ textField: { size: "small", sx: { minWidth: 160 } } }}
-                />
-              </LocalizationProvider>
-            </Stack>
+            <Box sx={{ position: "relative" }}>
+              <Typography variant="h4" fontWeight={700}>
+                CloudLodge Dashboard
+              </Typography>
+              <Typography variant="body2" sx={{ color: "text.secondary", mt: 0.5 }}>
+                Live performance snapshot and reservation activity.
+              </Typography>
+            </Box>
           </Paper>
-          <Grid container spacing={3}>
-            {/* Occupancy Rate */}
-            <Grid item xs={12} md={3}>
-              <Paper sx={{ p: 3, textAlign: "center", bgcolor: "rgba(24,26,27,0.9)" }}>
-                <Typography variant="h6" fontWeight={600}>
-                  Occupancy Rate
-                </Typography>
-                <Typography variant="body2" sx={{ color: '#888', mb: 1 }}>
-                  {sortPeriod === "day"
-                    ? format(selectedDate, "MMMM d, yyyy")
-                    : format(selectedDate, "MMMM yyyy")}
-                </Typography>
-                <Typography variant="h3" color="primary" fontWeight={700}>
-                  {stats.occupancyRate}%
-                </Typography>
-                <Divider sx={{ my: 2 }} />
-                <PieChart
-                  series={[
-                    {
-                      data: [
-                        { id: 0, value: stats.occupiedRooms, label: "Occupied", color: '#1976d2' },
-                        { id: 1, value: stats.totalRooms - stats.occupiedRooms - stats.inactiveRooms, label: "Vacant", color: '#90caf9' },
-                        { id: 2, value: stats.inactiveRooms, label: "Inactive", color: '#d32f2f' },
-                      ],
-                    },
-                  ]}
-                  width={180}
-                  height={140}
-                />
-              </Paper>
-            </Grid>
-            {/* Income */}
-            <Grid item xs={12} md={3}>
-              <Paper sx={{ p: 3, textAlign: "center", bgcolor: "rgba(24,26,27,0.9)" }}>
-                <Typography variant="h6" fontWeight={600}>
-                  Income
-                </Typography>
-                <Typography variant="body2" sx={{ color: '#888', mb: 1 }}>
-                  {sortPeriod === "day"
-                    ? format(selectedDate, "MMMM d, yyyy")
-                    : format(selectedDate, "MMMM yyyy")}
-                </Typography>
-                <Typography variant="h3" color="success.main" fontWeight={700}>
-                  ${stats.income}
-                </Typography>
-                <Divider sx={{ my: 2 }} />
-                <BarChart
-                  series={[{ data: stats.incomeHistory, label: "Income" }]}
-                  xAxis={[{ data: stats.incomeLabels }]}
-                  width={240}
-                  height={140}
-                />
-              </Paper>
-            </Grid>
-            
-            {/* Upcoming Reservations */}
-            <Grid item xs={12} md={3}>
-              <UpcomingReservations />
-            </Grid>
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: { xs: "1fr", md: "auto 1fr" },
+              gap: 3,
+              mt: 1,
+              mb: 8,
+            }}
+          >
+            {/* Left side - Occupancy and Income with Date Picker wrapped in a Paper */}
+            <Paper 
+              sx={{ 
+                p: 3, 
+                bgcolor: "rgba(21,26,31,0.92)", 
+                border: "1px solid rgba(125,211,252,0.16)",
+                minWidth: { md: 570 }
+              }}
+            >
+              <Box
+                sx={{
+                  display: "grid",
+                  gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
+                  gap: 3,
+                }}
+              >
+                <Paper sx={{ p: 3, textAlign: "center", bgcolor: "rgba(15,17,19,0.6)", border: "1px solid rgba(125,211,252,0.1)" }}>
+                  <Typography variant="h6" fontWeight={600}>
+                    Occupancy Rate
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: '#888', mb: 1 }}>
+                    {sortPeriod === "day"
+                      ? format(selectedDate, "MMMM d, yyyy")
+                      : format(selectedDate, "MMMM yyyy")}
+                  </Typography>
+                  <Typography variant="h3" color="primary" fontWeight={700}>
+                    {stats.occupancyRate}%
+                  </Typography>
+                  <Divider sx={{ my: 2 }} />
+                  <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
+                    <PieChart
+                      series={[
+                        {
+                          data: [
+                            { id: 0, value: stats.occupiedRooms, label: "Occupied", color: '#7dd3fc' },
+                            { id: 1, value: stats.totalRooms - stats.occupiedRooms - stats.inactiveRooms, label: "Vacant", color: '#4ea8f3' },
+                            { id: 2, value: stats.inactiveRooms, label: "Inactive", color: '#d32f2f' },
+                          ],
+                        },
+                      ]}
+                      width={180}
+                      height={140}
+                    />
+                  </Box>
+                </Paper>
 
-            {/* Recent Payments */}
-            <Grid item xs={12}>
-              <Paper sx={{ p: 3, bgcolor: "rgba(24,26,27,0.9)" }}>
-                <Typography variant="h6" fontWeight={600} mb={2}>
-                  Recent Payments
+                <Paper sx={{ p: 3, textAlign: "center", bgcolor: "rgba(15,17,19,0.6)", border: "1px solid rgba(125,211,252,0.1)" }}>
+                  <Typography variant="h6" fontWeight={600}>
+                    Income
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: '#888', mb: 1 }}>
+                    {sortPeriod === "day"
+                      ? format(selectedDate, "MMMM d, yyyy")
+                      : format(selectedDate, "MMMM yyyy")}
+                  </Typography>
+                  <Typography variant="h3" color="success.main" fontWeight={700}>
+                    ${stats.income}
+                  </Typography>
+                  <Divider sx={{ my: 2 }} />
+                  <BarChart
+                    series={[{ data: stats.incomeHistory, label: "Income", color: "#7dd3fc" }]}
+                    xAxis={[{ data: stats.incomeLabels }]}
+                    width={240}
+                    height={140}
+                  />
+                </Paper>
+              </Box>
+              
+              <Box
+                sx={{
+                  mt: 3,
+                  textAlign: "center",
+                }}
+              >
+                <Typography variant="body2" fontWeight={600} sx={{ mb: 1 }}>
+                  Select Date
                 </Typography>
-                <TableContainer>
-                  <Table size="small">
-                    <TableHead>
-                      <TableRow>
-                        <TableCell>Guest</TableCell>
-                        <TableCell>Amount</TableCell>
-                        <TableCell>Status</TableCell>
-                        <TableCell>Date</TableCell>
+                <LocalizationProvider dateAdapter={AdapterDateFns}>
+                  <DatePicker
+                    value={selectedDate}
+                    onChange={date => date && setSelectedDate(date)}
+                    closeOnSelect={false}
+                    slotProps={{
+                      textField: {
+                        size: "small",
+                        sx: {
+                          minWidth: 180,
+                          bgcolor: "rgba(15, 17, 19, 0.6)",
+                          borderRadius: 2,
+                          "& .MuiOutlinedInput-root": {
+                            "& fieldset": {
+                              borderColor: "rgba(125, 211, 252, 0.3)"
+                            },
+                            "&:hover fieldset": {
+                              borderColor: "rgba(125, 211, 252, 0.5)"
+                            }
+                          }
+                        }
+                      }
+                    }}
+                  />
+                </LocalizationProvider>
+              </Box>
+            </Paper>
+
+            {/* Right side - Recent Payments (takes remaining space) */}
+            <Paper sx={{ p: 3, bgcolor: "rgba(21,26,31,0.92)", border: "1px solid rgba(125,211,252,0.14)" }}>
+              <Typography variant="h6" fontWeight={600} mb={2}>
+                Recent Payments
+              </Typography>
+              <TableContainer>
+                <Table size="small">
+                  <TableHead>
+                    <TableRow sx={{ bgcolor: "rgba(15, 17, 19, 0.6)" }}>
+                      <TableCell sx={{ color: "text.secondary", fontWeight: 600 }}>Guest</TableCell>
+                      <TableCell sx={{ color: "text.secondary", fontWeight: 600 }}>Amount</TableCell>
+                      <TableCell sx={{ color: "text.secondary", fontWeight: 600 }}>Status</TableCell>
+                      <TableCell sx={{ color: "text.secondary", fontWeight: 600 }}>Date</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {(Array.isArray(stats.recentPayments)
+                      ? [...stats.recentPayments]
+                          .sort((a, b) => new Date(b.date) - new Date(a.date))
+                          .slice(0, 8)
+                      : []).map(p => (
+                      <TableRow key={p.id}>
+                        <TableCell>{guestNames[p.id] || p.guestName || "Guest"}</TableCell>
+                        <TableCell>${p.amount}</TableCell>
+                        <TableCell>
+                          <Chip
+                            label={p.status}
+                            color={
+                              p.status === "SUCCEEDED"
+                                ? "success"
+                                : p.status === "PENDING"
+                                ? "warning"
+                                : "error"
+                            }
+                            size="small"
+                          />
+                        </TableCell>
+                        <TableCell>{p.date ? p.date.slice(0, 10) : ""}</TableCell>
                       </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {(Array.isArray(stats.recentPayments)
-                        ? [...stats.recentPayments]
-                            .sort((a, b) => new Date(b.date) - new Date(a.date))
-                            .slice(0, 8)
-                        : []).map(p => (
-                        <TableRow key={p.id}>
-                          <TableCell>{guestNames[p.id] || p.guestName || "Guest"}</TableCell>
-                          <TableCell>${p.amount}</TableCell>
-                          <TableCell>
-                            <Chip
-                              label={p.status}
-                              color={
-                                p.status === "SUCCEEDED"
-                                  ? "success"
-                                  : p.status === "PENDING"
-                                  ? "warning"
-                                  : "error"
-                              }
-                              size="small"
-                            />
-                          </TableCell>
-                          <TableCell>{p.date ? p.date.slice(0, 10) : ""}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              </Paper>
-            </Grid>
-          </Grid>
-          {/* Users Table below dashboard info */}
-          <UsersTable />
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Paper>
+          </Box>
+
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+              gap: 3,
+              mt: 8,
+            }}
+          >
+            <Box sx={{ minWidth: 0 }}>
+              <UsersTable />
+            </Box>
+            <Box sx={{ minWidth: 0 }}>
+              <UpcomingReservations />
+            </Box>
+          </Box>
         </Box>
       </Box>
     </Box>

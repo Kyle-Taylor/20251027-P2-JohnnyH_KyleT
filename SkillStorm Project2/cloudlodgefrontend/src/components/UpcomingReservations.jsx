@@ -25,11 +25,10 @@ export default function UpcomingReservations() {
     const now = new Date();
     return new Date(now.getFullYear(), now.getMonth(), 1);
   });
-  const [upcomingReservations, setUpcomingReservations] = useState([]);
   const [userMap, setUserMap] = useState({});
   const [page, setPage] = useState(1);
   const [triggerUser] = useLazyGetUserQuery();
-  const rowsPerPage = 8;
+  const rowsPerPage = 12;
 
   const dashboardParams = reservationMonth
     ? {
@@ -41,9 +40,9 @@ export default function UpcomingReservations() {
 
   const { data, isLoading, refetch } = useGetDashboardQuery(dashboardParams);
 
-  useEffect(() => {
-    setUpcomingReservations(data?.upcomingReservations || []);
-  }, [data]);
+  const upcomingReservations = Array.isArray(data?.upcomingReservations)
+    ? data.upcomingReservations
+    : [];
 
   useEffect(() => {
     let active = true;
@@ -92,7 +91,14 @@ export default function UpcomingReservations() {
   }, [page, totalPages]);
 
   return (
-    <Paper sx={{ p: 3, bgcolor: "rgba(24, 26, 27, 0.9)" }}>
+    <Paper sx={{ 
+      p: 3, 
+      bgcolor: "rgba(24, 26, 27, 0.9)", 
+      width: "100%",
+      flex: 1,
+      display: "flex",
+      flexDirection: "column"
+    }}>
       <Stack direction="row" alignItems="center" justifyContent="space-between">
         <Typography variant="h6" fontWeight={600}>
           Upcoming Reservations
@@ -113,43 +119,45 @@ export default function UpcomingReservations() {
 
       <Divider sx={{ my: 1, borderColor: "rgba(125, 211, 252, 0.12)" }} />
 
-      {isLoading ? (
-        <Box sx={{ textAlign: "center", py: 2 }}>
-          <CircularProgress size={24} />
-        </Box>
-      ) : (
-        <TableContainer>
-          <Table size="small">
-            <TableHead>
-              <TableRow>
-                <TableCell>Guest</TableCell>
-                <TableCell>Room</TableCell>
-                <TableCell>Check-In</TableCell>
-                <TableCell>Check-Out</TableCell>
-                <TableCell>Action</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {pagedReservations.map(r => (
-                <TableRow key={r.id}>
-                  <TableCell>{userMap[r.userId]?.fullName || r.userId || "Unknown"}</TableCell>
-                  <TableCell>{r.roomNumber}</TableCell>
-                  <TableCell>{r.checkInDate}</TableCell>
-                  <TableCell>{r.checkOutDate}</TableCell>
-                  <TableCell>
-                    <CancelBookingButton
-                      reservationId={r.id}
-                      onCancel={refetch}
-                    />
-                  </TableCell>
+      <Box sx={{ flex: 1, display: "flex", flexDirection: "column" }}>
+        {isLoading ? (
+          <Box sx={{ textAlign: "center", py: 2 }}>
+            <CircularProgress size={24} />
+          </Box>
+        ) : (
+          <TableContainer>
+            <Table size="small">
+              <TableHead>
+                <TableRow>
+                  <TableCell>Guest</TableCell>
+                  <TableCell>Room</TableCell>
+                  <TableCell>Check-In</TableCell>
+                  <TableCell>Check-Out</TableCell>
+                  <TableCell>Action</TableCell>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      )}
-      {totalPages > 1 && (
-        <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
+              </TableHead>
+              <TableBody>
+              {pagedReservations.map((r, index) => (
+                <TableRow
+                  key={`${r.id || r.userId || "row"}-${r.checkInDate || "date"}-${index}`}
+                >
+                    <TableCell>{userMap[r.userId]?.fullName || r.userId || "Unknown"}</TableCell>
+                    <TableCell>{r.roomNumber}</TableCell>
+                    <TableCell>{r.checkInDate}</TableCell>
+                    <TableCell>{r.checkOutDate}</TableCell>
+                    <TableCell>
+                      <CancelBookingButton
+                        reservationId={r.id}
+                        onCancel={refetch}
+                      />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )}
+        <Box sx={{ display: "flex", justifyContent: "center", mt: 2, minHeight: 40 }}>
           <Pagination
             count={totalPages}
             page={page}
@@ -158,7 +166,7 @@ export default function UpcomingReservations() {
             shape="rounded"
           />
         </Box>
-      )}
+      </Box>
     </Paper>
   );
 }

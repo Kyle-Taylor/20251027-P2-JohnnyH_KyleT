@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import {
   Table,
@@ -24,6 +23,7 @@ import {
   Select,
   MenuItem,
   Stack,
+  Pagination,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import DeleteConfirmationModal from "./DeleteConfirmationModal";
@@ -53,6 +53,9 @@ export default function UsersTable() {
   });
   const [editError, setEditError] = useState("");
   const [saving, setSaving] = useState(false);
+  const [page, setPage] = useState(1);
+  const rowsPerPage = 8;
+
   async function handleDeleteUser(id) {
     try {
       await deleteUser(id).unwrap();
@@ -121,11 +124,20 @@ export default function UsersTable() {
     }
   }, [error]);
 
+  const totalPages = Math.max(1, Math.ceil(users.length / rowsPerPage));
+  const pagedUsers = users.slice(
+    (page - 1) * rowsPerPage,
+    page * rowsPerPage
+  );
+
+  useEffect(() => {
+    if (page > totalPages) {
+      setPage(1);
+    }
+  }, [page, totalPages]);
+
   return (
-    <Box sx={{ width: "100%" }}>
-      <Typography variant="h5" fontWeight={700} gutterBottom>
-        Users
-      </Typography>
+    <Box sx={{ width: "100%", display: "flex", flex: 1 }}>
       {isLoading ? (
         <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
           <CircularProgress />
@@ -133,57 +145,81 @@ export default function UsersTable() {
       ) : tableError ? (
         <Typography color="error">{tableError}</Typography>
       ) : (
-        <TableContainer
-          component={Paper}
+        <Paper
           sx={{
+            p: 3,
             bgcolor: "rgba(21,26,31,0.92)",
             border: "1px solid rgba(125, 211, 252, 0.16)",
-            overflowX: "auto",
+            width: "100%",
+            flex: 1,
+            display: "flex",
+            flexDirection: "column"
           }}
         >
-          <Table sx={{ minWidth: 720 }}>
-            <TableHead>
-              <TableRow sx={{ bgcolor: "rgba(15, 17, 19, 0.6)" }}>
-                <TableCell sx={{ color: "text.secondary", fontWeight: 600 }}>Email</TableCell>
-                <TableCell sx={{ color: "text.secondary", fontWeight: 600 }}>Name</TableCell>
-                <TableCell sx={{ color: "text.secondary", fontWeight: 600 }}>Role</TableCell>
-                <TableCell sx={{ color: "text.secondary", fontWeight: 600 }}>Phone</TableCell>
-                <TableCell sx={{ color: "text.secondary", fontWeight: 600 }}>Created At</TableCell>
-                <TableCell align="right" sx={{ color: "text.secondary", fontWeight: 600 }}>Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {users.map((user) => (
-                <TableRow
-                  key={user.id || user._id}
-                  hover
-                  sx={{ cursor: "pointer" }}
-                  onClick={() => handleOpenEdit(user)}
-                >
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>{user.fullName || ""}</TableCell>
-                  <TableCell>{user.role}</TableCell>
-                  <TableCell>{user.phone || ""}</TableCell>
-                  <TableCell>{user.createdAt ? new Date(user.createdAt).toLocaleString() : ""}</TableCell>
-                  <TableCell align="right">
-                    <Tooltip title="Delete User">
-                      <IconButton
-                        color="error"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          setUserToDelete(user.id || user._id);
-                          setDeleteModalOpen(true);
-                        }}
-                      >
-                        <DeleteIcon />
-                      </IconButton>
-                    </Tooltip>
-                  </TableCell>
+          <Typography variant="h5" fontWeight={700} mb={2}>
+            Users
+          </Typography>
+          <TableContainer
+            component={Box}
+            sx={{
+              overflowX: "auto",
+              width: "100%",
+              flex: 1,
+            }}
+          >
+            <Table sx={{ minWidth: 720 }}>
+              <TableHead>
+                <TableRow sx={{ bgcolor: "rgba(15, 17, 19, 0.6)" }}>
+                  <TableCell sx={{ color: "text.secondary", fontWeight: 600 }}>Email</TableCell>
+                  <TableCell sx={{ color: "text.secondary", fontWeight: 600 }}>Name</TableCell>
+                  <TableCell sx={{ color: "text.secondary", fontWeight: 600 }}>Role</TableCell>
+                  <TableCell sx={{ color: "text.secondary", fontWeight: 600 }}>Phone</TableCell>
+                  <TableCell sx={{ color: "text.secondary", fontWeight: 600 }}>Created At</TableCell>
+                  <TableCell align="right" sx={{ color: "text.secondary", fontWeight: 600 }}>Actions</TableCell>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+              </TableHead>
+              <TableBody>
+                {pagedUsers.map((user) => (
+                  <TableRow
+                    key={user.id || user._id}
+                    hover
+                    sx={{ cursor: "pointer" }}
+                    onClick={() => handleOpenEdit(user)}
+                  >
+                    <TableCell>{user.email}</TableCell>
+                    <TableCell>{user.fullName || ""}</TableCell>
+                    <TableCell>{user.role}</TableCell>
+                    <TableCell>{user.phone || ""}</TableCell>
+                    <TableCell>{user.createdAt ? new Date(user.createdAt).toLocaleString() : ""}</TableCell>
+                    <TableCell align="right">
+                      <Tooltip title="Delete User">
+                        <IconButton
+                          color="error"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            setUserToDelete(user.id || user._id);
+                            setDeleteModalOpen(true);
+                          }}
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      </Tooltip>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+          <Box sx={{ display: "flex", justifyContent: "center", mt: 2, minHeight: 40 }}>
+            <Pagination
+              count={totalPages}
+              page={page}
+              onChange={(_, value) => setPage(value)}
+              size="small"
+              shape="rounded"
+            />
+          </Box>
+        </Paper>
       )}
 
       {/* Delete Confirmation Modal */}
