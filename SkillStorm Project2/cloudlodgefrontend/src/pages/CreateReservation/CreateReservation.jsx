@@ -385,6 +385,30 @@ export default function BookRoom() {
     setBookingSuccess(true);
   }
 
+  async function bookCartReservations() {
+    if (!cartItems.length) return;
+    setBooking(true);
+    setBookingError("");
+    try {
+      for (const item of cartItems) {
+        await createReservation({
+          roomUnitId: item.roomId,
+          checkInDate: item.checkIn,
+          checkOutDate: item.checkOut,
+          numGuests: item.guests,
+          totalPrice: item.total,
+          status: "CONFIRMED"
+        }).unwrap();
+      }
+      setCartItems([]);
+      setBookingSuccess(true);
+    } catch (err) {
+      setBookingError(err?.message || "Failed to book reservation(s)");
+    } finally {
+      setBooking(false);
+    }
+  }
+
   // Only show active rooms for reservation (user-facing)
   const visibleRooms = useMemo(() => {
     if (!selectedRoomTypeId) return rooms.filter(r => r.isActive !== false);
@@ -1402,10 +1426,9 @@ export default function BookRoom() {
       <PaymentModal
         open={checkoutOpen}
         onClose={() => setCheckoutOpen(false)}
-        onSuccess={() => {
+        onSuccess={async () => {
+          await bookCartReservations();
           setCheckoutOpen(false);
-          setCartItems([]);
-          setBookingSuccess(true);
         }}
         title="Checkout"
         savedCards={profileData?.savedPaymentMethods || []}
