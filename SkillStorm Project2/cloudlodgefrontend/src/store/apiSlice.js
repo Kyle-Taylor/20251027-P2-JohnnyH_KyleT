@@ -258,6 +258,13 @@ export const apiSlice = createApi({
       }),
       invalidatesTags: ["Payments", "Profile"],
     }),
+    chargeSavedPaymentMethod: builder.mutation({
+      query: (body) => ({
+        url: "/payments/charge-saved",
+        method: "POST",
+        body,
+      }),
+    }),
     syncPaymentMethods: builder.mutation({
       query: () => ({
         url: "/payments/methods/sync",
@@ -311,6 +318,7 @@ export const {
   useGetStripeConfigQuery,
   useCreatePaymentIntentMutation,
   useCreateSetupIntentMutation,
+  useChargeSavedPaymentMethodMutation,
   useDeletePaymentMethodMutation,
   useSyncPaymentMethodsMutation,
 } = apiSlice;

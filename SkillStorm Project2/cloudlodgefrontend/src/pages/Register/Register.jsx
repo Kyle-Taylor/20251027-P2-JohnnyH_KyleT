@@ -1,7 +1,6 @@
 import React, { useState } from "react";
-import { TextField, Button, Box, MenuItem, Select, InputLabel, FormControl } from "@mui/material";
+import { TextField, Button, Box } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import Header from "../../components/Header";
 import { useRegisterMutation } from "../../store/apiSlice";
 
 import {
@@ -21,7 +20,6 @@ const Register = () => {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [role, setRole] = useState("GUEST"); // default role
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -53,7 +51,7 @@ const Register = () => {
         fullName,
         email,
         phone: phoneDigits || null,
-        role,
+        role: "GUEST",
         password,
       }).unwrap();
       navigate("/login");
@@ -67,7 +65,6 @@ const Register = () => {
 
   return (
     <>
-      <Header showSearch={false} />
       <RegisterContainer>
         <RegisterLeft>
           <RegisterTitle>CloudLodge</RegisterTitle>
@@ -107,22 +104,9 @@ const Register = () => {
                     const digits = (e.target.value || "").replace(/\D/g, "").slice(0, 10);
                     setPhone(digits);
                   }}
-                  helperText={phone ? `Digits: ${phone.length}/10` : "Optional"}
+                  helperText={phone ? `Digits: ${phone.length}/10` : ""}
                   sx={{ mb: 2 }}
                 />
-                <FormControl fullWidth sx={{ mb: 2 }}>
-                  <InputLabel id="role-label">Role</InputLabel>
-                  <Select
-                    labelId="role-label"
-                    value={role}
-                    label="Role"
-                    onChange={(e) => setRole(e.target.value)}
-                  >
-                    <MenuItem value="GUEST">GUEST</MenuItem>
-                    <MenuItem value="ADMIN">ADMIN</MenuItem>
-                    <MenuItem value="MANAGER">MANAGER</MenuItem>
-                  </Select>
-                </FormControl>
                 <TextField
                   label="Password"
                   variant="outlined"

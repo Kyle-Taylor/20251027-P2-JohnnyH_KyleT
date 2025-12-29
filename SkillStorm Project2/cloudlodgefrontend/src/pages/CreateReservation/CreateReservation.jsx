@@ -15,7 +15,9 @@ import {
   TextField,
   Divider,
   Paper,
-  IconButton
+  IconButton,
+  Snackbar,
+  Alert
 } from "@mui/material";
 import BedIcon from "@mui/icons-material/Bed";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
@@ -59,7 +61,7 @@ export default function BookRoom() {
   const [page, setPage] = useState(1);
   const itemsPerPage = 18;
   const [cartItems, setCartItems] = useState([]);
-  const { data: profileData } = useGetProfileQuery();
+  const { data: profileData, refetch: refetchProfile } = useGetProfileQuery();
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -72,6 +74,7 @@ export default function BookRoom() {
   const [bookingError, setBookingError] = useState("");
   const [cartOpen, setCartOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [toastOpen, setToastOpen] = useState(false);
 
   const [checkInDate, setCheckInDate] = useState(dayjs().format("YYYY-MM-DD"));
   const [checkOutDate, setCheckOutDate] = useState(
@@ -85,6 +88,13 @@ export default function BookRoom() {
   const [selectedRoomType, setSelectedRoomType] = useState(null);
 
   const [modalRange, setModalRange] = useState({ start: null, end: null });
+
+  // Refresh saved payment methods whenever the checkout modal is opened
+  useEffect(() => {
+    if (checkoutOpen) {
+      refetchProfile();
+    }
+  }, [checkoutOpen, refetchProfile]);
 
   const [lastSearch, setLastSearch] = useState(null);
   const {
@@ -385,7 +395,7 @@ export default function BookRoom() {
     setBookingSuccess(true);
   }
 
-  async function bookCartReservations() {
+  async function bookCartReservations(paymentIntentId) {
     if (!cartItems.length) return;
     setBooking(true);
     setBookingError("");
@@ -397,11 +407,16 @@ export default function BookRoom() {
           checkOutDate: item.checkOut,
           numGuests: item.guests,
           totalPrice: item.total,
-          status: "CONFIRMED"
+          status: "CONFIRMED",
+          paymentId: paymentIntentId || null
         }).unwrap();
       }
       setCartItems([]);
       setBookingSuccess(true);
+      if (selectedRoomType) {
+        fetchRoomsForSelectedType();
+      }
+      setToastOpen(true);
     } catch (err) {
       setBookingError(err?.message || "Failed to book reservation(s)");
     } finally {
@@ -1375,8 +1390,8 @@ export default function BookRoom() {
         }}
       >
         <DialogTitle sx={{ pb: 0.5 }}>
-          <Typography variant="h6" fontWeight={700}>Your Cart</Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography component="div" variant="h6" fontWeight={700}>Your Cart</Typography>
+          <Typography component="div" variant="body2" color="text.secondary">
             Rooms you’ve added will stay here until checkout.
           </Typography>
         </DialogTitle>
@@ -1426,15 +1441,29 @@ export default function BookRoom() {
       <PaymentModal
         open={checkoutOpen}
         onClose={() => setCheckoutOpen(false)}
-        onSuccess={async () => {
-          await bookCartReservations();
+        onSuccess={async (result) => {
+          await bookCartReservations(result?.paymentIntentId);
           setCheckoutOpen(false);
         }}
         title="Checkout"
         savedCards={profileData?.savedPaymentMethods || []}
         showSaveCardToggle={true}
         primaryCtaLabel="Book reservation"
+        mode="payment"
+        amount={Number(cartSubtotal) || 0}
+        description="Cart reservation payment"
       />
+
+      <Snackbar
+        open={toastOpen}
+        autoHideDuration={3000}
+        onClose={() => setToastOpen(false)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert onClose={() => setToastOpen(false)} severity="success" sx={{ width: "100%" }}>
+          Reservation booked!
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }

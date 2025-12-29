@@ -6,7 +6,7 @@ export const RegisterContainer = styled(Box)(({ theme }) => ({
   display: 'flex',
   flexDirection: 'row',
   width: '100%',
-  minHeight: 'calc(100vh - 72px)',
+  minHeight: '100vh',
   justifyContent: 'center',
   alignItems: 'center',
   gap: '2rem',
@@ -60,7 +60,7 @@ export const RegisterRight = styled(Box)(({ theme }) => ({
   display: 'flex',
   justifyContent: 'center',
   alignItems: 'center',
-  backgroundColor: '#0f1113',
+  backgroundColor: 'transparent',
 
   [theme.breakpoints.down('md')]: {
     width: '100%',
@@ -77,8 +77,8 @@ export const RegisterCard = styled(Paper)({
   display: 'flex',
   flexDirection: 'column',
   gap: '1rem',
-  backgroundColor: 'rgba(24, 26, 27, 0.9)',
-  border: '1px solid rgba(125, 211, 252, 0.16)',
+  backgroundColor: 'rgba(14, 16, 18, 0.88)',
+  border: '1px solid rgba(255, 255, 255, 0.08)',
   color: '#e6edf6',
   backdropFilter: 'blur(10px)',
   boxShadow: '0 24px 60px rgba(6, 15, 24, 0.45)',

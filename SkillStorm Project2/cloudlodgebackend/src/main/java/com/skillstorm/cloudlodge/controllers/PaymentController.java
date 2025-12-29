@@ -1,6 +1,7 @@
 package com.skillstorm.cloudlodge.controllers;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -229,6 +230,27 @@ public class PaymentController {
             return ResponseEntity.internalServerError()
                     .header("Error", "Sorry! We have an internal Error! Please check back later.")
                     .build();
+        }
+    }
+
+    @PostMapping("/charge-saved")
+    public ResponseEntity<?> chargeSavedPaymentMethod(
+            @RequestBody Map<String, Object> request, 
+            Authentication authentication) {
+        if (authentication == null || !(authentication.getPrincipal() instanceof User user)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
+        }
+        try {
+            String paymentMethodId = (String) request.get("paymentMethodId");
+            Double amount = ((Number) request.get("amount")).doubleValue();
+            String description = (String) request.getOrDefault("description", "Payment");
+            
+            Map<String, String> result = stripePaymentService.chargeExistingPaymentMethod(
+                user, paymentMethodId, amount, description
+            );
+            return ResponseEntity.ok(result);
+        } catch (StripeException e) {
+            return ResponseEntity.internalServerError().body("Stripe error: " + e.getMessage());
         }
     }
 }

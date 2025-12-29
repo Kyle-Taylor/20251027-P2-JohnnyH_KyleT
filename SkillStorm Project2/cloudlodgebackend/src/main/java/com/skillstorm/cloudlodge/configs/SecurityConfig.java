@@ -74,12 +74,7 @@ public class SecurityConfig {
                 // Everything else requires authentication
                 .anyRequest().authenticated()
             )
-            .oauth2Login(oauth -> oauth
-                .authorizationEndpoint(endpoint -> endpoint.baseUri("/auth/oauth2"))
-                .redirectionEndpoint(endpoint -> endpoint.baseUri("/login/oauth2/code/*"))
-                .successHandler(oauth2SuccessHandler)
-                .failureHandler(oauth2FailureHandler)
-            )
+            .oauth2Login(oauth -> oauth.disable())
             .formLogin(form -> form.disable())
             .httpBasic(basic -> basic.disable());
 

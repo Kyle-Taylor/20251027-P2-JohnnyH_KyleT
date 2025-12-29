@@ -107,8 +107,6 @@ const Login = () => {
               </Box>
 
               <Box textAlign="center" mt={3}>
-                <SmallLink href="#">Forgot password?</SmallLink>
-                <br /><br />
                 <SmallText>Don’t have an account?</SmallText>{" "}
                 <SmallLink
                   component="button"
@@ -118,26 +116,6 @@ const Login = () => {
                   Sign up
                 </SmallLink>
               </Box>
-
-              <Button
-                variant="outlined"
-                fullWidth
-                sx={{ mt: 4 }}
-                onClick={() =>
-                  (window.location.href = `${API_BASE_URL}/auth/oauth2/google`)
-                }
-              >
-                Continue with Google
-              </Button>
-              <Button
-                variant="outlined"
-                color="primary"
-                fullWidth
-                sx={{ mt: 2 }}
-                onClick={() => console.log("Okta login clicked")}
-              >
-                Continue with Okta
-              </Button>
             </FormWrapper>
           </LoginCard>
         </LoginRight>

@@ -9,7 +9,7 @@ import {
   useSyncPaymentMethodsMutation,
   useUpdateProfileMutation,
 } from '../../store/apiSlice';
-import PaymentModal from '../../components/payments/PaymentModal';
+import PaymentModal, { BrandIcon } from '../../components/payments/PaymentModal';
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -294,15 +294,18 @@ const Profile = () => {
                 <Typography sx={{ mb: 1 }}><strong>Member since:</strong> {created}</Typography>
               )}
               <Typography sx={{ mb: 1 }}><strong>Provider ID:</strong> {user.providerId || 'N/A'}</Typography>
-              <Typography sx={{ mb: 2 }}><strong>Stripe Customer ID:</strong> {user.stripeCustomerId || 'N/A'}</Typography>
 
               <Divider sx={{ my: 1 }} />
-              <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Preferences</Typography>
+              <Typography variant="subtitle1" sx={{ fontWeight: 700, letterSpacing: 0.2, textTransform: "uppercase" }}>
+                Preferences
+              </Typography>
               <Typography sx={{ mb: 1 }}><strong>Bed Type:</strong> {preferences.bedType || 'Not set'}</Typography>
               <Typography sx={{ mb: 2 }}><strong>Smoking:</strong> {preferences.smoking == null ? 'Not set' : (preferences.smoking ? 'Yes' : 'No')}</Typography>
 
               <Divider sx={{ my: 1 }} />
-              <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Billing Address</Typography>
+              <Typography variant="subtitle1" sx={{ fontWeight: 700, letterSpacing: 0.2, textTransform: "uppercase" }}>
+                Billing Address
+              </Typography>
               <Typography sx={{ mb: 2 }}>{joinedAddress || 'No billing address on file'}</Typography>
 
               <Button
@@ -326,7 +329,9 @@ const Profile = () => {
             </Grid>
             <Grid item xs={12} md={5}>
               <Paper sx={{ p: 3, bgcolor: 'rgba(21, 26, 31, 0.92)', border: '1px solid rgba(125, 211, 252, 0.18)' }}>
-                <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>Saved Payment Methods</Typography>
+                <Typography variant="subtitle1" sx={{ fontWeight: 700, letterSpacing: 0.2, textTransform: "uppercase", mb: 1 }}>
+                  Saved Payment Methods
+                </Typography>
                 {savedCards.length === 0 && (
                   <Typography sx={{ color: '#b0b3b8' }}>None saved</Typography>
                 )}
@@ -334,7 +339,10 @@ const Profile = () => {
                   <Stack spacing={0.5}>
                     {savedCards.map((pm, idx) => (
                       <Box key={idx} sx={{ fontSize: '0.95rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span>{pm.brand || 'Card'} •••• {pm.last4 || '----'}</span>
+                        <Stack direction="row" spacing={1} alignItems="center">
+                          <BrandIcon brand={pm.brand} />
+                          <span>•••• {pm.last4 || '----'}</span>
+                        </Stack>
                         <Button
                           size="small"
                           color="error"
