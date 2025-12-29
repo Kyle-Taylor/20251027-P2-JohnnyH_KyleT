@@ -11,6 +11,7 @@ import {
   TextField,
   Typography
 } from "@mui/material";
+import HeroSearch from "./HeroSearch";
 
 export default function RoomsFilters({
   roomTypes,
@@ -30,7 +31,11 @@ export default function RoomsFilters({
   onSortChange,
   onClearFilters,
   onAddRoom,
-  addRoomLabel = "Add Room"
+  addRoomLabel = "Add Room",
+  onSearchChange,
+  searchHideGuests = false,
+  searchMaxWidth,
+  searchHeight
 }) {
   return (
     <Paper
@@ -43,7 +48,7 @@ export default function RoomsFilters({
         border: "1px solid rgba(125, 211, 252, 0.2)",
         borderRadius: 3,
         position: "relative",
-        overflow: "hidden",
+        overflow: "visible",
         boxShadow: "0 18px 40px rgba(6, 15, 24, 0.4)"
       }}
     >
@@ -62,6 +67,16 @@ export default function RoomsFilters({
               {filteredCount} of {roomsCount} rooms shown
             </Typography>
           </Box>
+          {onSearchChange && (
+            <Box sx={{ flex: 1, display: "flex", justifyContent: "flex-start" }}>
+              <HeroSearch
+                onSearchChange={onSearchChange}
+                hideGuests={searchHideGuests}
+                maxWidth={searchMaxWidth}
+                height={searchHeight}
+              />
+            </Box>
+          )}
           <Stack direction="row" spacing={1} alignItems="center">
             {onAddRoom && (
               <Button

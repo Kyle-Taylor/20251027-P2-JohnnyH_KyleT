@@ -140,6 +140,7 @@ export default function UpcomingReservations() {
               {pagedReservations.map((r, index) => (
                 <TableRow
                   key={`${r.id || r.userId || "row"}-${r.checkInDate || "date"}-${index}`}
+                  sx={{ "& td": { py: 1.11 } }}
                 >
                     <TableCell>{userMap[r.userId]?.fullName || r.userId || "Unknown"}</TableCell>
                     <TableCell>{r.roomNumber}</TableCell>

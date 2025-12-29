@@ -15,6 +15,7 @@ import {
   TableRow,
   FormControl,
   CircularProgress,
+  Pagination,
 } from "@mui/material";
 import { BarChart, PieChart } from "@mui/x-charts";
 import Header from "../../components/Header";
@@ -43,6 +44,8 @@ export default function Dashboard() {
     const today = new Date();
     return today;
   });
+  const [paymentsPage, setPaymentsPage] = useState(1);
+  const paymentsPerPage = 11;
 
   const dashboardParams = useMemo(() => {
     const params = {};
@@ -61,7 +64,11 @@ export default function Dashboard() {
     return params;
   }, [selectedDate, sortPeriod, reservationMonth]);
 
-  const { data: stats, isLoading } = useGetDashboardQuery(dashboardParams);
+  const { data: stats, isLoading } = useGetDashboardQuery(dashboardParams, {
+    pollingInterval: 15000,
+    refetchOnFocus: true,
+    refetchOnReconnect: true,
+  });
   const { data: reservationsData } = useGetReservationsQuery(undefined, {
     skip: !stats?.recentPayments?.length,
   });
@@ -71,6 +78,22 @@ export default function Dashboard() {
   const { data: paymentsData } = useGetPaymentsQuery(undefined, {
     skip: !stats?.recentPayments?.length,
   });
+
+  const sortedPayments = useMemo(() => {
+    if (!Array.isArray(stats?.recentPayments)) return [];
+    return [...stats.recentPayments].sort((a, b) => new Date(b.date) - new Date(a.date));
+  }, [stats]);
+  const paymentsTotalPages = Math.max(1, Math.ceil(sortedPayments.length / paymentsPerPage));
+  const pagedPayments = sortedPayments.slice(
+    (paymentsPage - 1) * paymentsPerPage,
+    paymentsPage * paymentsPerPage
+  );
+
+  useEffect(() => {
+    if (paymentsPage > paymentsTotalPages) {
+      setPaymentsPage(1);
+    }
+  }, [paymentsPage, paymentsTotalPages]);
 
   useEffect(() => {
     let active = true;
@@ -219,6 +242,41 @@ export default function Dashboard() {
             >
               <Box
                 sx={{
+                  mb: 3,
+                  textAlign: "center",
+                }}
+              >
+                <Typography variant="body2" fontWeight={600} sx={{ mb: 1 }}>
+                  Select Date
+                </Typography>
+                <LocalizationProvider dateAdapter={AdapterDateFns}>
+                  <DatePicker
+                    value={selectedDate}
+                    onChange={date => date && setSelectedDate(date)}
+                    closeOnSelect={false}
+                    slotProps={{
+                      textField: {
+                        size: "small",
+                        sx: {
+                          minWidth: 180,
+                          bgcolor: "rgba(15, 17, 19, 0.6)",
+                          borderRadius: 2,
+                          "& .MuiOutlinedInput-root": {
+                            "& fieldset": {
+                              borderColor: "rgba(125, 211, 252, 0.3)"
+                            },
+                            "&:hover fieldset": {
+                              borderColor: "rgba(125, 211, 252, 0.5)"
+                            }
+                          }
+                        }
+                      }
+                    }}
+                  />
+                </LocalizationProvider>
+              </Box>
+              <Box
+                sx={{
                   display: "grid",
                   gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
                   gap: 3,
@@ -275,42 +333,6 @@ export default function Dashboard() {
                   />
                 </Paper>
               </Box>
-              
-              <Box
-                sx={{
-                  mt: 3,
-                  textAlign: "center",
-                }}
-              >
-                <Typography variant="body2" fontWeight={600} sx={{ mb: 1 }}>
-                  Select Date
-                </Typography>
-                <LocalizationProvider dateAdapter={AdapterDateFns}>
-                  <DatePicker
-                    value={selectedDate}
-                    onChange={date => date && setSelectedDate(date)}
-                    closeOnSelect={false}
-                    slotProps={{
-                      textField: {
-                        size: "small",
-                        sx: {
-                          minWidth: 180,
-                          bgcolor: "rgba(15, 17, 19, 0.6)",
-                          borderRadius: 2,
-                          "& .MuiOutlinedInput-root": {
-                            "& fieldset": {
-                              borderColor: "rgba(125, 211, 252, 0.3)"
-                            },
-                            "&:hover fieldset": {
-                              borderColor: "rgba(125, 211, 252, 0.5)"
-                            }
-                          }
-                        }
-                      }
-                    }}
-                  />
-                </LocalizationProvider>
-              </Box>
             </Paper>
 
             {/* Right side - Recent Payments (takes remaining space) */}
@@ -329,11 +351,7 @@ export default function Dashboard() {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {(Array.isArray(stats.recentPayments)
-                      ? [...stats.recentPayments]
-                          .sort((a, b) => new Date(b.date) - new Date(a.date))
-                          .slice(0, 8)
-                      : []).map(p => (
+                    {pagedPayments.map(p => (
                       <TableRow key={p.id}>
                         <TableCell>{guestNames[p.id] || p.guestName || "Guest"}</TableCell>
                         <TableCell>${p.amount}</TableCell>
@@ -356,6 +374,15 @@ export default function Dashboard() {
                   </TableBody>
                 </Table>
               </TableContainer>
+              <Box sx={{ display: "flex", justifyContent: "center", mt: 2, minHeight: 40 }}>
+                <Pagination
+                  count={paymentsTotalPages}
+                  page={paymentsPage}
+                  onChange={(_, value) => setPaymentsPage(value)}
+                  size="small"
+                  shape="rounded"
+                />
+              </Box>
             </Paper>
           </Box>
 

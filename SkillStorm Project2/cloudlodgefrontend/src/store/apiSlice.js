@@ -52,6 +52,7 @@ export const apiSlice = createApi({
         method: "POST",
         body,
       }),
+      invalidatesTags: ["Users", "Dashboard"],
     }),
     getAuthMe: builder.query({
       query: () => "/auth/me",
@@ -191,7 +192,7 @@ export const apiSlice = createApi({
         method: "POST",
         body,
       }),
-      invalidatesTags: ["Reservations"],
+      invalidatesTags: ["Reservations", "Availability", "Dashboard"],
     }),
     updateReservation: builder.mutation({
       query: ({ id, body }) => ({
@@ -199,14 +200,14 @@ export const apiSlice = createApi({
         method: "PUT",
         body,
       }),
-      invalidatesTags: ["Reservations"],
+      invalidatesTags: ["Reservations", "Availability", "Dashboard"],
     }),
     deleteReservation: builder.mutation({
       query: (id) => ({
         url: `/reservations/delete/${id}`,
         method: "DELETE",
       }),
-      invalidatesTags: ["Reservations"],
+      invalidatesTags: ["Reservations", "Availability", "Dashboard"],
     }),
     getAvailabilityForRoom: builder.query({
       query: (roomId) => `/availability/room/${roomId}`,
@@ -241,14 +242,14 @@ export const apiSlice = createApi({
         method: "POST",
         body,
       }),
-      invalidatesTags: ["Payments"],
+      invalidatesTags: ["Payments", "Dashboard"],
     }),
     createSetupIntent: builder.mutation({
       query: () => ({
         url: "/payments/setup-intent",
         method: "POST",
       }),
-      invalidatesTags: ["Payments"],
+      invalidatesTags: ["Payments", "Dashboard"],
     }),
     deletePaymentMethod: builder.mutation({
       query: (paymentMethodId) => ({
