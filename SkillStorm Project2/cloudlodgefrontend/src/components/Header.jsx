@@ -122,12 +122,13 @@ export default function Header({
         position="sticky"
         elevation={0}
         sx={{
-          bgcolor: "rgba(17, 20, 24, 0.96)",
-          borderBottom: "1px solid",
-          borderColor: "rgba(125, 211, 252, 0.12)",
+          bgcolor: "rgba(15, 17, 19, 0.92)",
+          borderBottom: "1px solid rgba(125, 211, 252, 0.16)",
           top: 0,
           zIndex: 1200,
           backdropFilter: "blur(10px)",
+          backgroundImage:
+            "linear-gradient(120deg, rgba(125,211,252,0.08), rgba(15,17,19,0.9))",
         }}
       >
         <Toolbar sx={{ height: 72 }}>
@@ -144,9 +145,9 @@ export default function Header({
             />
             <Typography
               sx={{
-                fontFamily: "'Dancing Script', cursive",
+                fontFamily: "'Playfair Display', serif",
                 fontWeight: 700,
-                letterSpacing: "0.12em",
+                letterSpacing: "0.08em",
                 color: "#e3e6ea",
               }}
             >
@@ -218,9 +219,10 @@ export default function Header({
               transformOrigin={{ vertical: "top", horizontal: "right" }}
               PaperProps={{
                 sx: {
-                  bgcolor: "rgba(24, 26, 27, 0.96)",
+                  bgcolor: "rgba(21, 26, 31, 0.96)",
                   color: "#e3e6ea",
-                  boxShadow: 3,
+                  border: "1px solid rgba(125, 211, 252, 0.18)",
+                  boxShadow: "0 18px 40px rgba(6, 15, 24, 0.45)",
                 },
               }}
             >

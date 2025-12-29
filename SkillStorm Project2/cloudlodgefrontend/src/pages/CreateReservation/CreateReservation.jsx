@@ -381,7 +381,7 @@ export default function BookRoom() {
     <Box
       sx={{
         background:
-          "radial-gradient(circle at 0% 10%, rgba(125,211,252,0.12), transparent 40%), radial-gradient(circle at 90% 0%, rgba(96,165,250,0.12), transparent 45%), #0f1113",
+          "radial-gradient(circle at 0% 10%, rgba(125,211,252,0.16), transparent 45%), radial-gradient(circle at 90% 0%, rgba(96,165,250,0.16), transparent 45%), #0f1113",
       }}
     >
       {/* Hide HeroSearch until room type selected */}
@@ -466,7 +466,7 @@ export default function BookRoom() {
                     <Typography
                       variant="h2"
                       sx={{
-                        fontFamily: "'Dancing Script', cursive",
+                        fontFamily: "'Playfair Display', serif",
                         fontWeight: 800,
                         fontSize: { xs: 28, sm: 40, md: 48 },
                         color: "#fff",
@@ -474,7 +474,7 @@ export default function BookRoom() {
                         mb: 1,
                       }}
                     >
-                      Select Your Perfect Room
+                      Select your perfect room
                     </Typography>
 
                     <Divider
@@ -492,10 +492,10 @@ export default function BookRoom() {
                         color: "rgba(255,255,255,0.85)",
                         maxWidth: 700,
                         fontWeight: 400,
-                        fontFamily: "'Dancing Script', cursive",
+                        fontFamily: "'Manrope', sans-serif",
                       }}
                     >
-                      Choose from our collection of thoughtfully designed spaces
+                      Choose from our collection of thoughtfully designed spaces.
                     </Typography>
                   </Box>
                 </Box>
@@ -524,7 +524,7 @@ export default function BookRoom() {
                           key={key}
                           sx={{
                             borderRadius: 3,
-                            bgcolor: "rgba(24, 26, 27, 0.92)",
+                            bgcolor: "rgba(21, 26, 31, 0.92)",
                             cursor: "pointer",
                             transition: "all 0.3s ease",
                             "&:hover": { 
@@ -540,7 +540,7 @@ export default function BookRoom() {
                           <Box
                             sx={{
                               width: "100%",
-                              height: 200,
+                              height: 210,
                               overflow: "hidden",
                               position: "relative"
                             }}
@@ -558,6 +558,33 @@ export default function BookRoom() {
                                 left: 0
                               }}
                             />
+                            <Box
+                              sx={{
+                                position: "absolute",
+                                inset: 0,
+                                background:
+                                  "linear-gradient(180deg, rgba(15,17,19,0.08) 20%, rgba(15,17,19,0.75) 100%)"
+                              }}
+                            />
+                            <Box
+                              sx={{
+                                position: "absolute",
+                                top: 12,
+                                right: 12,
+                                px: 1.4,
+                                py: 0.45,
+                                borderRadius: 999,
+                                bgcolor: "rgba(15, 17, 19, 0.85)",
+                                border: "1px solid rgba(125, 211, 252, 0.55)",
+                                color: "#e6edf6",
+                                fontSize: 13,
+                                fontWeight: 700,
+                                letterSpacing: 0.2,
+                                boxShadow: "0 10px 20px rgba(6, 15, 24, 0.45)"
+                              }}
+                            >
+                              ${rt.pricePerNight}
+                            </Box>
                           </Box>
                           <CardContent sx={{ p: 2.5, flexGrow: 1, display: "flex", flexDirection: "column" }}>
                             <Typography variant="h5" fontWeight={700} gutterBottom>
@@ -565,11 +592,11 @@ export default function BookRoom() {
                             </Typography>
                             
                             <Stack direction="row" spacing={1.5} sx={{ my: 1.5, flexWrap: "wrap" }}>
-                              <Chip 
+                              <Chip
                                 icon={<PeopleIcon />}
                                 label={`Up to ${rt.maxGuests} guests`}
                                 size="small"
-                                color="primary"
+                                color="success"
                                 variant="outlined"
                               />
                               <Chip 
@@ -577,6 +604,15 @@ export default function BookRoom() {
                                 label={rt.bedType || "Queen Bed"}
                                 size="small"
                                 variant="outlined"
+                                sx={{
+                                  bgcolor: "rgba(125, 211, 252, 0.28)",
+                                  color: "#e6edf6",
+                                  fontWeight: 700,
+                                  letterSpacing: 0.6,
+                                  border: "1px solid rgba(125, 211, 252, 0.6)",
+                                  textTransform: "uppercase",
+                                  boxShadow: "0 10px 18px rgba(6, 15, 24, 0.4)"
+                                }}
                               />
                             </Stack>
 
@@ -659,7 +695,7 @@ export default function BookRoom() {
                                 <Typography variant="caption" color="text.secondary">
                                   Starting from
                                 </Typography>
-                                <Typography variant="h5" fontWeight={700} color="primary">
+                                <Typography variant="h6" fontWeight={700} color="primary">
                                   ${rt.pricePerNight}
                                 </Typography>
                                 <Typography variant="caption" color="text.secondary">
@@ -694,6 +730,82 @@ export default function BookRoom() {
             {/* ====== ROOMS GRID (AFTER TYPE SELECTED) ====== */}
             {selectedRoomType && (
               <>
+                <Box
+                  sx={{
+                    position: "relative",
+                    width: "100%",
+                    height: { xs: 200, sm: 260, md: 300 },
+                    borderRadius: 3,
+                    overflow: "hidden",
+                    mb: 3,
+                  }}
+                >
+                  <Box
+                    component="img"
+                    src={BannerPhoto}
+                    alt="CloudLodge"
+                    sx={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                      position: "absolute",
+                      inset: 0,
+                    }}
+                  />
+                  <Box
+                    sx={{
+                      position: "absolute",
+                      inset: 0,
+                      bgcolor: "rgba(9, 12, 15, 0.6)",
+                    }}
+                  />
+                  <Box
+                    sx={{
+                      position: "relative",
+                      zIndex: 1,
+                      height: "100%",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      textAlign: "center",
+                      px: 2,
+                    }}
+                  >
+                    <Typography
+                      variant="h2"
+                      sx={{
+                        fontFamily: "'Playfair Display', serif",
+                        fontWeight: 800,
+                        fontSize: { xs: 24, sm: 34, md: 42 },
+                        color: "#fff",
+                        letterSpacing: 0.6,
+                        mb: 1,
+                      }}
+                    >
+                      Select your perfect room
+                    </Typography>
+                    <Divider
+                      sx={{
+                        width: 80,
+                        borderColor: "primary.main",
+                        borderBottomWidth: 3,
+                        my: 2,
+                      }}
+                    />
+                    <Typography
+                      variant="h6"
+                      sx={{
+                        color: "rgba(255,255,255,0.85)",
+                        maxWidth: 700,
+                        fontWeight: 400,
+                        fontFamily: "'Manrope', sans-serif",
+                      }}
+                    >
+                      Choose dates and pick the best available room in this category.
+                    </Typography>
+                  </Box>
+                </Box>
                 <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
                   <Button
                     variant="outlined"
@@ -711,7 +823,7 @@ export default function BookRoom() {
                 </Stack>
 
                 {loading ? (
-                  <Typography>Loading???</Typography>
+                  <Typography>Loading…</Typography>
                 ) : visibleRooms.length === 0 ? (
                   <Box sx={{ textAlign: "center", py: 8 }}>
                     <Typography variant="h6" color="text.secondary">
@@ -722,52 +834,107 @@ export default function BookRoom() {
                     </Typography>
                   </Box>
                 ) : (
-                  <Grid container spacing={3}>
+                  <Box sx={{ 
+                    display: "grid",
+                    gridTemplateColumns: {
+                      xs: "1fr",
+                      sm: "repeat(2, 1fr)",
+                      md: "repeat(3, 1fr)",
+                      lg: "repeat(4, 1fr)",
+                      xl: "repeat(5, 1fr)"
+                    },
+                    gap: 3,
+                    width: "100%"
+                  }}>
                     {visibleRooms
                       .slice((page - 1) * itemsPerPage, page * itemsPerPage)
                       .map(room => (
-                        <Grid item xs={12} sm={6} md={4} lg={3} key={room.id || room._id}>
-                          <Card
-                            sx={{
-                              borderRadius: 3,
-                              bgcolor: "rgba(24, 26, 27, 0.92)",
-                              cursor: "pointer",
-                              transition: "0.2s",
-                              "&:hover": { transform: "translateY(-4px)" }
-                            }}
-                            onClick={e => handleOpenModal(room, e)}
-                          >
+                        <Card
+                          key={room.id || room._id}
+                          sx={{
+                            borderRadius: 3,
+                            bgcolor: "rgba(21, 26, 31, 0.92)",
+                            cursor: "pointer",
+                            transition: "0.2s",
+                            display: "flex",
+                            flexDirection: "column",
+                            minHeight: 360,
+                            height: "100%",
+                            "&:hover": { transform: "translateY(-4px)" }
+                          }}
+                          onClick={e => handleOpenModal(room, e)}
+                        >
+                          <Box sx={{ position: "relative" }}>
                             <Box
                               component="img"
                               src={room.images?.[0] || "https://picsum.photos/400/250"}
                               alt={`Room ${room.roomNumber}`}
-                              sx={{ width: "100%", height: 160, objectFit: "cover" }}
+                              sx={{ width: "100%", height: 180, objectFit: "cover" }}
                             />
+                            <Box
+                              sx={{
+                                position: "absolute",
+                                inset: 0,
+                                background:
+                                  "linear-gradient(180deg, rgba(15,17,19,0.08) 20%, rgba(15,17,19,0.75) 100%)"
+                              }}
+                            />
+                            <Chip
+                              icon={<CheckCircleIcon />}
+                              label="Available"
+                              color="success"
+                              size="small"
+                              sx={{ position: "absolute", top: 12, left: 12 }}
+                            />
+                            <Box
+                              sx={{
+                                position: "absolute",
+                                top: 12,
+                                right: 12,
+                                px: 1.4,
+                                py: 0.45,
+                                borderRadius: 999,
+                                bgcolor: "rgba(15, 17, 19, 0.85)",
+                                border: "1px solid rgba(125, 211, 252, 0.55)",
+                                color: "#e6edf6",
+                                fontSize: 13,
+                                fontWeight: 700,
+                                letterSpacing: 0.2,
+                                boxShadow: "0 10px 20px rgba(6, 15, 24, 0.45)"
+                              }}
+                            >
+                              ${room.price}
+                            </Box>
+                          </Box>
 
-                            <CardContent>
-                              <Stack direction="row" spacing={1} alignItems="center">
-                                <BedIcon fontSize="small" />
-                                <Typography fontWeight={700}>
-                                  Room #{room.roomNumber}
-                                </Typography>
-                              </Stack>
+                          <CardContent sx={{ display: "flex", flexDirection: "column", flexGrow: 1, py: 2.5 }}>
+                            <Stack direction="row" spacing={1} alignItems="center">
+                              <BedIcon fontSize="small" />
+                              <Typography fontWeight={700}>
+                                Room #{room.roomNumber}
+                              </Typography>
+                            </Stack>
 
-                              <Chip label={room.roomCategory} size="small" sx={{ my: 1 }} />
-
-                              <Stack direction="row" justifyContent="space-between">
-                                <Chip
-                                  icon={<CheckCircleIcon />}
-                                  label="Available"
-                                  color="success"
-                                  size="small"
-                                />
-                                <Typography>${room.price}</Typography>
-                              </Stack>
-                            </CardContent>
-                          </Card>
-                        </Grid>
+                            <Chip
+                              label={room.roomCategory}
+                              size="small"
+                              sx={{
+                                my: 1,
+                                bgcolor: "rgba(125, 211, 252, 0.28)",
+                                color: "#e6edf6",
+                                fontWeight: 800,
+                                letterSpacing: 0.8,
+                                border: "1px solid rgba(125, 211, 252, 0.6)",
+                                textTransform: "uppercase",
+                                boxShadow: "0 10px 18px rgba(6, 15, 24, 0.4)",
+                                width: "fit-content"
+                              }}
+                            />
+                            <Box sx={{ flexGrow: 1 }} />
+                          </CardContent>
+                        </Card>
                       ))}
-                  </Grid>
+                  </Box>
                 )}
               </>
             )}
@@ -997,7 +1164,7 @@ export default function BookRoom() {
                           alignItems: "center",
                           gap: 1,
                           p: 1.5,
-                          bgcolor: "rgba(24, 26, 27, 0.92)",
+                          bgcolor: "rgba(21, 26, 31, 0.92)",
                           borderRadius: 1
                         }}
                       >

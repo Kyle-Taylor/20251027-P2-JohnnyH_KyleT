@@ -30,7 +30,7 @@ function App() {
   return (
     <Router>
       <GlobalStyles
-        styles={`@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Manrope:wght@400;500;600;700&display=swap');`}
+        styles={`@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Manrope:wght@400;500;600;700&display=swap');`}
       />
       <Routes>
         {/* Default route redirects to landing page */}
@@ -51,7 +51,7 @@ function App() {
         <Route 
           path="/rooms" 
           element={
-            <ProtectedRoute requiredRole="ADMIN">
+            <ProtectedRoute requiredRole={["ADMIN", "MANAGER"]}>
               <Rooms />
             </ProtectedRoute>
           } 
@@ -59,7 +59,7 @@ function App() {
         <Route 
           path="/roomtypes" 
           element={
-            <ProtectedRoute requiredRole="ADMIN">
+            <ProtectedRoute requiredRole={["ADMIN", "MANAGER"]}>
               <RoomTypes />
             </ProtectedRoute>
           } 

@@ -28,7 +28,9 @@ export default function RoomsFilters({
   onPriceMinChange,
   onPriceMaxChange,
   onSortChange,
-  onClearFilters
+  onClearFilters,
+  onAddRoom,
+  addRoomLabel = "Add Room"
 }) {
   return (
     <Paper
@@ -37,11 +39,12 @@ export default function RoomsFilters({
         width: "100%",
         height: "auto",
         p: { xs: 2, md: 2.5 },
-        bgcolor: "rgba(24, 26, 27, 0.92)",
-        border: "1px solid rgba(125, 211, 252, 0.18)",
+        bgcolor: "rgba(21, 26, 31, 0.92)",
+        border: "1px solid rgba(125, 211, 252, 0.2)",
         borderRadius: 3,
         position: "relative",
-        overflow: "hidden"
+        overflow: "hidden",
+        boxShadow: "0 18px 40px rgba(6, 15, 24, 0.4)"
       }}
     >
       <Stack spacing={2.5} sx={{ position: "relative" }}>
@@ -59,14 +62,25 @@ export default function RoomsFilters({
               {filteredCount} of {roomsCount} rooms shown
             </Typography>
           </Box>
-          <Button
-            variant="outlined"
-            color="inherit"
-            onClick={onClearFilters}
-            sx={{ whiteSpace: "nowrap", color: "#e6edf6" }}
-          >
-            Clear Filters
-          </Button>
+          <Stack direction="row" spacing={1} alignItems="center">
+            {onAddRoom && (
+              <Button
+                variant="contained"
+                onClick={onAddRoom}
+                sx={{ whiteSpace: "nowrap" }}
+              >
+                {addRoomLabel}
+              </Button>
+            )}
+            <Button
+              variant="outlined"
+              color="inherit"
+              onClick={onClearFilters}
+              sx={{ whiteSpace: "nowrap", color: "#e6edf6" }}
+            >
+              Clear Filters
+            </Button>
+          </Stack>
         </Stack>
 
         <Stack

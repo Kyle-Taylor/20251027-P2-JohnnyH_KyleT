@@ -7,7 +7,6 @@ import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import Header from "../../components/Header";
 import CloseIcon from '@mui/icons-material/Close';
 import BedIcon from "@mui/icons-material/Bed";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import PhotoCamera from "@mui/icons-material/PhotoCamera";
 import DeleteConfirmationModal from '../../components/DeleteConfirmationModal';
 import DetailsModal from "../../components/DetailsModal";
@@ -244,7 +243,7 @@ export default function RoomTypes() {
     <Box
       sx={{
         background:
-          "radial-gradient(circle at 0% 0%, rgba(125,211,252,0.12), transparent 40%), radial-gradient(circle at 90% 10%, rgba(96,165,250,0.12), transparent 45%), #0f1113",
+          "radial-gradient(circle at 0% 0%, rgba(125,211,252,0.16), transparent 45%), radial-gradient(circle at 90% 10%, rgba(96,165,250,0.16), transparent 45%), #0f1113",
       }}
     >
       <Header 
@@ -282,47 +281,74 @@ export default function RoomTypes() {
                 width: "100%",
                 display: "flex",
                 alignItems: "center",
-                justifyContent: "space-between",
+                justifyContent: "center",
                 mb: 3,
               }}
             >
-              <Box sx={{ flex: 1 }} />
-              <Pagination
-                count={Math.ceil(roomTypes.length / itemsPerPage)}
-                page={page}
-                onChange={(_, value) => setPage(value)}
+              <Paper
                 sx={{
-                  '& .MuiPaginationItem-root': {
-                    color: '#fff',
-                    backgroundColor: 'rgba(24, 26, 27, 0.9)',
-                    border: '1px solid #444',
-                    transition: 'background 0.2s',
-                  },
-                  '& .Mui-selected': {
-                    backgroundColor: '#1976d2',
-                    color: '#fff',
-                    border: '2px solid #1976d2',
-                  },
-                  '& .MuiPaginationItem-root:hover': {
-                    backgroundColor: 'rgba(24, 26, 27, 0.95)',
-                  },
+                  width: "100%",
+                  maxWidth: 1640,
+                  p: { xs: 2.5, md: 3 },
+                  bgcolor: "rgba(21, 26, 31, 0.92)",
+                  border: "1px solid rgba(125, 211, 252, 0.18)",
+                  boxShadow: "0 22px 50px rgba(6, 15, 24, 0.45)",
+                  position: "relative",
+                  overflow: "hidden"
                 }}
-              />
-              <Box sx={{ flex: 1, display: "flex", justifyContent: "flex-end" }}>
-                <Button
-                  variant="contained"
-                  startIcon={<AddIcon />}
-                  onClick={() => setAddModalOpen(true)}
+              >
+                <Box
+                  sx={{
+                    position: "absolute",
+                    inset: 0,
+                    backgroundImage:
+                      "linear-gradient(135deg, rgba(125,211,252,0.16), rgba(15,17,19,0.92)), url(https://picsum.photos/1200/320?blur=2)",
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                    opacity: 0.35
+                  }}
+                />
+                <Stack
+                  direction={{ xs: "column", md: "row" }}
+                  spacing={2}
+                  alignItems={{ xs: "flex-start", md: "center" }}
+                  justifyContent="space-between"
+                  sx={{ position: "relative" }}
                 >
-                  Add Room Type
-                </Button>
-              </Box>
+                  <Box>
+                    <Typography variant="h4" fontWeight={700}>
+                      Room Types
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                      Curate categories, pricing, and amenities for guest booking.
+                    </Typography>
+                  </Box>
+                  <Button
+                    variant="contained"
+                    startIcon={<AddIcon />}
+                    onClick={() => setAddModalOpen(true)}
+                  >
+                    Add Room Type
+                  </Button>
+                </Stack>
+              </Paper>
             </Box>
             {loading ? (
               <Typography>Loading…</Typography>
             ) : (
-              <Box sx={{ width: '100%' }}>
-                <Grid container columns={12} columnSpacing={3} justifyContent="center" alignItems="flex-start">
+              <Box sx={{ width: "100%", maxWidth: 1640, mx: "auto" }}>
+                <Box
+                  sx={{
+                    display: "grid",
+                    gridTemplateColumns: {
+                      xs: "1fr",
+                      sm: "repeat(2, minmax(0, 1fr))",
+                      md: "repeat(3, minmax(0, 1fr))",
+                      lg: "repeat(4, minmax(0, 1fr))"
+                    },
+                    gap: 2
+                  }}
+                >
                   {(() => {
                     const filtered = roomTypes.filter(rt => rt && (rt.id || rt._id) && rt.roomCategory);
                     return filtered
@@ -337,28 +363,37 @@ export default function RoomTypes() {
                         const maxGuests = typeof roomType.maxGuests === 'number' && !isNaN(roomType.maxGuests)
                           ? roomType.maxGuests
                           : 'N/A';
+                        const amenitiesCount = Array.isArray(roomType.amenities)
+                          ? roomType.amenities.length
+                          : typeof roomType.amenities === "string"
+                          ? roomType.amenities.split(",").map(a => a.trim()).filter(Boolean).length
+                          : 0;
+                        const maxGuestsLabel = maxGuests === "N/A"
+                          ? "Max Guests: N/A"
+                          : `Max Guests: ${maxGuests}`;
                         return (
-                          <Grid key={roomType.id || roomType._id} sx={{ gridColumn: { xs: 'span 12', sm: 'span 6', md: 'span 4', lg: 'span 4' } }}>
+                          <Box key={roomType.id || roomType._id}>
                             <Card
                               sx={{
                                 borderRadius: 3,
                                 overflow: "hidden",
                                 cursor: "pointer",
                                 transition: "0.2s",
-                                bgcolor: "rgba(24, 26, 27, 0.92)",
+                                bgcolor: "rgba(21, 26, 31, 0.92)",
                                 "&:hover": { transform: "translateY(-4px)" },
                               }}
                               onClick={() => handleOpenModal(roomType)}
                             >
                               <Box
                                 sx={{
-                                  width: '100%',
-                                  height: 200,
-                                  bgcolor: 'rgba(24, 26, 27, 0.9)',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  overflow: 'hidden',
+                                  width: "100%",
+                                  height: 210,
+                                  bgcolor: "rgba(24, 26, 27, 0.9)",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  overflow: "hidden",
+                                  position: "relative"
                                 }}
                               >
                                 {roomType.images && roomType.images.length > 0 ? (
@@ -366,37 +401,78 @@ export default function RoomTypes() {
                                     src={roomType.images[0]}
                                     alt={category}
                                     style={{
-                                      width: '100%',
-                                      height: '100%',
-                                      objectFit: 'cover',
+                                      width: "100%",
+                                      height: "100%",
+                                      objectFit: "cover",
                                     }}
                                   />
                                 ) : (
-                                  <BedIcon sx={{ fontSize: 60, color: '#555' }} />
+                                  <BedIcon sx={{ fontSize: 60, color: "#555" }} />
                                 )}
+                                <Box
+                                  sx={{
+                                    position: "absolute",
+                                    inset: 0,
+                                    background:
+                                      "linear-gradient(180deg, rgba(15,17,19,0.08) 20%, rgba(15,17,19,0.75) 100%)"
+                                  }}
+                                />
+                                <Box
+                                  sx={{
+                                    position: "absolute",
+                                    top: 12,
+                                    right: 12,
+                                    px: 1.4,
+                                    py: 0.45,
+                                    borderRadius: 999,
+                                    bgcolor: "rgba(15, 17, 19, 0.85)",
+                                    border: "1px solid rgba(125, 211, 252, 0.55)",
+                                    color: "#e6edf6",
+                                    fontSize: 13,
+                                    fontWeight: 700,
+                                    letterSpacing: 0.2,
+                                    boxShadow: "0 10px 20px rgba(6, 15, 24, 0.45)"
+                                  }}
+                                >
+                                  {price}
+                                </Box>
                               </Box>
                               <CardContent>
                                 <Stack direction="row" spacing={1} alignItems="center">
+                                  <BedIcon fontSize="small" />
                                   <Typography fontWeight={700}>
                                     {category}
                                   </Typography>
                                 </Stack>
-                                <Chip
-                                  label={price}
-                                  size="small"
-                                  sx={{ my: 1 }}
-                                />
+                                <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+                                  <Chip
+                                    label={`${amenitiesCount} amenities`}
+                                    size="small"
+                                    sx={{
+                                      bgcolor: "rgba(125, 211, 252, 0.28)",
+                                      color: "#e6edf6",
+                                      fontWeight: 700,
+                                      letterSpacing: 0.6,
+                                      border: "1px solid rgba(125, 211, 252, 0.6)",
+                                      textTransform: "uppercase",
+                                      boxShadow: "0 10px 18px rgba(6, 15, 24, 0.4)"
+                                    }}
+                                  />
+                                  <Chip
+                                    label={maxGuestsLabel}
+                                    size="small"
+                                    color="success"
+                                    variant="outlined"
+                                  />
+                                </Stack>
                                 <Stack
                                   direction="row"
                                   justifyContent="space-between"
                                   alignItems="center"
                                 >
-                                  <Chip
-                                    icon={<CheckCircleIcon />}
-                                    label={`Max Guests: ${maxGuests}`}
-                                    color="success"
-                                    size="small"
-                                  />
+                                  <Typography variant="body2" color="text.secondary">
+                                    {roomType.description ? "View details to edit amenities and pricing." : "Add a description to help guests decide."}
+                                  </Typography>
                                 </Stack>
                               </CardContent>
                               <CardActions sx={{ justifyContent: "flex-end" }}>
@@ -424,11 +500,11 @@ export default function RoomTypes() {
                                 </Tooltip>
                               </CardActions>
                             </Card>
-                          </Grid>
+                          </Box>
                         );
                       });
                   })()}
-                </Grid>
+                </Box>
                 {roomTypes.length > itemsPerPage && (
                   <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
                     <Pagination
@@ -437,18 +513,18 @@ export default function RoomTypes() {
                       onChange={(_, value) => setPage(value)}
                       sx={{
                         '& .MuiPaginationItem-root': {
-                          color: '#fff',
-                          backgroundColor: 'rgba(24, 26, 27, 0.9)',
-                          border: '1px solid #444',
+                          color: '#e6edf6',
+                          backgroundColor: 'rgba(21, 26, 31, 0.9)',
+                          border: '1px solid rgba(125, 211, 252, 0.2)',
                           transition: 'background 0.2s',
                         },
                         '& .Mui-selected': {
-                          backgroundColor: '#1976d2',
-                          color: '#fff',
-                          border: '2px solid #1976d2',
+                          backgroundColor: 'rgba(125, 211, 252, 0.3)',
+                          color: '#e6edf6',
+                          border: '2px solid rgba(125, 211, 252, 0.4)',
                         },
                         '& .MuiPaginationItem-root:hover': {
-                          backgroundColor: 'rgba(24, 26, 27, 0.95)',
+                          backgroundColor: 'rgba(21, 26, 31, 0.95)',
                         },
                       }}
                       color="standard"

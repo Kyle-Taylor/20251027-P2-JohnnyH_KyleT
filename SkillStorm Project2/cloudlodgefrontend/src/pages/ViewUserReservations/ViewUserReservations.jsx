@@ -574,7 +574,7 @@ export default function ViewUserReservations() {
         width: "100vw",
         maxWidth: "100%",
         background:
-          "radial-gradient(circle at 0% 0%, rgba(125,211,252,0.12), transparent 40%), radial-gradient(circle at 90% 10%, rgba(96,165,250,0.12), transparent 45%), #0f1113",
+          "radial-gradient(circle at 0% 0%, rgba(125,211,252,0.16), transparent 45%), radial-gradient(circle at 90% 10%, rgba(96,165,250,0.16), transparent 45%), #0f1113",
       }}
     >
       <Header showSearch={false} />
@@ -593,8 +593,8 @@ export default function ViewUserReservations() {
               mb: 3,
               p: { xs: 2, md: 3 },
               borderRadius: 3,
-              bgcolor: "rgba(24, 26, 27, 0.9)",
-              border: "1px solid rgba(125, 211, 252, 0.18)",
+              bgcolor: "rgba(21, 26, 31, 0.92)",
+              border: "1px solid rgba(125, 211, 252, 0.2)",
               boxShadow: "0 24px 60px rgba(6, 15, 24, 0.45)",
               position: "relative",
               overflow: "hidden"

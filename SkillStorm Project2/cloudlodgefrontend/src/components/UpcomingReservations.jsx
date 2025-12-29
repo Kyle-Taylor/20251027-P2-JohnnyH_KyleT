@@ -12,6 +12,7 @@ import {
   TableHead,
   TableRow,
   CircularProgress,
+  Pagination,
 } from "@mui/material";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
@@ -26,7 +27,9 @@ export default function UpcomingReservations() {
   });
   const [upcomingReservations, setUpcomingReservations] = useState([]);
   const [userMap, setUserMap] = useState({});
+  const [page, setPage] = useState(1);
   const [triggerUser] = useLazyGetUserQuery();
+  const rowsPerPage = 8;
 
   const dashboardParams = reservationMonth
     ? {
@@ -76,6 +79,18 @@ export default function UpcomingReservations() {
     };
   }, [upcomingReservations]);
 
+  const totalPages = Math.max(1, Math.ceil(upcomingReservations.length / rowsPerPage));
+  const pagedReservations = upcomingReservations.slice(
+    (page - 1) * rowsPerPage,
+    page * rowsPerPage
+  );
+
+  useEffect(() => {
+    if (page > totalPages) {
+      setPage(1);
+    }
+  }, [page, totalPages]);
+
   return (
     <Paper sx={{ p: 3, bgcolor: "rgba(24, 26, 27, 0.9)" }}>
       <Stack direction="row" alignItems="center" justifyContent="space-between">
@@ -115,7 +130,7 @@ export default function UpcomingReservations() {
               </TableRow>
             </TableHead>
             <TableBody>
-              {upcomingReservations.map(r => (
+              {pagedReservations.map(r => (
                 <TableRow key={r.id}>
                   <TableCell>{userMap[r.userId]?.fullName || r.userId || "Unknown"}</TableCell>
                   <TableCell>{r.roomNumber}</TableCell>
@@ -132,6 +147,17 @@ export default function UpcomingReservations() {
             </TableBody>
           </Table>
         </TableContainer>
+      )}
+      {totalPages > 1 && (
+        <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
+          <Pagination
+            count={totalPages}
+            page={page}
+            onChange={(_, value) => setPage(value)}
+            size="small"
+            shape="rounded"
+          />
+        </Box>
       )}
     </Paper>
   );

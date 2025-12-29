@@ -44,7 +44,7 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.disable())
             .cors(cors -> {})
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 // Public routes
                 .requestMatchers(
@@ -58,21 +58,19 @@ public class SecurityConfig {
                     "/oauth2/**",
                     "/auth/oauth2/**",
                     "/login/oauth2/**",
-                    "/payments/webhook",
-                    "/reservations/**",
-                    "/availability/**"
+                    "/payments/webhook"
                 ).permitAll()
                 .requestMatchers(HttpMethod.GET, "/roomtypes/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/rooms/search", "/rooms/*", "/roomtypes/*").authenticated()
 
                 // Admin-only routes
                 .requestMatchers(
-                    "/dashboard/**",
                     "/roomtypes/**",
                     "/users/**",
                     "/reservations/**",
                     "/rooms/**"
-                ).hasRole("ADMIN")
+                ).hasAnyRole("ADMIN", "MANAGER")
+                .requestMatchers("/dashboard/**").hasRole("ADMIN")
                 // Everything else requires authentication
                 .anyRequest().authenticated()
             )

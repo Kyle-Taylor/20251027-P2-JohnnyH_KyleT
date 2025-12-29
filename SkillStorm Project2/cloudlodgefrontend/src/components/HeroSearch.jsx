@@ -109,8 +109,9 @@ export default function HeroSearch({ onSearchChange, hideGuests = false, maxWidt
             height: controlHeight,
             width: "100%",
             borderRadius: "999px",
-            bgcolor: "background.paper",
-            boxShadow: "0 4px 12px rgba(0,0,0,0.4)",
+            bgcolor: "rgba(21, 26, 31, 0.92)",
+            border: "1px solid rgba(125, 211, 252, 0.18)",
+            boxShadow: "0 12px 30px rgba(6, 15, 24, 0.45)",
           }}
         >
           {/* Dates */}
@@ -208,7 +209,7 @@ export default function HeroSearch({ onSearchChange, hideGuests = false, maxWidt
                   color: "text.primary",
                 }}
               >
-                −
+                -
               </IconButton>
 
               <IconButton

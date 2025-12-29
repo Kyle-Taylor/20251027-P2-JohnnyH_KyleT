@@ -15,7 +15,8 @@ export default function NavBar() {
     if (!token) return "GUEST";
     try {
       const payload = JSON.parse(atob(token.split(".")[1]));
-      return (payload.role || "GUEST").toString().toUpperCase();
+      const rawRole = (payload.role || "GUEST").toString().toUpperCase();
+      return rawRole.replace(/^ROLE_/, "");
     } catch {
       return "GUEST";
     }
@@ -72,9 +73,9 @@ export default function NavBar() {
               whiteSpace: "nowrap",
               minHeight: 32,
               color: location.pathname === item.path ? "#e6f0ff" : "#c7d0db",
-              bgcolor: location.pathname === item.path ? "#2f3f5c" : "transparent",
+              bgcolor: location.pathname === item.path ? "rgba(125, 211, 252, 0.18)" : "transparent",
               "&:hover": {
-                bgcolor: location.pathname === item.path ? "#2f3f5c" : "#2a2f36",
+                bgcolor: location.pathname === item.path ? "rgba(125, 211, 252, 0.22)" : "rgba(255,255,255,0.06)",
               },
             }}
           >

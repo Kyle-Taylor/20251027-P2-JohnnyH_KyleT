@@ -142,7 +142,7 @@ const Profile = () => {
           display: 'flex',
           minHeight: '100vh',
           background:
-            'radial-gradient(circle at 0% 0%, rgba(125,211,252,0.12), transparent 40%), radial-gradient(circle at 90% 10%, rgba(96,165,250,0.12), transparent 45%), #0f1113',
+            'radial-gradient(circle at 0% 0%, rgba(125,211,252,0.16), transparent 45%), radial-gradient(circle at 90% 10%, rgba(96,165,250,0.16), transparent 45%), #0f1113',
         }}
       >
         <Box sx={{ flex: 1, p: { xs: 2, md: 4 }, color: '#e6edf6' }}>
@@ -153,7 +153,7 @@ const Profile = () => {
           {globalError && <Chip label={globalError} color="error" sx={{ mb: 2 }} />}
           <Grid container spacing={3}>
             <Grid item xs={12} md={7}>
-              <Paper sx={{ p: 3, bgcolor: 'rgba(24, 26, 27, 0.9)', border: '1px solid rgba(125, 211, 252, 0.18)' }}>
+              <Paper sx={{ p: 3, bgcolor: 'rgba(21, 26, 31, 0.92)', border: '1px solid rgba(125, 211, 252, 0.18)' }}>
           {isEditing ? (
             <>
               <TextField
@@ -323,7 +323,7 @@ const Profile = () => {
               </Paper>
             </Grid>
             <Grid item xs={12} md={5}>
-              <Paper sx={{ p: 3, bgcolor: 'rgba(24, 26, 27, 0.9)', border: '1px solid rgba(125, 211, 252, 0.18)' }}>
+              <Paper sx={{ p: 3, bgcolor: 'rgba(21, 26, 31, 0.92)', border: '1px solid rgba(125, 211, 252, 0.18)' }}>
                 <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>Saved Payment Methods</Typography>
                 {savedCards.length === 0 && (
                   <Typography sx={{ color: '#b0b3b8' }}>None saved</Typography>

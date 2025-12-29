@@ -122,7 +122,7 @@ export default function UsersTable() {
   }, [error]);
 
   return (
-    <Box sx={{ mt: 4, width: "100%" }}>
+    <Box sx={{ width: "100%" }}>
       <Typography variant="h5" fontWeight={700} gutterBottom>
         Users
       </Typography>
@@ -136,20 +136,20 @@ export default function UsersTable() {
         <TableContainer
           component={Paper}
           sx={{
-            bgcolor: "rgba(24,26,27,0.9)",
-            border: "1px solid rgba(125, 211, 252, 0.12)",
-            overflow: "hidden",
+            bgcolor: "rgba(21,26,31,0.92)",
+            border: "1px solid rgba(125, 211, 252, 0.16)",
+            overflowX: "auto",
           }}
         >
-          <Table>
+          <Table sx={{ minWidth: 720 }}>
             <TableHead>
-              <TableRow>
-                <TableCell>Email</TableCell>
-                <TableCell>Name</TableCell>
-                <TableCell>Role</TableCell>
-                <TableCell>Phone</TableCell>
-                <TableCell>Created At</TableCell>
-                <TableCell align="right">Actions</TableCell>
+              <TableRow sx={{ bgcolor: "rgba(15, 17, 19, 0.6)" }}>
+                <TableCell sx={{ color: "text.secondary", fontWeight: 600 }}>Email</TableCell>
+                <TableCell sx={{ color: "text.secondary", fontWeight: 600 }}>Name</TableCell>
+                <TableCell sx={{ color: "text.secondary", fontWeight: 600 }}>Role</TableCell>
+                <TableCell sx={{ color: "text.secondary", fontWeight: 600 }}>Phone</TableCell>
+                <TableCell sx={{ color: "text.secondary", fontWeight: 600 }}>Created At</TableCell>
+                <TableCell align="right" sx={{ color: "text.secondary", fontWeight: 600 }}>Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>

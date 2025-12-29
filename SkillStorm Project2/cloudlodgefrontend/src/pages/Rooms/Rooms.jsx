@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import Pagination from '@mui/material/Pagination';
 import {
-  Card, CardContent, CardActions, Typography, Button, Grid, Chip,
+  Card, CardContent, CardActions, Typography, Button, Chip,
   Box, TextField, Dialog, DialogTitle, DialogContent, DialogActions,
   Divider, Select, MenuItem, InputLabel, FormControl, Stack,
   Tooltip, IconButton, Paper
@@ -34,7 +34,7 @@ const INITIAL_FORM = {
 export default function Rooms() {
   const [rooms, setRooms] = useState([]);
   const [page, setPage] = useState(1);
-  const itemsPerPage = 16;
+  const itemsPerPage = 15;
   const [roomTypes, setRoomTypes] = useState([]);
   const [searchLoading, setSearchLoading] = useState(false);
   const [error, setError] = useState("");
@@ -360,7 +360,7 @@ export default function Rooms() {
   <Box
     sx={{
       background:
-        "radial-gradient(circle at 0% 0%, rgba(125,211,252,0.12), transparent 40%), radial-gradient(circle at 90% 10%, rgba(96,165,250,0.12), transparent 45%), #0f1113",
+        "radial-gradient(circle at 0% 0%, rgba(125,211,252,0.16), transparent 45%), radial-gradient(circle at 90% 10%, rgba(96,165,250,0.16), transparent 45%), #0f1113",
     }}
   >
       <Header 
@@ -403,71 +403,96 @@ export default function Rooms() {
             flexDirection: "column",
             }}
           >
-            <Box
-              sx={{
-                width: "100%",
-                display: "flex",
-                justifyContent: "center",
-                mb: 3
-              }}
-            >
-              <Box
+            <Box sx={{ width: "100%", display: "flex", justifyContent: "center", mb: 3 }}>
+              <Paper
                 sx={{
-                  maxWidth: 1280,
                   width: "100%",
-                  display: "flex",
-                  alignItems: "flex-start",
-                  justifyContent: "space-between",
-                  gap: 2,
-                  ml: { xs: 0, sm: 0, md: -12 }
+                  maxWidth: 1640,
+                  p: { xs: 2.5, md: 3.5 },
+                  bgcolor: "rgba(21, 26, 31, 0.92)",
+                  border: "1px solid rgba(125, 211, 252, 0.22)",
+                  boxShadow: "0 28px 60px rgba(6, 15, 24, 0.5)",
+                  position: "relative",
+                  overflow: "hidden"
                 }}
               >
-                <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <RoomsFilters
-                    roomTypes={roomTypes}
-                    roomsCount={rooms.length}
-                    filteredCount={filteredRooms.length}
-                    filterRoomTypeId={filterRoomTypeId}
-                    filterStatus={filterStatus}
-                    filterRoomNumber={filterRoomNumber}
-                    filterPriceMin={filterPriceMin}
-                    filterPriceMax={filterPriceMax}
-                    sortOrder={sortOrder}
-                    onRoomTypeChange={setFilterRoomTypeId}
-                    onStatusChange={setFilterStatus}
-                    onRoomNumberChange={setFilterRoomNumber}
-                    onPriceMinChange={setFilterPriceMin}
-                    onPriceMaxChange={setFilterPriceMax}
-                    onSortChange={setSortOrder}
-                    onClearFilters={() => {
-                      setFilterRoomTypeId("");
-                      setFilterStatus("all");
-                      setFilterRoomNumber("");
-                      setFilterPriceMin("");
-                      setFilterPriceMax("");
-                      setSortOrder("roomNumberAsc");
-                    }}
-                  />
-                </Box>
-                <Box sx={{ flexShrink: 0, mt: 9 }}>
-                  <Button
-                    variant="contained"
-                    startIcon={<AddIcon />}
-                    onClick={() => setAddModalOpen(true)}
-                  >
-                    Add Room
-                  </Button>
-                </Box>
+                <Box
+                  sx={{
+                    position: "absolute",
+                    inset: 0,
+                    backgroundImage:
+                      "linear-gradient(135deg, rgba(125,211,252,0.18), rgba(15,17,19,0.92)), url(https://picsum.photos/1200/320?blur=2)",
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                    opacity: 0.35
+                  }}
+                />
+                <Stack
+                  direction={{ xs: "column", md: "row" }}
+                  spacing={2}
+                  alignItems={{ xs: "flex-start", md: "center" }}
+                  justifyContent="space-between"
+                  sx={{ position: "relative" }}
+                >
+                  <Box>
+                    <Typography variant="h3" fontWeight={700}>
+                      Rooms Overview
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                      Manage availability, maintenance, and pricing overrides across the property.
+                    </Typography>
+                  </Box>
+                  <Stack direction="row" spacing={1} flexWrap="wrap">
+                    <Chip
+                      label={`${rooms.length} total`}
+                      sx={{ bgcolor: "rgba(125, 211, 252, 0.2)", color: "#e6edf6" }}
+                    />
+                    <Chip
+                      label={`${filteredRooms.length} shown`}
+                      variant="outlined"
+                      sx={{ borderColor: "rgba(125, 211, 252, 0.4)" }}
+                    />
+                  </Stack>
+                </Stack>
+              </Paper>
+            </Box>
+            <Box sx={{ width: "100%", display: "flex", justifyContent: "center", mb: 3 }}>
+              <Box sx={{ maxWidth: 1640, width: "100%" }}>
+                <RoomsFilters
+                  roomTypes={roomTypes}
+                  roomsCount={rooms.length}
+                  filteredCount={filteredRooms.length}
+                  filterRoomTypeId={filterRoomTypeId}
+                  filterStatus={filterStatus}
+                  filterRoomNumber={filterRoomNumber}
+                  filterPriceMin={filterPriceMin}
+                  filterPriceMax={filterPriceMax}
+                  sortOrder={sortOrder}
+                  onRoomTypeChange={setFilterRoomTypeId}
+                  onStatusChange={setFilterStatus}
+                  onRoomNumberChange={setFilterRoomNumber}
+                  onPriceMinChange={setFilterPriceMin}
+                  onPriceMaxChange={setFilterPriceMax}
+                  onSortChange={setSortOrder}
+                  onAddRoom={() => setAddModalOpen(true)}
+                  onClearFilters={() => {
+                    setFilterRoomTypeId("");
+                    setFilterStatus("all");
+                    setFilterRoomNumber("");
+                    setFilterPriceMin("");
+                    setFilterPriceMax("");
+                    setSortOrder("roomNumberAsc");
+                  }}
+                />
               </Box>
             </Box>
-
 
 
             {loading ? (
               <Typography>Loading…</Typography>
             ) : (
               <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <Box sx={{ maxWidth: 1380, width: '100%' }}>
+                <Box sx={{ maxWidth: 1640, width: '100%' }}>
                   {filteredRooms.length === 0 ? (
                     <Box sx={{ textAlign: "center", py: 6 }}>
                       <Typography variant="h6" color="text.secondary">
@@ -478,155 +503,189 @@ export default function Rooms() {
                       </Typography>
                     </Box>
                   ) : (
-                    <Grid container spacing={3} justifyContent="flex-start">
+                    <Box
+                      sx={{
+                        display: "grid",
+                        gridTemplateColumns: {
+                          xs: "1fr",
+                          sm: "repeat(2, minmax(0, 1fr))",
+                          md: "repeat(3, minmax(0, 1fr))",
+                          lg: "repeat(5, minmax(0, 1fr))"
+                        },
+                        gap: 2
+                      }}
+                    >
                       {filteredRooms
                         .slice((page - 1) * itemsPerPage, page * itemsPerPage)
                         .map((room) => (
-                          <Grid item key={room.id || room._id}>
+                          <Box key={room.id || room._id}>
                             <Card
-                          sx={{
-                            borderRadius: 3,
-                            overflow: "hidden",
-                            cursor: "pointer",
-                            transition: "0.2s",
-                            bgcolor: "rgba(24, 26, 27, 0.92)",
-                            width: 320,
-                            minWidth: 320,
-                            maxWidth: 320,
-                            mx: "auto",
-                            "&:hover": { transform: "translateY(-4px)" },
-                          }}
-                          onClick={() => handleOpenModal(room)}
-                        >
-                          <Box
-                            component="img"
-                            src={
-                              room.images?.length
-                                ? room.images[0]
-                                : "https://picsum.photos/400/250"
-                            }
-                            alt={`Room ${room.roomNumber}`}
-                            sx={{
-                              width: 320,
-                              minWidth: 320,
-                              maxWidth: 320,
-                              height: 160,
-                              objectFit: "cover",
-                              display: "block",
-                              mx: "auto"
-                            }}
-                          />
-
-                          <CardContent>
-                            <Stack direction="row" spacing={1} alignItems="center">
-                              <BedIcon fontSize="small" />
-                              <Typography fontWeight={700}>
-                                Room #{room.roomNumber}
-                              </Typography>
-                            </Stack>
-
-                            <Chip
-                              label={room.roomCategory}
-                              size="small"
-                              sx={{ my: 1, bgcolor: '#1976d2', color: '#fff', fontWeight: 700, letterSpacing: 1 }}
-                            />
-
-                            <Stack
-                              direction="row"
-                              justifyContent="space-between"
-                              alignItems="center"
+                              sx={{
+                                borderRadius: 3,
+                                overflow: "hidden",
+                                cursor: "pointer",
+                                transition: "0.2s",
+                                bgcolor: "rgba(21, 26, 31, 0.92)",
+                                width: "100%",
+                                "&:hover": { transform: "translateY(-4px)" },
+                              }}
+                              onClick={() => handleOpenModal(room)}
                             >
-                              <Chip
-                                icon={
-                                  room.isActive === false ? <CancelIcon /> : (room.booked ? <CancelIcon /> : <CheckCircleIcon />)
-                                }
-                                label={room.isActive === false ? "Maintenance" : (room.booked ? "Booked" : "Available")}
-                                color={room.isActive === false ? "warning" : (room.booked ? "error" : "success")}
-                                size="small"
-                              />
-                              <Typography>
-                                ${room.price}
-                              </Typography>
-                            </Stack>
-                            
-                            <Box sx={{ height: 40, mt: 1, display: "flex", alignItems: "center" }}>
-                              {/* Maintenance/Active Toggle Button */}
-                              {room.isActive === false ? (
-                                <Button
-                                  variant="outlined"
-                                  color="success"
+                              <Box sx={{ position: "relative" }}>
+                                <Box
+                                  component="img"
+                                  src={
+                                    room.images?.length
+                                      ? room.images[0]
+                                      : "https://picsum.photos/400/250"
+                                  }
+                                  alt={`Room ${room.roomNumber}`}
+                                  sx={{
+                                    width: "100%",
+                                    height: 170,
+                                    objectFit: "cover",
+                                    display: "block",
+                                  }}
+                                />
+                                <Box
+                                  sx={{
+                                    position: "absolute",
+                                    inset: 0,
+                                    background:
+                                      "linear-gradient(180deg, rgba(15,17,19,0.05) 20%, rgba(15,17,19,0.75) 100%)"
+                                  }}
+                                />
+                                <Chip
+                                  icon={
+                                    room.isActive === false ? <CancelIcon /> : (room.booked ? <CancelIcon /> : <CheckCircleIcon />)
+                                  }
+                                  label={room.isActive === false ? "Maintenance" : (room.booked ? "Booked" : "Available")}
+                                  color={room.isActive === false ? "warning" : (room.booked ? "error" : "success")}
                                   size="small"
-                                  fullWidth
-                                  onClick={async (e) => {
-                                    e.stopPropagation();
-                                    try {
-                                      const updatedRoom = await setRoomActive({
-                                        id: room.id || room._id,
-                                        isActive: true,
-                                      }).unwrap();
-                                      const updatedId = updatedRoom.id || updatedRoom._id;
-                                      setRooms(prevRooms => prevRooms.map(r =>
-                                        (r.id || r._id) === updatedId ? { ...r, ...updatedRoom } : r
-                                      ));
-                                    } catch (err) {
-                                      setError(err?.message || "Failed to update room status.");
-                                    }
+                                  sx={{ position: "absolute", top: 12, left: 12 }}
+                                />
+                                <Box
+                                  sx={{
+                                    position: "absolute",
+                                    top: 12,
+                                    right: 12,
+                                    px: 1.4,
+                                    py: 0.45,
+                                    borderRadius: 999,
+                                    bgcolor: "rgba(15, 17, 19, 0.85)",
+                                    border: "1px solid rgba(125, 211, 252, 0.55)",
+                                    color: "#e6edf6",
+                                    fontSize: 13,
+                                    fontWeight: 700,
+                                    letterSpacing: 0.2,
+                                    boxShadow: "0 10px 20px rgba(6, 15, 24, 0.45)"
                                   }}
                                 >
-                                  Set Active
-                                </Button>
-                              ) : (!room.booked ? (
-                                <Button
-                                  variant="outlined"
-                                  color="warning"
-                                  size="small"
-                                  fullWidth
-                                  onClick={async (e) => {
-                                    e.stopPropagation();
-                                    try {
-                                      const updatedRoom = await setRoomActive({
-                                        id: room.id || room._id,
-                                        isActive: false,
-                                      }).unwrap();
-                                      const updatedId = updatedRoom.id || updatedRoom._id;
-                                      setRooms(prevRooms => prevRooms.map(r =>
-                                        (r.id || r._id) === updatedId ? { ...r, ...updatedRoom } : r
-                                      ));
-                                    } catch (err) {
-                                      setError(err?.message || "Failed to update room status.");
-                                    }
-                                  }}
-                                >
-                                  Set Inactive
-                                </Button>
-                              ) : null)}
-                            </Box>
-                          </CardContent>
+                                  ${room.price}
+                                </Box>
+                              </Box>
 
-                          <CardActions sx={{ justifyContent: "flex-end" }}>
-                            <Tooltip title="Delete Room">
-                              <IconButton
-                                color="error"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setRoomToDelete(room.id || room._id);
-                                  setDeleteModalOpen(true);
-                                }}
-                                onMouseDown={e => e.stopPropagation()}
-                              >
-                                <DeleteIcon />
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title="View Details">
-                              <IconButton
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleOpenModal(room);
-                                }}
-                              >
-                                <InfoOutlinedIcon />
-                              </IconButton>
-                            </Tooltip>
+                              <CardContent>
+                                <Stack direction="row" spacing={1} alignItems="center">
+                                  <BedIcon fontSize="small" />
+                                  <Typography fontWeight={700}>
+                                    Room #{room.roomNumber}
+                                  </Typography>
+                                </Stack>
+
+                                <Chip
+                                  label={room.roomCategory}
+                                  size="small"
+                                  sx={{
+                                    my: 1,
+                                    bgcolor: "rgba(125, 211, 252, 0.28)",
+                                    color: "#e6edf6",
+                                    fontWeight: 800,
+                                    letterSpacing: 0.8,
+                                    border: "1px solid rgba(125, 211, 252, 0.6)",
+                                    textTransform: "uppercase",
+                                    boxShadow: "0 10px 18px rgba(6, 15, 24, 0.4)"
+                                  }}
+                                />
+
+                                <Box sx={{ height: 40, mt: 1, display: "flex", alignItems: "center" }}>
+                                  {/* Maintenance/Active Toggle Button */}
+                                  {room.isActive === false ? (
+                                    <Button
+                                      variant="outlined"
+                                      color="success"
+                                      size="small"
+                                      fullWidth
+                                      onClick={async (e) => {
+                                        e.stopPropagation();
+                                        try {
+                                          const updatedRoom = await setRoomActive({
+                                            id: room.id || room._id,
+                                            isActive: true,
+                                          }).unwrap();
+                                          const updatedId = updatedRoom.id || updatedRoom._id;
+                                          setRooms(prevRooms => prevRooms.map(r =>
+                                            (r.id || r._id) === updatedId ? { ...r, ...updatedRoom } : r
+                                          ));
+                                        } catch (err) {
+                                          setError(err?.message || "Failed to update room status.");
+                                        }
+                                      }}
+                                    >
+                                      Set Active
+                                    </Button>
+                                  ) : (!room.booked ? (
+                                    <Button
+                                      variant="outlined"
+                                      color="warning"
+                                      size="small"
+                                      fullWidth
+                                      onClick={async (e) => {
+                                        e.stopPropagation();
+                                        try {
+                                          const updatedRoom = await setRoomActive({
+                                            id: room.id || room._id,
+                                            isActive: false,
+                                          }).unwrap();
+                                          const updatedId = updatedRoom.id || updatedRoom._id;
+                                          setRooms(prevRooms => prevRooms.map(r =>
+                                            (r.id || r._id) === updatedId ? { ...r, ...updatedRoom } : r
+                                          ));
+                                        } catch (err) {
+                                          setError(err?.message || "Failed to update room status.");
+                                        }
+                                      }}
+                                    >
+                                      Set Inactive
+                                    </Button>
+                                  ) : null)}
+                                </Box>
+                              </CardContent>
+
+                              <CardActions sx={{ justifyContent: "flex-end" }}>
+                                <Tooltip title="Delete Room">
+                                  <IconButton
+                                    color="error"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setRoomToDelete(room.id || room._id);
+                                      setDeleteModalOpen(true);
+                                    }}
+                                    onMouseDown={e => e.stopPropagation()}
+                                  >
+                                    <DeleteIcon />
+                                  </IconButton>
+                                </Tooltip>
+                                <Tooltip title="View Details">
+                                  <IconButton
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleOpenModal(room);
+                                    }}
+                                  >
+                                    <InfoOutlinedIcon />
+                                  </IconButton>
+                                </Tooltip>
                                 {/* Global Delete Confirmation Modal - only rendered when open */}
                                 {deleteModalOpen && (
                                   <DeleteConfirmationModal
@@ -639,11 +698,11 @@ export default function Rooms() {
                                     text="Are you sure you want to delete this room? This action cannot be undone."
                                   />
                                 )}
-                          </CardActions>
-                        </Card>
-                      </Grid>
+                              </CardActions>
+                            </Card>
+                          </Box>
                     ))}
-                  </Grid>
+                  </Box>
                   )}
                 </Box>
                 {/* Pagination below grid */}
@@ -655,18 +714,18 @@ export default function Rooms() {
                       onChange={(_, value) => setPage(value)}
                       sx={{
                         '& .MuiPaginationItem-root': {
-                          color: '#fff',
-                          backgroundColor: 'rgba(24, 26, 27, 0.9)',
-                          border: '1px solid #444',
+                          color: '#e6edf6',
+                          backgroundColor: 'rgba(21, 26, 31, 0.9)',
+                          border: '1px solid rgba(125, 211, 252, 0.2)',
                           transition: 'background 0.2s',
                         },
                         '& .Mui-selected': {
-                          backgroundColor: '#1976d2',
-                          color: '#fff',
-                          border: '2px solid #1976d2',
+                          backgroundColor: 'rgba(125, 211, 252, 0.3)',
+                          color: '#e6edf6',
+                          border: '2px solid rgba(125, 211, 252, 0.4)',
                         },
                         '& .MuiPaginationItem-root:hover': {
-                          backgroundColor: 'rgba(24, 26, 27, 0.95)',
+                          backgroundColor: 'rgba(21, 26, 31, 0.95)',
                         },
                       }}
                     />

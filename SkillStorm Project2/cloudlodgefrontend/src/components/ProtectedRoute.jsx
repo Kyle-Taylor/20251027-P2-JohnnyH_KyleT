@@ -13,7 +13,14 @@ export default function ProtectedRoute({ children, requiredRole }) {
 
   try {
     const payload = JSON.parse(atob(token.split(".")[1]));
-    if (requiredRole && ![].concat(requiredRole).includes(payload.role)) {
+    const roleSource =
+      payload.role ||
+      payload.roles?.[0] ||
+      payload.authorities?.[0] ||
+      payload.authority ||
+      "GUEST";
+    const normalizedRole = roleSource.toString().toUpperCase().replace(/^ROLE_/, "");
+    if (requiredRole && ![].concat(requiredRole).includes(normalizedRole)) {
       // Role mismatch → redirect to forbidden or home
       return <Navigate to="/" replace />;
     }
