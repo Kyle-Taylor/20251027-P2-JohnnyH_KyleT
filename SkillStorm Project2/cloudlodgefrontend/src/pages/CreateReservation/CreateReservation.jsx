@@ -30,6 +30,10 @@ import dayjs from "dayjs";
 import BannerPhoto from "../../assets/images/BannerPhoto.png";
 import CalendarPopup from "../../components/CalandarPopup";
 import { useNavigate } from "react-router-dom";
+import DeleteIcon from "@mui/icons-material/Delete";
+import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
+import PaymentModal from "../../components/payments/PaymentModal";
+import { useGetProfileQuery } from "../../store/apiSlice";
 import {
   useCreateReservationMutation,
   useGetRoomTypesQuery,
@@ -54,6 +58,8 @@ export default function BookRoom() {
   const [rooms, setRooms] = useState([]);
   const [page, setPage] = useState(1);
   const itemsPerPage = 18;
+  const [cartItems, setCartItems] = useState([]);
+  const { data: profileData } = useGetProfileQuery();
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -64,6 +70,8 @@ export default function BookRoom() {
   const [booking, setBooking] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState(false);
   const [bookingError, setBookingError] = useState("");
+  const [cartOpen, setCartOpen] = useState(false);
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
 
   const [checkInDate, setCheckInDate] = useState(dayjs().format("YYYY-MM-DD"));
   const [checkOutDate, setCheckOutDate] = useState(
@@ -119,6 +127,30 @@ export default function BookRoom() {
       setLoading(false);
     }
   }, [roomTypesLoading]);
+
+  // Hydrate cart from localStorage once
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("cloudlodge_cart");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          setCartItems(parsed);
+        }
+      }
+    } catch (err) {
+      console.warn("Failed to load cart from storage", err);
+    }
+  }, []);
+
+  // Persist cart to localStorage whenever it changes
+  useEffect(() => {
+    try {
+      localStorage.setItem("cloudlodge_cart", JSON.stringify(cartItems));
+    } catch (err) {
+      console.warn("Failed to persist cart", err);
+    }
+  }, [cartItems]);
 
   useEffect(() => {
     if (!selectedRoomType) return;
@@ -253,6 +285,25 @@ export default function BookRoom() {
     return nights * (selectedRoom.price ?? 0);
   }
 
+  const cartSubtotal = useMemo(
+    () => cartItems.reduce((sum, item) => sum + (item.total || 0), 0),
+    [cartItems]
+  );
+
+  function handleRemoveFromCart(index) {
+    setCartItems((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  function handleClearCart() {
+    setCartItems([]);
+    setCartOpen(false);
+  }
+
+  function handleProceedToCheckout() {
+    setCartOpen(false);
+    setCheckoutOpen(true);
+  }
+
   async function handleCheckInChange(newCheckIn) {
     setCheckInDate(newCheckIn);
 
@@ -306,7 +357,7 @@ export default function BookRoom() {
     );
   }
 
-  async function handleBookRoom() {
+  function handleAddToCart() {
     if (!selectedRoom) return;
 
     const nights = calculateNights();
@@ -315,59 +366,23 @@ export default function BookRoom() {
       return;
     }
 
-    // Use modal dates for booking
     const bookingCheckIn = modalRange.start ? modalRange.start.format("YYYY-MM-DD") : checkInDate;
     const bookingCheckOut = modalRange.end ? modalRange.end.format("YYYY-MM-DD") : checkOutDate;
 
-    setBooking(true);
+    const item = {
+      roomId: selectedRoom.id || selectedRoom._id,
+      title: selectedRoom.title || selectedRoom.name || "Room",
+      checkIn: bookingCheckIn,
+      checkOut: bookingCheckOut,
+      guests: numGuests,
+      nights,
+      pricePerNight: selectedRoom.price ?? 0,
+      total: calculateTotalPrice(),
+    };
+    setCartItems((prev) => [...prev, item]);
+    setModalOpen(false);
     setBookingError("");
-    setBookingSuccess(false);
-
-    try {
-      const userId = getUserIdFromToken();
-      const payload = {
-        ...(userId ? { userId } : {}),
-        roomUnitId: selectedRoom.id || selectedRoom._id,
-        checkInDate: bookingCheckIn,
-        checkOutDate: bookingCheckOut,
-        numGuests,
-        totalPrice: calculateTotalPrice()
-      };
-
-      const saved = await createReservation(payload).unwrap();
-
-      setBookingSuccess(true);
-
-      // After booking, refresh list using current search bar dates (not the booking dates)
-      if (selectedRoomType) {
-        await fetchRoomsForSelectedType({
-          startDate: checkInDate,
-          endDate: checkOutDate,
-          guests: numGuests
-        });
-        // Update lastSearch to keep search state in sync
-        setLastSearch({
-          startDate: checkInDate,
-          endDate: checkOutDate,
-          guests: numGuests
-        });
-      }
-
-      // Redirect to Stripe checkout for this reservation
-      const reservationId = saved?.id || saved?._id;
-      if (!reservationId) {
-        console.error("Reservation created but no ID returned", saved);
-        setBookingError("Reservation created but missing an ID. Please try again.");
-        return;
-      }
-      navigate(`/pay/${reservationId}`);
-      setModalOpen(false);
-      setBookingSuccess(false);
-    } catch (err) {
-      setBookingError(err?.message || "Failed to book room");
-    } finally {
-      setBooking(false);
-    }
+    setBookingSuccess(true);
   }
 
   // Only show active rooms for reservation (user-facing)
@@ -384,6 +399,26 @@ export default function BookRoom() {
           "radial-gradient(circle at 0% 10%, rgba(125,211,252,0.16), transparent 45%), radial-gradient(circle at 90% 0%, rgba(96,165,250,0.16), transparent 45%), #0f1113",
       }}
     >
+      {/* Floating cart button */}
+      <Box
+        sx={{
+          position: "fixed",
+          bottom: 24,
+          right: 24,
+          zIndex: 1300,
+        }}
+      >
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={() => setCartOpen(true)}
+          sx={{ boxShadow: 6, gap: 1 }}
+        >
+          <ShoppingCartIcon fontSize="small" />
+          Cart ({cartItems.length})
+        </Button>
+      </Box>
+
       {/* Hide HeroSearch until room type selected */}
       <Header setRooms={setRooms} setLoading={setLoading} setError={setError} showSearch={Boolean(selectedRoomType)} />
 
@@ -1264,7 +1299,7 @@ export default function BookRoom() {
                   )}
                   {bookingSuccess && (
                     <Chip
-                      label="Room booked successfully!"
+                      label="Room added to cart!"
                       color="success"
                       sx={{ width: "100%" }}
                     />
@@ -1286,15 +1321,97 @@ export default function BookRoom() {
           </Button>
           <Button
             variant="contained"
-            onClick={handleBookRoom}
+            onClick={handleAddToCart}
             disabled={booking || calculateNights() <= 0}
             size="large"
             sx={{ minWidth: 140 }}
           >
-            {booking ? "Booking..." : `Book for $${calculateTotalPrice()}`}
+            {booking ? "Adding..." : `Add to cart ($${calculateTotalPrice()})`}
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Cart modal (bottom-right) */}
+      <Dialog
+        open={cartOpen}
+        onClose={() => setCartOpen(false)}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            position: "fixed",
+            m: 0,
+            bottom: 16,
+            right: 16,
+            width: { xs: "90vw", sm: 420 },
+            maxHeight: "80vh",
+            borderRadius: 3,
+            bgcolor: "rgba(24, 26, 27, 0.94)"
+          }
+        }}
+      >
+        <DialogTitle sx={{ pb: 0.5 }}>
+          <Typography variant="h6" fontWeight={700}>Your Cart</Typography>
+          <Typography variant="body2" color="text.secondary">
+            Rooms you’ve added will stay here until checkout.
+          </Typography>
+        </DialogTitle>
+        <DialogContent dividers>
+          {cartItems.length === 0 ? (
+            <Typography color="text.secondary">Cart is empty.</Typography>
+          ) : (
+            <Stack spacing={1.5}>
+              {cartItems.map((item, idx) => (
+                <Paper
+                  key={`${item.roomId}-${idx}`}
+                  variant="outlined"
+                  sx={{ p: 1.5, bgcolor: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.08)" }}
+                >
+                  <Stack direction="row" spacing={1.5} alignItems="center" justifyContent="space-between">
+                    <Box>
+                      <Typography fontWeight={600}>{item.title}</Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {item.checkIn} → {item.checkOut} • {item.guests} guest(s)
+                      </Typography>
+                      <Typography variant="body2" fontWeight={600}>
+                        ${item.total.toFixed(2)}
+                      </Typography>
+                    </Box>
+                    <IconButton size="small" color="error" onClick={() => handleRemoveFromCart(idx)}>
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  </Stack>
+                </Paper>
+              ))}
+            </Stack>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ px: 3, py: 2 }}>
+          <Stack direction="row" spacing={1} width="100%" justifyContent="flex-end">
+            <Button variant="outlined" onClick={handleClearCart} disabled={cartItems.length === 0}>
+              Clear
+            </Button>
+            <Button variant="contained" onClick={handleProceedToCheckout} disabled={cartItems.length === 0}>
+              Proceed (${cartSubtotal.toFixed(2)})
+            </Button>
+          </Stack>
+        </DialogActions>
+      </Dialog>
+
+      {/* Stripe checkout modal */}
+      <PaymentModal
+        open={checkoutOpen}
+        onClose={() => setCheckoutOpen(false)}
+        onSuccess={() => {
+          setCheckoutOpen(false);
+          setCartItems([]);
+          setBookingSuccess(true);
+        }}
+        title="Checkout"
+        savedCards={profileData?.savedPaymentMethods || []}
+        showSaveCardToggle={true}
+        primaryCtaLabel="Book reservation"
+      />
     </Box>
   );
 }

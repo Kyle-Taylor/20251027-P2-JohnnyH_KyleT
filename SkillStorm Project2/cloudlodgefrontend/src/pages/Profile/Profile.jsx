@@ -9,6 +9,7 @@ import {
   useSyncPaymentMethodsMutation,
   useUpdateProfileMutation,
 } from '../../store/apiSlice';
+import PaymentModal from '../../components/payments/PaymentModal';
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -18,6 +19,7 @@ const Profile = () => {
   const [globalError, setGlobalError] = useState('');
   const [fieldErrors, setFieldErrors] = useState({});
   const [pmLoadingId, setPmLoadingId] = useState(null);
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const { data, isLoading, error, refetch } = useGetProfileQuery();
   const [updateProfile] = useUpdateProfileMutation();
   const [deletePaymentMethod] = useDeletePaymentMethodMutation();
@@ -349,7 +351,7 @@ const Profile = () => {
                 <Button
                   variant="outlined"
                   sx={{ mt: 2 }}
-                  onClick={() => navigate("/pay/add-card")}
+                  onClick={() => setPaymentModalOpen(true)}
                 >
                   Add Payment Method
                 </Button>
@@ -358,6 +360,24 @@ const Profile = () => {
           </Grid>
         </Box>
       </Box>
+
+      <PaymentModal
+        open={paymentModalOpen}
+        onClose={() => setPaymentModalOpen(false)}
+        onSuccess={async () => {
+          // Ensure new payment method shows up immediately
+          try {
+            await syncPaymentMethods().unwrap();
+          } catch (_) {
+            // ignore sync errors here
+          }
+          await refetch();
+          setPaymentModalOpen(false);
+        }}
+        title="Add Payment Method"
+        savedCards={savedCards}
+        allowSavedSelection={false}
+      />
     </>
   );
 };
