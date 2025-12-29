@@ -23,6 +23,7 @@ import {
   useDeleteRoomMutation,
   useGetRoomTypesQuery,
   useGetRoomsQuery,
+  useLazySearchRoomsQuery,
   useSetRoomActiveMutation,
   useUpdateRoomMutation,
 } from "../../store/apiSlice";
@@ -78,6 +79,7 @@ export default function Rooms() {
   const [updateRoom] = useUpdateRoomMutation();
   const [deleteRoom] = useDeleteRoomMutation();
   const [setRoomActive] = useSetRoomActiveMutation();
+  const [triggerSearch] = useLazySearchRoomsQuery();
   const loading = roomsLoading || roomTypesLoading || roomsFetching || roomTypesFetching || searchLoading;
 
   useEffect(() => {
@@ -111,6 +113,28 @@ export default function Rooms() {
   useEffect(() => {
     setPage(1);
   }, [filterRoomTypeId, filterStatus, filterRoomNumber, filterPriceMin, filterPriceMax, sortOrder]);
+
+  async function runSearch({ startDate, endDate, guests }) {
+    try {
+      setSearchLoading(true);
+      setError("");
+
+      const params = new URLSearchParams();
+      if (startDate) params.set("startDate", startDate);
+      if (endDate) params.set("endDate", endDate);
+      if (guests !== undefined && guests !== null && guests !== "") {
+        params.set("guests", String(guests));
+      }
+      params.set("includeBooked", "true");
+
+      const data = await triggerSearch(Object.fromEntries(params.entries())).unwrap();
+      handleRoomsUpdate(data?.content || data);
+    } catch (err) {
+      setError(err?.message || "Search failed");
+    } finally {
+      setSearchLoading(false);
+    }
+  }
 
   function resetAddForm() {
     setForm(INITIAL_FORM);
@@ -363,16 +387,7 @@ export default function Rooms() {
         "radial-gradient(circle at 0% 0%, rgba(125,211,252,0.16), transparent 45%), radial-gradient(circle at 90% 10%, rgba(96,165,250,0.16), transparent 45%), #0f1113",
     }}
   >
-      <Header 
-      setRooms={handleRoomsUpdate}
-      setLoading={setSearchLoading}
-      setError={setError}
-      showSearch
-      hideGuests
-      searchMaxWidth={200}
-      searchHeight={55}
-      searchParams={{ includeBooked: true }}
-      />
+      <Header showSearch={false} />
 
       <Box sx={{ width: "100%"}}>
 
@@ -483,6 +498,10 @@ export default function Rooms() {
                     setFilterPriceMax("");
                     setSortOrder("roomNumberAsc");
                   }}
+                  onSearchChange={runSearch}
+                  searchHideGuests={true}
+                  searchMaxWidth={320}
+                  searchHeight={55}
                 />
               </Box>
             </Box>
