@@ -500,7 +500,7 @@ export default function Rooms() {
                   }}
                   onSearchChange={runSearch}
                   searchHideGuests={true}
-                  searchMaxWidth={200}
+                  searchMaxWidth={320}
                   searchHeight={55}
                 />
               </Box>
